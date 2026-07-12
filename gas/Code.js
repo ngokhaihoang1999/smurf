@@ -139,3 +139,10 @@ function doPost(e) {
 function doGet(e) {
   return ContentService.createTextOutput("✅ API Làng Xì Trum đang hoạt động! Dùng phương thức POST để gửi đăng ký.");
 }
+
+// Hàm chạy thử nghiệm để kích hoạt hộp thoại Cấp quyền (Authorization Required) trên giao diện Web GAS
+function testPermission() {
+  var sheet = SpreadsheetApp.openById("1Sgb2kddv3-DSgA5IZZhexZf4d-ZFjFuBwIYS56JLJPI").getActiveSheet();
+  Logger.log("Kết nối Sheet thành công! Tên sheet: " + sheet.getName());
+  Logger.log("Số dòng hiện tại: " + sheet.getLastRow());
+}
