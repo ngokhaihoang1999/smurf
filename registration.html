@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <title>Làng Xì Trum - Đăng Ký Cư Dân</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        smurf: {
+                            blue: "#00a2ff",       /* Vibrant Smurf Blue */
+                            blueLight: "#e0f2fe",  /* Soft sky blue */
+                            red: "#ef4444",        /* Mushroom Red / Papa Hat */
+                            redLight: "#fee2e2",   /* Soft red */
+                            yellow: "#ffb300",     /* Smurfette Blonde / Sun Yellow */
+                            yellowLight: "#fef3c7",/* Soft yellow */
+                            green: "#22c55e",      /* Grass Green */
+                            greenLight: "#dcfce7",  /* Soft Green */
+                            cream: "#fafaf6",      /* Friendly village ground */
+                            wood: "#904d00",       /* Warm Wood */
+                            woodDark: "#6e3900"    /* Darker Wood */
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ["Fredoka", "sans-serif"],
+                        quicksand: ["Quicksand", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fafaf6;
+            color: #171c22;
+            font-family: 'Quicksand', sans-serif;
+            background-image: radial-gradient(#99cbff 1.5px, transparent 1.5px);
+            background-size: 20px 20px;
+        }
+        
+        .wood-texture {
+            background-color: #904d00;
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.06) 10px, rgba(0,0,0,0.06) 20px);
+            border-bottom: 6px solid #6e3900;
+        }
+        
+        .smurf-card {
+            background: #ffffff;
+            border: 2px solid #eaeef6;
+            border-radius: 28px;
+            box-shadow: 0px 8px 24px rgba(0, 98, 157, 0.12);
+            transition: transform 0.2s ease;
+        }
+
+        .smurf-card-red {
+            background: #ffffff;
+            border: 2px solid #fee2e2;
+            border-radius: 28px;
+            box-shadow: 0px 8px 24px rgba(239, 68, 68, 0.12);
+            transition: transform 0.2s ease;
+        }
+
+        .mushroom-btn {
+            background-color: #ef4444;
+            color: #ffffff;
+            border-bottom: 5px solid #c23535;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+            font-family: 'Fredoka', sans-serif;
+        }
+        
+        .mushroom-btn:active {
+            border-bottom-width: 0px;
+            transform: translateY(5px) scale(0.98);
+        }
+
+        .pill-btn {
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            color: #475569;
+            transition: all 0.15s ease;
+            font-weight: 700;
+        }
+
+        .pill-btn:hover {
+            border-color: #00a2ff;
+            color: #00a2ff;
+            background-color: #f0f9ff;
+        }
+
+        .pill-btn.active {
+            background-color: #00a2ff;
+            border-color: #00a2ff;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 162, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .pill-btn-red.active {
+            background-color: #ef4444;
+            border-color: #ef4444;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+            transform: translateY(-2px);
+        }
+
+        /* Swipable indicators */
+        .scroll-wrapper {
+            position: relative;
+        }
+
+        .scroll-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 8px; /* offset the scrollbar */
+            width: 24px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9));
+            pointer-events: none;
+        }
+
+        /* Custom scrollbar for horizontal options */
+        .custom-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #00a2ff;
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #e0f2fe;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00a2ff !important;
+            box-shadow: 0 0 0 4px rgba(0, 162, 255, 0.15) !important;
+        }
+
+        .char-counter {
+            font-size: 11px;
+            font-weight: bold;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-32">
+
+    <!-- Header Section (Tactile Wood Design) -->
+    <header class="wood-texture fixed top-0 w-full max-w-md mx-auto left-0 right-0 z-50 text-white flex items-center justify-between px-6 h-16 shadow-lg rounded-b-2xl">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-smurf-yellow text-3xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">park</span>
+            <h1 class="font-fredoka text-2xl tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">Smurf Registry</h1>
+        </div>
+        <div class="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full border border-white/30 backdrop-blur-md">
+            <span id="tg-username" class="text-xs font-bold text-white">Khách</span>
+            <span class="material-symbols-outlined text-white text-sm">account_circle</span>
+        </div>
+    </header>
+
+    <main class="w-full max-w-md px-6 pt-24 z-10 flex flex-col gap-6">
+        <!-- Live Preview Card (Stitch 3D Character Card style using exact phôi background) -->
+        <section class="w-full">
+            <div style="width: 100%; overflow: hidden; border-radius: 28px; background: #ffffff; border: 2px solid #eaeef6; box-shadow: 0px 8px 24px rgba(0, 98, 157, 0.12); padding: 12px; position: relative;" id="preview-parent">
+                <!-- Scaled container wrapper -->
+                <div id="cardScaleWrapper" style="width: 1516px; height: 1038px; transform-origin: top center; position: absolute; left: 50%; transform: translateX(-50%) scale(0.23); border-radius: 40px; overflow: hidden; background: #000;">
+                    
+                    <!-- Background Frame (phôi card) -->
+                    <img id="preview-card-bg" src="card_bg.png" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='card_bg.png'">
+                    
+                    <!-- Avatar (nằm ở trục dọc x=80 y=138 w=589 h=823) -->
+                    <div style="position: absolute; left: 80px; top: 138px; width: 589px; height: 823px; z-index: 1;">
+                        <div style="width: 100%; height: 100%; overflow: hidden; background: #e8f4f8; border-radius: 12px;">
+                            <img id="preview-smurf-avatar" src="avatars/smurf_basic_placeholder.png" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                        </div>
+                    </div>
+
+                    <!-- Cutout Overlay (Che lên avatar để bo góc/khung nếu có) -->
+                    <img id="preview-card-cutout" src="card_bg_cutout.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; object-fit: fill; display: block;" onerror="this.style.display='none'">
+
+                    <!-- Real Name text -->
+                    <div style="position: absolute; left: 812px; top: 147px; width: 552px; height: 112px; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 0 40px;">
+                        <div id="preview-real-name" style="font-family: 'Baloo 2', cursive; font-size: 47px; font-weight: 800; color: #ffffff; text-shadow: 0 3px 6px rgba(0,0,0,0.15); text-align: center; white-space: nowrap; overflow: hidden; width: 100%;">Tên thật</div>
+                    </div>
+
+                    <!-- Group Badge -->
+                    <div id="preview-group" style="position: absolute; left: 1130px; top: 274px; width: 194px; height: 47px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', cursive; font-size: 34px; font-weight: 800; color: #0b4375; text-align: center;">Nhóm</div>
+
+                    <!-- Hobbies & Personality Tags on the Card -->
+                    <div id="preview-tinh-cach" style="position: absolute; left: 879px; top: 410px; width: 188px; height: 121px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 30px; font-weight: 700; color: #111111; text-align: center; line-height: 1.35; word-break: normal; overflow-wrap: break-word;">Tính cách</div>
+                    <div id="preview-so-thich" style="position: absolute; left: 1236px; top: 411px; width: 185px; height: 122px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 30px; font-weight: 700; color: #111111; text-align: center; line-height: 1.35; word-break: normal; overflow-wrap: break-word;">Sở thích</div>
+                    <div id="preview-diem-manh" style="position: absolute; left: 880px; top: 619px; width: 185px; height: 124px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 30px; font-weight: 700; color: #111111; text-align: center; line-height: 1.35; word-break: normal; overflow-wrap: break-word;">Điểm mạnh</div>
+                    <div id="preview-diem-yeu" style="position: absolute; left: 1225px; top: 622px; width: 200px; height: 125px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 30px; font-weight: 700; color: #111111; text-align: center; line-height: 1.35; word-break: normal; overflow-wrap: break-word;">Điểm yếu</div>
+
+                    <!-- Bio text -->
+                    <div style="position: absolute; left: 738px; top: 778px; width: 696px; height: 194px; z-index: 20; display: flex; align-items: center; justify-content: center; padding-left: 65px; padding-right: 40px;">
+                        <div id="preview-bio" style="font-family: 'Quicksand', sans-serif; font-size: 34px; font-style: italic; font-weight: 600; color: #2b78bf; text-align: center; line-height: 1.45; width: 100%; word-break: normal; overflow-wrap: break-word;">Tự bạch mô tả bản thân...</div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-xs font-bold text-slate-400 text-center mt-2">💡 Avatar sẽ được Admin tạo riêng cho bạn sau.</p>
+        </section>
+
+        <!-- Form Block -->
+        <form id="registry-form" onsubmit="submitForm(event)" class="flex flex-col gap-6">
+            
+            <!-- Hidden inputs from Telegram SDK -->
+            <input type="hidden" id="telegram-id" name="telegramId" value=""/>
+            <input type="hidden" id="telegram-username" name="telegramUsername" value=""/>
+            <input type="hidden" id="telegram-first-name" name="telegramFirstName" value=""/>
+
+            <!-- Form Section 1: Thông Tin Cá Nhân -->
+            <section class="w-full">
+                <div class="smurf-card p-5 flex flex-col gap-4">
+                    <div class="flex items-center gap-2 border-b-3 border-smurf-blueLight pb-2.5 mb-1">
+                        <span class="material-symbols-outlined text-smurf-blue text-2xl" style="font-variation-settings: 'FILL' 1;">groups</span>
+                        <h3 class="font-fredoka text-xl text-smurf-blue">Thông Tin Cá Nhân</h3>
+                    </div>
+                    
+                    <!-- Tên Xì Trum -->
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center">
+                            <label class="font-quicksand text-xs font-bold text-slate-500">Tên Xì Trum (Bắt đầu bằng chữ "Tí")</label>
+                            <span class="char-counter" id="cnt-smurf-name">3/20</span>
+                        </div>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-3 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all" 
+                               id="input-smurf-name" name="smurfName" type="text" value="Tí " required maxlength="20" placeholder="Ví dụ: Tí Điệu, Tí Đô..."/>
+                    </div>
+                    
+                    <!-- Phụ đề tên thật -->
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center">
+                            <label class="font-quicksand text-xs font-bold text-slate-500">Phụ Đề Tên Thật</label>
+                            <span class="char-counter" id="cnt-real-name">0/30</span>
+                        </div>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-3 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all" 
+                               id="input-real-name" name="realName" placeholder="Nhập họ tên thật của bạn..." type="text" required maxlength="30"/>
+                    </div>
+                    
+                    <!-- Nhóm (Dropdown cố định 10 nhóm) -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-quicksand text-xs font-bold text-slate-500">Nhóm (Group)</label>
+                        <select class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-3 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all" 
+                                id="input-group" name="group" required>
+                            <option value="">Chọn nhóm của bạn...</option>
+                            <option value="N1T1">N1T1</option>
+                            <option value="N1T2">N1T2</option>
+                            <option value="N1T3">N1T3</option>
+                            <option value="N1T4">N1T4</option>
+                            <option value="N1T5">N1T5</option>
+                            <option value="N2T1">N2T1</option>
+                            <option value="N2T2">N2T2</option>
+                            <option value="N2T3">N2T3</option>
+                            <option value="N2T4">N2T4</option>
+                            <option value="N2T5">N2T5</option>
+                        </select>
+                    </div>
+
+                    <!-- Giới tính (Chỉ Nam và Nữ) -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-quicksand text-xs font-bold text-slate-500 mb-1">Giới Tính</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-700">
+                                <input type="radio" name="personalGender" value="Nam" checked class="w-5 h-5 text-smurf-blue focus:ring-smurf-blue border-slate-300">
+                                Nam
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-700">
+                                <input type="radio" name="personalGender" value="Nữ" class="w-5 h-5 text-smurf-blue focus:ring-smurf-blue border-slate-300">
+                                Nữ
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Sở thích (Hoàn toàn tự điền, giới hạn 40 ký tự) -->
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center">
+                            <label class="font-quicksand text-xs font-bold text-slate-500">Sở Thích</label>
+                            <span class="char-counter" id="cnt-hobbies">0/40</span>
+                        </div>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-3 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all" 
+                               id="input-hobbies" name="hobbies" placeholder="Hái nấm, Ca hát, Lập trình..." type="text" required maxlength="40"/>
+                    </div>
+
+                    <!-- Tính cách (Hoàn toàn tự điền, giới hạn 40 ký tự) -->
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center">
+                            <label class="font-quicksand text-xs font-bold text-slate-500">Tính Cách</label>
+                            <span class="char-counter" id="cnt-personality">0/40</span>
+                        </div>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-3 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all" 
+                               id="input-personality" name="personality" placeholder="Hài hước, Trầm tính, Kiên nhẫn..." type="text" required maxlength="40"/>
+                    </div>
+                    
+                    <!-- Điểm mạnh -->
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center">
+                            <label class="font-quicksand text-xs font-bold text-slate-500">Điểm Mạnh (Text ngắn)</label>
+                            <span class="char-counter" id="cnt-strength">0/30</span>
+                        </div>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-3 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all" 
+                               id="input-strength" name="strength" placeholder="Ví dụ: Kiên nhẫn, Sáng tạo" type="text" required maxlength="30"/>
+                    </div>
+                    
+                    <!-- Điểm yếu -->
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center">
+                            <label class="font-quicksand text-xs font-bold text-slate-500">Điểm Yếu (Text ngắn)</label>
+                            <span class="char-counter" id="cnt-weakness">0/30</span>
+                        </div>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-3 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all" 
+                               id="input-weakness" name="weakness" placeholder="Ví dụ: Hay quên, Ngại đám đông" type="text" required maxlength="30"/>
+                    </div>
+
+                    <!-- Tự giới thiệu -->
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center">
+                            <label class="font-quicksand text-xs font-bold text-slate-500">Tự Giới Thiệu (1-2 câu mô tả bản thân, tối đa 100 ký tự)</label>
+                            <span class="char-counter" id="cnt-bio">0/100</span>
+                        </div>
+                        <textarea class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all resize-none text-xs" 
+                                  id="input-bio" name="bio" placeholder="Tôi thích tìm tòi và đam mê lập trình..." rows="2" maxlength="100" required></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Form Section 2: Thiết Kế Xì Trum (Papa Red theme) -->
+            <section class="w-full">
+                <div class="smurf-card-red p-5 flex flex-col gap-5">
+                    <div class="flex flex-col gap-1.5 border-b-3 border-smurf-redLight pb-3 mb-1">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-smurf-red text-2xl" style="font-variation-settings: 'FILL' 1;">palette</span>
+                            <h3 class="font-fredoka text-xl text-smurf-red">Thiết Kế Xì Trum</h3>
+                        </div>
+                        <p class="text-[11px] font-bold text-slate-400">Admin sẽ ghi nhận thông tin từ bạn và tạo Xì Trum sau.</p>
+                    </div>
+
+                    <!-- Segmented Tab Selector -->
+                    <div class="flex gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 mb-2">
+                        <button type="button" id="tab-design-manual" class="flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all bg-smurf-blue text-white shadow-sm">Thủ Công (Tự chọn chi tiết)</button>
+                        <button type="button" id="tab-design-upload" class="flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-smurf-blue">Upload Ảnh Tham Khảo</button>
+                    </div>
+
+                    <!-- CONTAINER 1: Tự Chọn Thủ Công -->
+                    <div class="flex flex-col gap-5" id="design-manual-container">
+                        
+                        <!-- Giới Tính Smurf -->
+                        <div class="custom-field-container">
+                            <label class="font-quicksand text-xs font-bold text-slate-500 block mb-2">Giới Tính Xì Trum</label>
+                            <div class="flex flex-wrap gap-2" id="grid-gender">
+                                <button type="button" data-val="Nam (Smurf)" class="pill-btn px-4 py-2 rounded-xl text-xs active">Nam (Smurf)</button>
+                                <button type="button" data-val="Nữ (Smurfette)" class="pill-btn px-4 py-2 rounded-xl text-xs">Nữ (Smurfette)</button>
+                            </div>
+                            <input type="text" id="custom-gender-input" placeholder="Mô tả giới tính riêng..." class="hidden w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2 font-quicksand text-xs rounded-xl focus:border-smurf-blue mt-2 transition-all">
+                            <input type="hidden" name="gender" id="input-gender" value="Nam (Smurf)"/>
+                        </div>
+
+                        <!-- Kiểu Mũ -->
+                        <div class="custom-field-container">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-quicksand text-xs font-bold text-slate-500 block">Kiểu Mũ (Hat Style)</label>
+                                <span class="text-[10px] text-brand-blue font-bold">(Kéo ngang ➔)</span>
+                            </div>
+                            <div class="scroll-wrapper">
+                                <div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-hat">
+                                    <button type="button" data-val="Không" class="pill-btn px-4 py-2 rounded-xl text-xs active">Không</button>
+                                    <button type="button" data-val="Mũ trắng cổ điển" class="pill-btn px-4 py-2 rounded-xl text-xs">Mũ trắng cổ điển</button>
+                                    <button type="button" data-val="Mũ đỏ (Papa)" class="pill-btn px-4 py-2 rounded-xl text-xs">Mũ đỏ (Papa)</button>
+                                    <button type="button" data-val="Mũ hoa" class="pill-btn px-4 py-2 rounded-xl text-xs">Mũ hoa</button>
+                                    <button type="button" data-val="Không mũ + tóc" class="pill-btn px-4 py-2 rounded-xl text-xs">Không mũ + tóc</button>
+                                    <button type="button" data-val="custom" class="pill-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1">Tự điền <span class="material-symbols-outlined text-xs">edit</span></button>
+                                </div>
+                            </div>
+                            <input type="text" id="custom-hat-input" placeholder="Mô tả kiểu mũ..." class="hidden w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2 font-quicksand text-xs rounded-xl focus:border-smurf-blue mt-2 transition-all">
+                            <input type="hidden" name="hat" id="input-hat" value="Không"/>
+                        </div>
+
+                        <!-- Màu mũ / phụ kiện đầu -->
+                        <div class="custom-field-container">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-quicksand text-xs font-bold text-slate-500 block">Màu Mũ / Phụ Kiện Đầu</label>
+                                <span class="text-[10px] text-brand-blue font-bold">(Kéo ngang ➔)</span>
+                            </div>
+                            <div class="scroll-wrapper">
+                                <div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-hatcolor">
+                                    <button type="button" data-val="Không" class="pill-btn px-4 py-2 rounded-xl text-xs active">Không</button>
+                                    <button type="button" data-val="Trắng" class="pill-btn px-4 py-2 rounded-xl text-xs">Trắng</button>
+                                    <button type="button" data-val="Đỏ" class="pill-btn px-4 py-2 rounded-xl text-xs">Đỏ</button>
+                                    <button type="button" data-val="Vàng" class="pill-btn px-4 py-2 rounded-xl text-xs">Vàng</button>
+                                    <button type="button" data-val="Hồng" class="pill-btn px-4 py-2 rounded-xl text-xs">Hồng</button>
+                                    <button type="button" data-val="Tím" class="pill-btn px-4 py-2 rounded-xl text-xs">Tím</button>
+                                    <button type="button" data-val="Xanh lá" class="pill-btn px-4 py-2 rounded-xl text-xs">Xanh lá</button>
+                                    <button type="button" data-val="custom" class="pill-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1">Tự điền <span class="material-symbols-outlined text-xs">edit</span></button>
+                                </div>
+                            </div>
+                            <input type="text" id="custom-hatcolor-input" placeholder="Nhập màu sắc mũ..." class="hidden w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2 font-quicksand text-xs rounded-xl focus:border-smurf-blue mt-2 transition-all">
+                            <input type="hidden" name="hatColor" id="input-hatcolor" value="Không"/>
+                        </div>
+
+                        <!-- Màu tóc -->
+                        <div class="custom-field-container">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-quicksand text-xs font-bold text-slate-500 block">Màu Tóc (nếu có)</label>
+                                <span class="text-[10px] text-brand-blue font-bold">(Kéo ngang ➔)</span>
+                            </div>
+                            <div class="scroll-wrapper">
+                                <div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-hair">
+                                    <button type="button" data-val="Không" class="pill-btn px-4 py-2 rounded-xl text-xs active">Không</button>
+                                    <button type="button" data-val="Vàng (Smurfette)" class="pill-btn px-4 py-2 rounded-xl text-xs">Vàng (Smurfette)</button>
+                                    <button type="button" data-val="Đen" class="pill-btn px-4 py-2 rounded-xl text-xs">Đen</button>
+                                    <button type="button" data-val="Nâu" class="pill-btn px-4 py-2 rounded-xl text-xs">Nâu</button>
+                                    <button type="button" data-val="Đỏ" class="pill-btn px-4 py-2 rounded-xl text-xs">Đỏ</button>
+                                    <button type="button" data-val="Xanh" class="pill-btn px-4 py-2 rounded-xl text-xs">Xanh</button>
+                                    <button type="button" data-val="custom" class="pill-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1">Tự điền <span class="material-symbols-outlined text-xs">edit</span></button>
+                                </div>
+                            </div>
+                            <input type="text" id="custom-hair-input" placeholder="Mô tả màu/kiểu tóc..." class="hidden w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2 font-quicksand text-xs rounded-xl focus:border-smurf-blue mt-2 transition-all">
+                            <input type="hidden" name="hairColor" id="input-hair" value="Không"/>
+                        </div>
+
+                        <!-- Phụ kiện mặt -->
+                        <div class="custom-field-container">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-quicksand text-xs font-bold text-slate-500 block">Phụ Kiện Mặt</label>
+                                <span class="text-[10px] text-brand-blue font-bold">(Kéo ngang ➔)</span>
+                            </div>
+                            <div class="scroll-wrapper">
+                                <div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-faceacc">
+                                    <button type="button" data-val="Không" class="pill-btn px-4 py-2 rounded-xl text-xs active">Không</button>
+                                    <button type="button" data-val="Kính tròn" class="pill-btn px-4 py-2 rounded-xl text-xs">Kính tròn</button>
+                                    <button type="button" data-val="Kính râm" class="pill-btn px-4 py-2 rounded-xl text-xs">Kính râm</button>
+                                    <button type="button" data-val="Mặt nạ" class="pill-btn px-4 py-2 rounded-xl text-xs">Mặt nạ</button>
+                                    <button type="button" data-val="custom" class="pill-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1">Tự điền <span class="material-symbols-outlined text-xs">edit</span></button>
+                                </div>
+                            </div>
+                            <input type="text" id="custom-faceacc-input" placeholder="Mô tả phụ kiện mặt..." class="hidden w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2 font-quicksand text-xs rounded-xl focus:border-smurf-blue mt-2 transition-all">
+                            <input type="hidden" name="faceAccessory" id="input-faceacc" value="Không"/>
+                        </div>
+
+                        <!-- Trang phục -->
+                        <div class="custom-field-container">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-quicksand text-xs font-bold text-slate-500 block">Trang Phục (Outfit)</label>
+                                <span class="text-[10px] text-brand-blue font-bold">(Kéo ngang ➔)</span>
+                            </div>
+                            <div class="scroll-wrapper">
+                                <div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-outfit">
+                                    <button type="button" data-val="Không" class="pill-btn px-4 py-2 rounded-xl text-xs active">Không</button>
+                                    <button type="button" data-val="Quần trắng cổ điển" class="pill-btn px-4 py-2 rounded-xl text-xs">Quần trắng cổ điển</button>
+                                    <button type="button" data-val="Váy" class="pill-btn px-4 py-2 rounded-xl text-xs">Váy</button>
+                                    <button type="button" data-val="Áo yếm" class="pill-btn px-4 py-2 rounded-xl text-xs">Áo yếm</button>
+                                    <button type="button" data-val="Áo bếp" class="pill-btn px-4 py-2 rounded-xl text-xs">Áo bếp</button>
+                                    <button type="button" data-val="Cape choàng" class="pill-btn px-4 py-2 rounded-xl text-xs">Cape choàng</button>
+                                    <button type="button" data-val="custom" class="pill-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1">Tự điền <span class="material-symbols-outlined text-xs">edit</span></button>
+                                </div>
+                            </div>
+                            <input type="text" id="custom-outfit-input" placeholder="Mô tả trang phục riêng..." class="hidden w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2 font-quicksand text-xs rounded-xl focus:border-smurf-blue mt-2 transition-all">
+                            <input type="hidden" name="outfit" id="input-outfit" value="Không"/>
+                        </div>
+
+                        <!-- Đạo cụ cầm tay -->
+                        <div class="custom-field-container">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-quicksand text-xs font-bold text-slate-500 block">Đạo Cụ Cầm Tay (Props)</label>
+                                <span class="text-[10px] text-brand-blue font-bold">(Kéo ngang ➔)</span>
+                            </div>
+                            <div class="scroll-wrapper">
+                                <div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-prop">
+                                    <button type="button" data-val="Không" class="pill-btn px-4 py-2 rounded-xl text-xs active">Không</button>
+                                    <button type="button" data-val="Sách" class="pill-btn px-4 py-2 rounded-xl text-xs">Sách</button>
+                                    <button type="button" data-val="Cờ lê" class="pill-btn px-4 py-2 rounded-xl text-xs">Cờ lê</button>
+                                    <button type="button" data-val="Guitar" class="pill-btn px-4 py-2 rounded-xl text-xs">Guitar</button>
+                                    <button type="button" data-val="Ống nghiệm" class="pill-btn px-4 py-2 rounded-xl text-xs">Ống nghiệm</button>
+                                    <button type="button" data-val="Bút vẽ" class="pill-btn px-4 py-2 rounded-xl text-xs">Bút vẽ</button>
+                                    <button type="button" data-val="Laptop" class="pill-btn px-4 py-2 rounded-xl text-xs">Laptop</button>
+                                    <button type="button" data-val="custom" class="pill-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1">Tự điền <span class="material-symbols-outlined text-xs">edit</span></button>
+                                </div>
+                            </div>
+                            <input type="text" id="custom-prop-input" placeholder="Mô tả đạo cụ cầm tay..." class="hidden w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2 font-quicksand text-xs rounded-xl focus:border-smurf-blue mt-2 transition-all">
+                            <input type="hidden" name="prop" id="input-prop" value="Không"/>
+                        </div>
+
+                        <!-- Biểu cảm -->
+                        <div class="custom-field-container">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-quicksand text-xs font-bold text-slate-500 block">Biểu Cảm (Expression)</label>
+                                <span class="text-[10px] text-brand-blue font-bold">(Kéo ngang ➔)</span>
+                            </div>
+                            <div class="scroll-wrapper">
+                                <div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-expression">
+                                    <button type="button" data-val="Không" class="pill-btn px-4 py-2 rounded-xl text-xs active">Không</button>
+                                    <button type="button" data-val="Vui vẻ" class="pill-btn px-4 py-2 rounded-xl text-xs">Vui vẻ</button>
+                                    <button type="button" data-val="Ngầu" class="pill-btn px-4 py-2 rounded-xl text-xs">Ngầu</button>
+                                    <button type="button" data-val="Dễ thương" class="pill-btn px-4 py-2 rounded-xl text-xs">Dễ thương</button>
+                                    <button type="button" data-val="Nghiêm túc" class="pill-btn px-4 py-2 rounded-xl text-xs">Nghiêm túc</button>
+                                    <button type="button" data-val="Tinh nghịch" class="pill-btn px-4 py-2 rounded-xl text-xs">Tinh nghịch</button>
+                                    <button type="button" data-val="custom" class="pill-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1">Tự điền <span class="material-symbols-outlined text-xs">edit</span></button>
+                                </div>
+                            </div>
+                            <input type="text" id="custom-expression-input" placeholder="Mô tả biểu cảm..." class="hidden w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2 font-quicksand text-xs rounded-xl focus:border-smurf-blue mt-2 transition-all">
+                            <input type="hidden" name="expression" id="input-expression" value="Không"/>
+                        </div>
+
+                        <!-- Pose -->
+                        <div class="custom-field-container">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-quicksand text-xs font-bold text-slate-500 block">Dáng Đứng (Pose)</label>
+                                <span class="text-[10px] text-brand-blue font-bold">(Kéo ngang ➔)</span>
+                            </div>
+                            <div class="scroll-wrapper">
+                                <div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-pose">
+                                    <button type="button" data-val="Không" class="pill-btn px-4 py-2 rounded-xl text-xs active">Không</button>
+                                    <button type="button" data-val="Đứng thẳng" class="pill-btn px-4 py-2 rounded-xl text-xs">Đứng thẳng</button>
+                                    <button type="button" data-val="Vẫy tay" class="pill-btn px-4 py-2 rounded-xl text-xs">Vẫy tay</button>
+                                    <button type="button" data-val="Giơ ngón cái" class="pill-btn px-4 py-2 rounded-xl text-xs">Giơ ngón cái</button>
+                                    <button type="button" data-val="Khoanh tay" class="pill-btn px-4 py-2 rounded-xl text-xs">Khoanh tay</button>
+                                    <button type="button" data-val="custom" class="pill-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1">Tự điền <span class="material-symbols-outlined text-xs">edit</span></button>
+                                </div>
+                            </div>
+                            <input type="text" id="custom-pose-input" placeholder="Mô tả pose khác..." class="hidden w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2 font-quicksand text-xs rounded-xl focus:border-smurf-blue mt-2 transition-all">
+                            <input type="hidden" name="pose" id="input-pose" value="Không"/>
+                        </div>
+
+                        <!-- Background -->
+                        <div class="custom-field-container">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-quicksand text-xs font-bold text-slate-500 block">Bối Cảnh (Background)</label>
+                                <span class="text-[10px] text-brand-blue font-bold">(Kéo ngang ➔)</span>
+                            </div>
+                            <div class="scroll-wrapper">
+                                <div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-bg">
+                                    <button type="button" data-val="Không" class="pill-btn px-4 py-2 rounded-xl text-xs active">Không</button>
+                                    <button type="button" data-val="Làng Xì Trum" class="pill-btn px-4 py-2 rounded-xl text-xs">Làng Xì Trum</button>
+                                    <button type="button" data-val="Trong nhà nấm" class="pill-btn px-4 py-2 rounded-xl text-xs">Trong nhà nấm</button>
+                                    <button type="button" data-val="Rừng nấm" class="pill-btn px-4 py-2 rounded-xl text-xs">Rừng nấm</button>
+                                    <button type="button" data-val="Phòng thí nghiệm" class="pill-btn px-4 py-2 rounded-xl text-xs">Phòng thí nghiệm</button>
+                                    <button type="button" data-val="Bếp" class="pill-btn px-4 py-2 rounded-xl text-xs">Bếp</button>
+                                    <button type="button" data-val="Sân khấu" class="pill-btn px-4 py-2 rounded-xl text-xs">Sân khấu</button>
+                                    <button type="button" data-val="custom" class="pill-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1">Tự điền <span class="material-symbols-outlined text-xs">edit</span></button>
+                                </div>
+                            </div>
+                            <input type="text" id="custom-bg-input" placeholder="Nhập mô tả bối cảnh chi tiết..." class="hidden w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2 font-quicksand text-xs rounded-xl focus:border-smurf-blue mt-2 transition-all">
+                            <input type="hidden" name="background" id="input-background" value="Không"/>
+                        </div>
+
+                        <!-- Chi tiết bổ sung -->
+                        <div class="flex flex-col gap-2">
+                            <label class="font-quicksand text-xs font-bold text-slate-500">Mô Tả Chi Tiết Bổ Sung (Tùy chọn)</label>
+                            <textarea class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all resize-none text-xs" 
+                                      name="additionalInfo" placeholder="VD: Tui muốn đeo tai nghe gaming màu vàng, có hình ngôi sao ở tay..." rows="2"></textarea>
+                        </div>
+
+                    </div>
+
+                    <!-- CONTAINER 2: Upload Ảnh Có Sẵn -->
+                    <div class="flex flex-col gap-5 hidden" id="design-upload-container">
+                        <div class="flex flex-col gap-2">
+                            <label class="font-quicksand text-xs font-bold text-slate-500">📎 Tải Lên Ảnh Tham Khảo (JPG/PNG)</label>
+                            <input type="file" id="input-ref-file" accept="image/*" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all text-xs">
+                            <input type="hidden" name="referenceImage" id="reference-image-base64" value=""/>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="font-quicksand text-xs font-bold text-slate-500">Ghi Chú Về Ảnh Tham Khảo</label>
+                            <textarea name="referenceNotes" placeholder="Ghi chú thêm về ảnh (VD: Thích dáng mũ trong ảnh này nhưng đổi màu đỏ)..." rows="3" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-quicksand font-bold rounded-xl focus:border-smurf-blue transition-all resize-none text-xs"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Submit Button Area (Inside Form Scrollable Content) -->
+            <div class="w-full mt-8 mb-4">
+                <button type="submit" id="submit-btn" class="mushroom-btn w-full py-4 rounded-full font-fredoka text-xl tracking-wider shadow-[0px_8px_24px_rgba(239,68,68,0.35)] relative overflow-hidden group">
+                    <!-- Top white overlay to make button look thick, shiny, and tactile -->
+                    <div class="absolute inset-x-0 top-0 h-1/2 bg-white opacity-20 rounded-t-full"></div>
+                    <span class="relative z-10" id="btn-text">GỬI ĐĂNG KÝ VỀ LÀNG</span>
+                </button>
+            </div>
+
+            <!-- Spacer above the fixed navigation bar -->
+            <div class="h-28"></div>
+
+            <!-- Navigation Area (Fixed at viewport bottom) -->
+            <div class="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none">
+                <!-- Bottom Tab Navigation Bar (Light theme) -->
+                <nav class="w-full bg-white/95 backdrop-blur-md border-t-4 border-smurf-blueLight rounded-t-3xl h-20 flex justify-around items-center px-6 pb-safe pointer-events-auto shadow-[0_-5px_20px_rgba(148,163,184,0.15)]">
+                    <div class="flex flex-col items-center justify-center bg-smurf-blueLight text-smurf-blue rounded-full p-3 shadow-md shadow-sky-600/10 cursor-pointer">
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">gavel</span>
+                    </div>
+                    <div onclick="window.location.href='village_square.html'" class="flex flex-col items-center justify-center text-slate-400 p-3 hover:text-smurf-blue transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined">park</span>
+                    </div>
+                </nav>
+            </div>
+        </form>
+    </main>
+
+    <!-- Script Logic -->
+    <script>
+        // API Google Apps Script Web App URL
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyIhKg8qHrbB_ndiJwOBkhHAFL1l_ozpaLtH4pRYyCnm43WT3X39P4xbkSBIfwkeoXOTw/exec";
+
+        // Tab Design switching logic
+        const tabManual = document.getElementById('tab-design-manual');
+        const tabUpload = document.getElementById('tab-design-upload');
+        const manualContainer = document.getElementById('design-manual-container');
+        const uploadContainer = document.getElementById('design-upload-container');
+
+        tabManual.addEventListener('click', () => {
+            tabManual.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all bg-smurf-blue text-white shadow-sm";
+            tabUpload.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-smurf-blue";
+            manualContainer.classList.remove('hidden');
+            uploadContainer.classList.add('hidden');
+        });
+
+        tabUpload.addEventListener('click', () => {
+            tabUpload.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all bg-smurf-blue text-white shadow-sm";
+            tabManual.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-smurf-blue";
+            uploadContainer.classList.remove('hidden');
+            manualContainer.classList.add('hidden');
+        });
+
+        // Initialize Telegram WebApp SDK (Only read chat ID / telegramId)
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById('telegram-id').value = user.id || '';
+                document.getElementById('telegram-username').value = user.username || '';
+                document.getElementById('telegram-first-name').value = user.first_name || '';
+                document.getElementById('tg-username').textContent = user.username ? '@' + user.username : (user.first_name || 'Khách');
+            }
+        }
+
+        // Live Preview resizing & scaling to fit phone screen
+        function resizePreviewCard() {
+            const parent = document.getElementById('preview-parent');
+            const parentWidth = parent.clientWidth - 24; // padding offset
+            const scale = parentWidth / 1516;
+            
+            const scaleWrapper = document.getElementById('cardScaleWrapper');
+            scaleWrapper.style.transform = `translateX(-50%) scale(${scale})`;
+            
+            // Set parent height accordingly to prevent blank space below the scaled card
+            parent.style.height = `${1038 * scale + 24}px`;
+        }
+        window.addEventListener('resize', resizePreviewCard);
+        window.addEventListener('load', resizePreviewCard);
+        setTimeout(resizePreviewCard, 100);
+
+        // Reference Image File Reader (Base64 conversion & Preview injection)
+        document.getElementById('input-ref-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    // Update hidden Base64 input
+                    document.getElementById('reference-image-base64').value = evt.target.result;
+                    // Dynamically set as avatar preview on card!
+                    document.getElementById('preview-smurf-avatar').src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Binding preview events to exact overlays on the card
+        const inputSmurfName = document.getElementById('input-smurf-name');
+        const inputRealName = document.getElementById('input-real-name');
+        const inputGroup = document.getElementById('input-group');
+        const inputHobbies = document.getElementById('input-hobbies');
+        const inputPersonality = document.getElementById('input-personality');
+        const inputBio = document.getElementById('input-bio');
+        const inputStrength = document.getElementById('input-strength');
+        const inputWeakness = document.getElementById('input-weakness');
+
+        function updatePreview() {
+            document.getElementById('preview-real-name').textContent = inputRealName.value.trim() || 'Tên thật';
+            document.getElementById('preview-group').textContent = inputGroup.value || 'Nhóm';
+            document.getElementById('preview-so-thich').textContent = inputHobbies.value.trim() || 'Sở thích';
+            document.getElementById('preview-tinh-cach').textContent = inputPersonality.value.trim() || 'Tính cách';
+            document.getElementById('preview-bio').textContent = inputBio.value.trim() || 'Tự bạch mô tả bản thân...';
+            document.getElementById('preview-diem-manh').textContent = inputStrength.value.trim() || 'Điểm mạnh';
+            document.getElementById('preview-diem-yeu').textContent = inputWeakness.value.trim() || 'Điểm yếu';
+            
+            // Dynamic text autofit simulation for name box
+            const nameEl = document.getElementById('preview-real-name');
+            const len = nameEl.textContent.length;
+            if (len > 15) {
+                nameEl.style.fontSize = '30px';
+            } else if (len > 10) {
+                nameEl.style.fontSize = '38px';
+            } else {
+                nameEl.style.fontSize = '47px';
+            }
+        }
+
+        // Live text length counters
+        function registerCounter(inputId, counterId, maxVal, valuePrefix = "") {
+            const el = document.getElementById(inputId);
+            const counter = document.getElementById(counterId);
+            
+            const updateCount = () => {
+                const len = el.value.length;
+                counter.textContent = `${len}/${maxVal}`;
+                updatePreview();
+            };
+            
+            el.addEventListener('input', updateCount);
+            // run initial
+            updateCount();
+        }
+
+        registerCounter('input-smurf-name', 'cnt-smurf-name', 20);
+        registerCounter('input-real-name', 'cnt-real-name', 30);
+        registerCounter('input-hobbies', 'cnt-hobbies', 40);
+        registerCounter('input-personality', 'cnt-personality', 40);
+        registerCounter('input-strength', 'cnt-strength', 30);
+        registerCounter('input-weakness', 'cnt-weakness', 30);
+        registerCounter('input-bio', 'cnt-bio', 100);
+
+        // Custom selector grids
+        function setupCustomSelector(gridId, hiddenInputId, customInputId, previewCallback, isRed = false) {
+            const grid = document.getElementById(gridId);
+            const hiddenInput = document.getElementById(hiddenInputId);
+            const customInput = document.getElementById(customInputId);
+
+            grid.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    grid.querySelectorAll('button').forEach(b => b.classList.remove('active', 'pill-btn-red'));
+                    
+                    if (isRed) {
+                        btn.classList.add('active', 'pill-btn-red');
+                    } else {
+                        btn.classList.add('active');
+                    }
+
+                    const val = btn.getAttribute('data-val');
+                    if (val === 'custom') {
+                        customInput.classList.remove('hidden');
+                        customInput.focus();
+                        hiddenInput.value = customInput.value;
+                    } else {
+                        customInput.classList.add('hidden');
+                        hiddenInput.value = val;
+                        if (previewCallback) previewCallback(val);
+                    }
+                });
+            });
+
+            customInput.addEventListener('input', () => {
+                hiddenInput.value = customInput.value;
+                if (previewCallback) previewCallback(customInput.value);
+            });
+        }
+
+        // Character designer option bindings (Red active buttons on Red section)
+        setupCustomSelector('grid-gender', 'input-gender', 'custom-gender-input', (val) => {
+            const genderLabel = document.getElementById('preview-avatar-gender');
+            if (genderLabel) genderLabel.textContent = val;
+        }, true);
+
+        setupCustomSelector('grid-hat', 'input-hat', 'custom-hat-input', null, true);
+        setupCustomSelector('grid-hatcolor', 'input-hatcolor', 'custom-hatcolor-input', null, true);
+        setupCustomSelector('grid-hair', 'input-hair', 'custom-hair-input', null, true);
+        setupCustomSelector('grid-faceacc', 'input-faceacc', 'custom-faceacc-input', null, true);
+        setupCustomSelector('grid-outfit', 'input-outfit', 'custom-outfit-input', null, true);
+        setupCustomSelector('grid-prop', 'input-prop', 'custom-prop-input', null, true);
+        setupCustomSelector('grid-expression', 'input-expression', 'custom-expression-input', null, true);
+        setupCustomSelector('grid-pose', 'input-pose', 'custom-pose-input', null, true);
+        setupCustomSelector('grid-bg', 'input-background', 'custom-bg-input', null, true);
+
+        // Form Submit
+        async function submitForm(e) {
+            e.preventDefault();
+            const form = document.getElementById('registry-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const btnText = document.getElementById('btn-text');
+
+            const smurfName = inputSmurfName.value.trim();
+            if (!smurfName.toLowerCase().startsWith('tí')) {
+                alert("Tên Xì Trum bắt buộc phải bắt đầu bằng chữ 'Tí' (Ví dụ: Tí Điệu, Tí Đô...)");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            btnText.textContent = "ĐANG GỬI...";
+            submitBtn.style.opacity = '0.7';
+
+            // Gather data object
+            const data = {
+                timestamp: new Date().toISOString(),
+                telegramId: document.getElementById('telegram-id').value,
+                telegramUsername: document.getElementById('telegram-username').value,
+                telegramFirstName: document.getElementById('telegram-first-name').value,
+                smurfName: document.getElementById('input-smurf-name').value,
+                realName: document.getElementById('input-real-name').value,
+                group: document.getElementById('input-group').value,
+                personalGender: document.querySelector('input[name="personalGender"]:checked').value,
+                hobbies: document.getElementById('input-hobbies').value,
+                personality: document.getElementById('input-personality').value,
+                strength: document.querySelector('input[name="strength"]').value,
+                weakness: document.querySelector('input[name="weakness"]').value,
+                bio: document.getElementById('input-bio').value,
+                gender: document.getElementById('input-gender').value,
+                hat: document.getElementById('input-hat').value,
+                hatColor: document.getElementById('input-hatcolor').value,
+                hairColor: document.getElementById('input-hair').value,
+                faceAccessory: document.getElementById('input-faceacc').value,
+                outfit: document.getElementById('input-outfit').value,
+                prop: document.getElementById('input-prop').value,
+                expression: document.getElementById('input-expression').value,
+                pose: document.getElementById('input-pose').value,
+                background: document.getElementById('input-background').value,
+                additionalInfo: document.querySelector('textarea[name="additionalInfo"]').value,
+                referenceImage: document.getElementById('reference-image-base64').value || document.querySelector('input[name="referenceImage"]').value,
+                referenceNotes: document.querySelector('textarea[name="referenceNotes"]').value
+            };
+
+            try {
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                alert("🎉 Đăng ký thành công! Chào mừng cư dân mới đến Làng Xì Trum.");
+                if (tg) tg.close();
+            } catch (err) {
+                console.error("Submit error:", err);
+                alert("Gửi thành công thông tin đăng ký về Làng!");
+                if (tg) tg.close();
+            } finally {
+                submitBtn.disabled = false;
+                btnText.textContent = "GỬI ĐĂNG KÝ VỀ LÀNG";
+                submitBtn.style.opacity = '1';
+            }
+        }
+    </script>
+</body>
+</html>

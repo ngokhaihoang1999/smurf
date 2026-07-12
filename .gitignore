@@ -1,0 +1,29 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Clasp local config
+.clasprc.json
+.auth.clicksign
+
+# Temporary files
+output/
+temp/
+*.tmp
+the_cu_dan_*.png
+test_*.html
+smurf_canvas_player.html
+scene_editor.html
+cutout_tool.html
+bg_v4_*.png
+smurfette_*.png
+*.log

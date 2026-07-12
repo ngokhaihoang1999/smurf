@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<script>
+window.onerror = function(message, source, lineno, colno, error) {
+    const banner = document.getElementById('debugErrorBanner');
+    if (banner) {
+        banner.style.display = 'block';
+        banner.innerHTML = '⚠️ <b>Lỗi JS Trình Duyệt:</b> ' + message + ' (Dòng ' + lineno + ')';
+    } else {
+        alert('Lỗi JavaScript: ' + message + ' tại dòng ' + lineno);
+    }
+    return false;
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛠️ Trình Biên Tập Thẻ Cư Dân Làng Xì Trum</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: #1e293b;
+    color: #f1f5f9;
+    font-family: 'Quicksand', sans-serif;
+    min-height: 100vh;
+    display: flex;
+}
+
+/* ── LAYOUT CHÍNH: BÊN TRÁI PREVIEW, BÊN PHẢI CONTROL PANEL ── */
+.workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: auto;
+    background: radial-gradient(circle, #334155 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.workspace-header {
+    margin-bottom: 15px;
+    text-align: center;
+}
+.workspace-header h1 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 28px;
+    color: #38bdf8;
+}
+.workspace-header p {
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+/* Khung bọc card hỗ trợ transform scale */
+.card-scale-wrapper {
+    transform-origin: center center;
+    transition: transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+/* ── CARD HOLDER (Native 1516x1038) ── */
+.card-container {
+    width: 1516px;
+    height: 1038px;
+    position: relative;
+    user-select: none;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    border-radius: 40px;
+    overflow: hidden;
+    background: #000;
+}
+
+.card-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ── OVERLAYS (Absolute Positioning) ── */
+.overlay {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    cursor: move;
+    transition: box-shadow 0.2s;
+}
+
+/* Chế độ edit: hiển thị đường viền nhạt để nhận biết */
+.edit-mode .overlay {
+    outline: 1px dashed rgba(56, 189, 248, 0.4);
+    overflow: visible !important;
+}
+.edit-mode .overlay:hover {
+    outline: 2px dashed #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+}
+.edit-mode .overlay.selected-active {
+    outline: 3px solid #f59e0b !important;
+    background: rgba(245, 158, 11, 0.08);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+}
+
+/* Nút kéo giãn kích thước ở góc dưới bên phải */
+.resize-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: #f59e0b;
+    border: 2px solid #ffffff;
+    bottom: -10px;
+    right: -10px;
+    border-radius: 50%;
+    cursor: se-resize;
+    z-index: 999;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* 1. Avatar Overlay — nằm dưới frame cutout, z-index thấp */
+.overlay-avatar {
+    left: 80px;
+    top: 138px;
+    width: 589px;
+    height: 823px;
+    overflow: visible;
+    background: transparent;
+    display: block;
+    z-index: 1; /* Dưới frame overlay */
+}
+/* Container clip bên trong */
+.avatar-clip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #e8f4f8;
+}
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    pointer-events: none;
+}
+
+/* Frame overlay (cutout) — lớp trên cùng, z-index cao */
+.card-frame-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    object-fit: fill;
+    display: block;
+}
+
+/* 2. Real Name */
+.overlay-real-name {
+    left: 812px;
+    top: 147px;
+    width: 552px;
+    height: 112px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 40px;
+    z-index: 20;
+}
+.real-name-txt {
+    font-family: 'Baloo 2', cursive;
+    font-size: 47px;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: center;
+    width: 100%;
+}
+
+/* 3. Group Badge */
+.overlay-group {
+    left: 1130px;
+    top: 274px;
+    width: 194px;
+    height: 47px;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Baloo 2', cursive;
+    font-size: 34px;
+    font-weight: 800;
+    color: #0b4375;
+    text-align: center;
+    z-index: 20;
+}
+
+/* 4. 2x2 Info Chips */
+.overlay-chip-val {
+    font-size: 30px;
+    font-weight: 700;
+    color: #111111;
+    line-height: 1.35;
+    z-index: 20;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.chip-tinh-cach-val { left: 879px; top: 410px; width: 188px; height: 121px; }
+.chip-so-thich-val { left: 1236px; top: 411px; width: 185px; height: 122px; }
+.chip-diem-manh-val { left: 880px; top: 619px; width: 185px; height: 124px; }
+.chip-diem-yeu-val { left: 1225px; top: 622px; width: 200px; height: 125px; }
+
+/* 5. Speech Bubble Bio */
+.overlay-bio {
+    left: 738px;
+    top: 778px;
+    width: 696px;
+    height: 194px;
+    align-items: center;
+    padding-left: 65px;
+    padding-right: 40px;
+    z-index: 20;
+}
+.bio-txt {
+    font-size: 34px;
+    font-style: italic;
+    font-weight: 600;
+    color: #2b78bf;
+    line-height: 1.45;
+    text-align: center;
+    width: 100%;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+/* ── SIDE PANEL (Control Panel) ── */
+.panel {
+    width: 420px;
+    background: #0f172a;
+    border-left: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    box-shadow: -5px 0 25px rgba(0,0,0,0.3);
+}
+
+.panel-header {
+    padding: 24px;
+    border-bottom: 1px solid #1e293b;
+}
+.panel-header h2 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 22px;
+    color: #f8fafc;
+    margin-bottom: 6px;
+}
+.panel-header p {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.panel-tabs {
+    display: flex;
+    border-bottom: 1px solid #1e293b;
+    background: #090d16;
+}
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+.tab-btn.active {
+    color: #38bdf8;
+    background: #0f172a;
+    border-bottom: 2px solid #38bdf8;
+}
+
+.panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.section {
+    display: none;
+}
+.section.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-bottom: 8px;
+}
+.input-row {
+    display: flex;
+    gap: 12px;
+}
+.input-col {
+    flex: 1;
+}
+.input-col span {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 4px;
+    display: block;
+}
+
+input[type="text"], input[type="number"], select, textarea {
+    width: 100%;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #f1f5f9;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: #38bdf8;
+}
+
+.slider-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+input[type="range"] {
+    flex: 1;
+    accent-color: #38bdf8;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 14px;
+}
+.btn-primary {
+    background: #38bdf8;
+    color: #0f172a;
+}
+.btn-primary:hover {
+    background: #0ea5e9;
+}
+.btn-secondary {
+    background: #334155;
+    color: #f1f5f9;
+    margin-top: 10px;
+}
+.btn-secondary:hover {
+    background: #475569;
+}
+
+.css-box {
+    background: #090d16;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #38bdf8;
+    height: 220px;
+    resize: none;
+    width: 100%;
+}
+
+.keyboard-tips {
+    margin-top: 20px;
+    background: #1e293b;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+.panel-footer {
+    padding: 20px;
+    border-top: 1px solid #1e293b;
+    background: #090d16;
+}
+
+/* ── MINI GRID THÀNH VIÊN Ở DƯỚI ── */
+.mini-section {
+    width: 100%;
+    background: #111827;
+    border-top: 1px solid #1f2937;
+    padding: 15px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.mini-section h3 {
+    font-size: 15px;
+    color: #9ca3af;
+}
+
+/* ── Live Edit Form Styles ── */
+.field-group {
+    margin-bottom: 10px;
+}
+.field-group label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.field-group label .char-count {
+    font-size: 11px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: #1f2937;
+    transition: all 0.2s;
+}
+.field-group label .char-count.warn {
+    background: #78350f;
+    color: #fde68a;
+}
+.field-group label .char-count.danger {
+    background: #7f1d1d;
+    color: #fca5a5;
+}
+.field-input {
+    width: 100%;
+    background: #1f2937;
+    border: 1.5px solid #374151;
+    color: #f1f5f9;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Segoe UI', sans-serif;
+    resize: none;
+    transition: border-color 0.2s;
+    line-height: 1.4;
+}
+.field-input:focus {
+    outline: none;
+    border-color: #38bdf8;
+}
+.field-input.warn  { border-color: #f59e0b; }
+.field-input.danger { border-color: #ef4444; }
+.autofont-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #6ee7b7;
+    background: #064e3b;
+    padding: 2px 7px;
+    border-radius: 8px;
+    margin-top: 3px;
+}
+.section-divider {
+    border: none;
+    border-top: 1px solid #374151;
+    margin: 10px 0;
+}
+.font-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 5px;
+    padding: 6px 8px;
+    background: #0f172a;
+    border-radius: 6px;
+    border: 1px solid #1e293b;
+}
+.font-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.font-row-label {
+    font-size: 10px;
+    color: #94a3b8;
+    min-width: 52px;
+    white-space: nowrap;
+}
+.font-row input[type="range"] {
+    flex: 1;
+    accent-color: #38bdf8;
+    height: 14px;
+}
+.font-row .fs-val {
+    font-size: 12px;
+    font-weight: 700;
+    color: #38bdf8;
+    min-width: 32px;
+    text-align: right;
+}
+.font-row.max-row .fs-val { color: #4ade80; }
+.font-row.min-row .fs-val { color: #fb923c; }
+.font-row.max-row input[type="range"] { accent-color: #4ade80; }
+.font-row.min-row input[type="range"] { accent-color: #fb923c; }
+.fs-range-input { display: none; } /* hidden, values synced from sliders */
+.mini-grid {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+}
+.card-mini {
+    flex: 0 0 110px;
+    background: #1f2937;
+    border: 2px solid #374151;
+    border-radius: 12px;
+    padding: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+.card-mini:hover {
+    border-color: #38bdf8;
+    transform: translateY(-2px);
+}
+.card-mini.active {
+    border-color: #f59e0b;
+    background: #111827;
+}
+.card-mini img {
+    width: 70px;
+    height: 70px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+.card-mini div {
+    font-size: 11px;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-top: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>
+</head>
+<body class="edit-mode">
+<div id="debugErrorBanner" style="display:none; position:fixed; top:0; left:0; width:100%; background:#ef4444; color:#fff; padding:15px; z-index:999999; font-family:monospace; font-weight:bold; font-size:14px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);"></div>
+
+<div style="display: flex; flex-direction: column; flex: 1; height: 100vh;">
+    <!-- WORKSPACE CHỨA CARD -->
+    <div class="workspace">
+        <div class="workspace-header">
+            <h1>🏘️ Trình Điều Chỉnh Tọa Độ Thẻ Cư Dân</h1>
+            <p>Nhấp vào bất kỳ phần tử nào trên thẻ (Ảnh, Tên, Nhóm, 4 Ô đặc điểm, Bio) để di chuyển hoặc kéo thả kích thước</p>
+        </div>
+        
+        <div class="card-scale-wrapper" id="cardScaleWrapper" style="transform: scale(0.65);">
+            <!-- CANVAS CARD CHÍNH -->
+            <div class="card-container" id="cardContainer">
+
+                <!-- LỚP 1: Avatar (nằm dưới frame, z-index thấp) -->
+                <div class="overlay overlay-avatar" id="avatarBox" data-key="avatar">
+                    <div class="avatar-clip">
+                        <img id="smurfAvatar" src="avatars/smurf_avatar_coding_cropped_3_4.png" class="avatar-img" alt="Avatar">
+                    </div>
+                </div>
+
+                <!-- LỚP 2: Các text overlay (z-index trung bình) -->
+                <!-- 2. Real Name -->
+                <div class="overlay overlay-real-name" id="nameBox" data-key="realName">
+                    <div class="real-name-txt" id="realName" style="font-size: 38px;">Nguyễn Văn An</div>
+                </div>
+
+                <!-- 3. Group Badge -->
+                <div class="overlay overlay-group" id="groupBox" data-key="group">N1T2</div>
+
+                <!-- 4. Chips -->
+                <div class="overlay overlay-chip-val chip-tinh-cach-val" id="tinhCachBox" data-key="tinhCach">Hài hước, Năng động</div>
+                <div class="overlay overlay-chip-val chip-so-thich-val" id="soThichBox" data-key="soThich">Lập trình, Guitar</div>
+                <div class="overlay overlay-chip-val chip-diem-manh-val" id="diemManhBox" data-key="diemManh">Kiên nhẫn, Sáng tạo</div>
+                <div class="overlay overlay-chip-val chip-diem-yeu-val" id="diemYeuBox" data-key="diemYeu">Hay quên, Thức khuya</div>
+
+                <!-- 5. Bio -->
+                <div class="overlay overlay-bio" id="bioBox" data-key="bio">
+                    <div class="bio-txt" id="bioText" style="font-size: 24px;">Code và cà phê là nguồn sống của tui! Mọi bug đều có cách fix 🌙</div>
+                </div>
+
+                <!-- LỚP 3 (TOP): Phôi Canva đã cắt lỗ transparent — che phủ lên trên avatar -->
+                <!-- Fallback về card_bg.png nếu chưa có file cutout -->
+                <img id="cardFrameOverlay" src="card_bg_cutout.png"
+                     class="card-frame-overlay"
+                     alt="Card Frame"
+                     style="pointer-events: none;"
+                     onerror="this.src='card_bg.png'; this.style.opacity='1'">
+            </div>
+        </div>
+    </div>
+
+    <!-- HÀNG THÀNH VIÊN Ở DƯỚI -->
+    <div class="mini-section">
+        <h3>Chọn Nhân Vật Demo</h3>
+        <div class="mini-grid" id="miniGrid"></div>
+    </div>
+</div>
+
+<!-- PANEL ĐIỀU KHIỂN BÊN PHẢI -->
+<div class="panel">
+    <div class="panel-header">
+        <h2>Bộ Điều Chỉnh Thủ Công</h2>
+        <p>Chọn đối tượng để thiết kế pixel-perfect</p>
+    </div>
+
+    <div class="panel-tabs">
+        <button class="tab-btn active" onclick="switchTab('contentTab')">Nội Dung & Cỡ Chữ</button>
+        <button class="tab-btn" onclick="switchTab('layoutTab')">Tọa Độ & Kích Thước</button>
+        <button class="tab-btn" onclick="switchTab('batchTab')">📦 Ghép Hàng Loạt</button>
+    </div>
+
+    <div class="panel-content">
+        <!-- TAB 1: NHẬP LIỆU THỰC TẾ -->
+        <div class="section active" id="contentTab">
+
+            <!-- Tên thật -->
+            <div class="field-group">
+                <label>
+                    👤 Tên Thật
+                    <span class="char-count" id="cc_realName">0/40</span>
+                </label>
+                <input type="text" class="field-input" maxlength="40" onfocus="selectElementByKey('realName')" id="fi_realName"
+                    maxlength="40" placeholder="Nguyễn Thị Thanh Hương"
+                    oninput="liveUpdate('realName', this)">
+                <div class="font-controls">
+                    <div class="font-row" style="margin-bottom: 2px;">
+                        <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8; text-transform: none; font-weight: normal; cursor: pointer; width: 100%;">
+                            <input type="checkbox" id="auto_realName" checked onchange="toggleAutoFont('realName', this.checked)" style="accent-color: #38bdf8; width: 13px; height: 13px; margin: 0;">
+                            ⚡ Tự động co chữ khi gõ dài
+                        </label>
+                    </div>
+                    <div class="font-row">
+                        <span class="font-row-label">📏 Hiện tại</span>
+                        <input type="range" min="10" max="60" id="fs_realName" oninput="manualFontSize('realName', this.value)">
+                        <span class="fs-val" id="fv_realName">38px</span>
+                    </div>
+                    <div class="font-row max-row">
+                        <span class="font-row-label">🟢 Cỡ lớn</span>
+                        <input type="range" min="10" max="60" id="fmax_realName" value="38" oninput="updateFontRange('realName')">
+                        <span class="fs-val" id="fvmax_realName">38px</span>
+                    </div>
+                    <div class="font-row min-row">
+                        <span class="font-row-label">🟠 Cỡ nhỏ</span>
+                        <input type="range" min="10" max="60" id="fmin_realName" value="20" oninput="updateFontRange('realName')">
+                        <span class="fs-val" id="fvmin_realName">20px</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nhóm -->
+            <div class="field-group">
+                <label>
+                    🏷️ Nhóm
+                    <span class="char-count" id="cc_group">0/6</span>
+                </label>
+                <input type="text" class="field-input" maxlength="6" onfocus="selectElementByKey('group')" id="fi_group"
+                    maxlength="6" placeholder="N1T2"
+                    oninput="liveUpdate('group', this)">
+                <div class="font-controls">
+                    <div class="font-row" style="margin-bottom: 2px;">
+                        <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8; text-transform: none; font-weight: normal; cursor: pointer; width: 100%;">
+                            <input type="checkbox" id="auto_realName" checked onchange="toggleAutoFont('realName', this.checked)" style="accent-color: #38bdf8; width: 13px; height: 13px; margin: 0;">
+                            ⚡ Tự động co chữ khi gõ dài
+                        </label>
+                    </div>
+                    <div class="font-row">
+                        <span class="font-row-label">📏 Hiện tại</span>
+                        <input type="range" min="10" max="50" id="fs_group" oninput="manualFontSize('group', this.value)">
+                        <span class="fs-val" id="fv_group">28px</span>
+                    </div>
+                    <div class="font-row max-row">
+                        <span class="font-row-label">🟢 Cỡ lớn</span>
+                        <input type="range" min="10" max="50" id="fmax_group" value="28" oninput="updateFontRange('group')">
+                        <span class="fs-val" id="fvmax_group">28px</span>
+                    </div>
+                    <div class="font-row min-row">
+                        <span class="font-row-label">🟠 Cỡ nhỏ</span>
+                        <input type="range" min="10" max="50" id="fmin_group" value="18" oninput="updateFontRange('group')">
+                        <span class="fs-val" id="fvmin_group">18px</span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Tính cách -->
+            <div class="field-group">
+                <label>
+                    💛 Tính Cách
+                    <span class="char-count" id="cc_tinhCach">0/50</span>
+                </label>
+                <input type="text" class="field-input" maxlength="50" onfocus="selectElementByKey('tinhCach')" id="fi_tinhCach"
+                    maxlength="40" placeholder="Hài hước, Năng động"
+                    oninput="liveUpdate('tinhCach', this)">
+                <div class="font-controls">
+                    <div class="font-row" style="margin-bottom: 2px;">
+                        <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8; text-transform: none; font-weight: normal; cursor: pointer; width: 100%;">
+                            <input type="checkbox" id="auto_realName" checked onchange="toggleAutoFont('realName', this.checked)" style="accent-color: #38bdf8; width: 13px; height: 13px; margin: 0;">
+                            ⚡ Tự động co chữ khi gõ dài
+                        </label>
+                    </div>
+                    <div class="font-row">
+                        <span class="font-row-label">📏 Hiện tại</span>
+                        <input type="range" min="8" max="40" id="fs_tinhCach" oninput="manualFontSize('tinhCach', this.value)">
+                        <span class="fs-val" id="fv_tinhCach">21px</span>
+                    </div>
+                    <div class="font-row max-row">
+                        <span class="font-row-label">🟢 Cỡ lớn</span>
+                        <input type="range" min="8" max="40" id="fmax_tinhCach" value="21" oninput="updateFontRange('tinhCach')">
+                        <span class="fs-val" id="fvmax_tinhCach">21px</span>
+                    </div>
+                    <div class="font-row min-row">
+                        <span class="font-row-label">🟠 Cỡ nhỏ</span>
+                        <input type="range" min="8" max="40" id="fmin_tinhCach" value="13" oninput="updateFontRange('tinhCach')">
+                        <span class="fs-val" id="fvmin_tinhCach">13px</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sở thích -->
+            <div class="field-group">
+                <label>
+                    💚 Sở Thích
+                    <span class="char-count" id="cc_soThich">0/50</span>
+                </label>
+                <input type="text" class="field-input" maxlength="50" onfocus="selectElementByKey('soThich')" id="fi_soThich"
+                    maxlength="40" placeholder="Lập trình, Guitar"
+                    oninput="liveUpdate('soThich', this)">
+                <div class="font-controls">
+                    <div class="font-row" style="margin-bottom: 2px;">
+                        <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8; text-transform: none; font-weight: normal; cursor: pointer; width: 100%;">
+                            <input type="checkbox" id="auto_realName" checked onchange="toggleAutoFont('realName', this.checked)" style="accent-color: #38bdf8; width: 13px; height: 13px; margin: 0;">
+                            ⚡ Tự động co chữ khi gõ dài
+                        </label>
+                    </div>
+                    <div class="font-row">
+                        <span class="font-row-label">📏 Hiện tại</span>
+                        <input type="range" min="8" max="40" id="fs_soThich" oninput="manualFontSize('soThich', this.value)">
+                        <span class="fs-val" id="fv_soThich">21px</span>
+                    </div>
+                    <div class="font-row max-row">
+                        <span class="font-row-label">🟢 Cỡ lớn</span>
+                        <input type="range" min="8" max="40" id="fmax_soThich" value="21" oninput="updateFontRange('soThich')">
+                        <span class="fs-val" id="fvmax_soThich">21px</span>
+                    </div>
+                    <div class="font-row min-row">
+                        <span class="font-row-label">🟠 Cỡ nhỏ</span>
+                        <input type="range" min="8" max="40" id="fmin_soThich" value="13" oninput="updateFontRange('soThich')">
+                        <span class="fs-val" id="fvmin_soThich">13px</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Điểm mạnh -->
+            <div class="field-group">
+                <label>
+                    💪 Điểm Mạnh
+                    <span class="char-count" id="cc_diemManh">0/50</span>
+                </label>
+                <input type="text" class="field-input" maxlength="50" onfocus="selectElementByKey('diemManh')" id="fi_diemManh"
+                    maxlength="40" placeholder="Kiên nhẫn, Sáng tạo"
+                    oninput="liveUpdate('diemManh', this)">
+                <div class="font-controls">
+                    <div class="font-row" style="margin-bottom: 2px;">
+                        <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8; text-transform: none; font-weight: normal; cursor: pointer; width: 100%;">
+                            <input type="checkbox" id="auto_realName" checked onchange="toggleAutoFont('realName', this.checked)" style="accent-color: #38bdf8; width: 13px; height: 13px; margin: 0;">
+                            ⚡ Tự động co chữ khi gõ dài
+                        </label>
+                    </div>
+                    <div class="font-row">
+                        <span class="font-row-label">📏 Hiện tại</span>
+                        <input type="range" min="8" max="40" id="fs_diemManh" oninput="manualFontSize('diemManh', this.value)">
+                        <span class="fs-val" id="fv_diemManh">21px</span>
+                    </div>
+                    <div class="font-row max-row">
+                        <span class="font-row-label">🟢 Cỡ lớn</span>
+                        <input type="range" min="8" max="40" id="fmax_diemManh" value="21" oninput="updateFontRange('diemManh')">
+                        <span class="fs-val" id="fvmax_diemManh">21px</span>
+                    </div>
+                    <div class="font-row min-row">
+                        <span class="font-row-label">🟠 Cỡ nhỏ</span>
+                        <input type="range" min="8" max="40" id="fmin_diemManh" value="13" oninput="updateFontRange('diemManh')">
+                        <span class="fs-val" id="fvmin_diemManh">13px</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Điểm yếu -->
+            <div class="field-group">
+                <label>
+                    🌧️ Điểm Yếu
+                    <span class="char-count" id="cc_diemYeu">0/50</span>
+                </label>
+                <input type="text" class="field-input" maxlength="50" onfocus="selectElementByKey('diemYeu')" id="fi_diemYeu"
+                    maxlength="40" placeholder="Hay quên, Thức khuya"
+                    oninput="liveUpdate('diemYeu', this)">
+                <div class="font-controls">
+                    <div class="font-row" style="margin-bottom: 2px;">
+                        <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8; text-transform: none; font-weight: normal; cursor: pointer; width: 100%;">
+                            <input type="checkbox" id="auto_realName" checked onchange="toggleAutoFont('realName', this.checked)" style="accent-color: #38bdf8; width: 13px; height: 13px; margin: 0;">
+                            ⚡ Tự động co chữ khi gõ dài
+                        </label>
+                    </div>
+                    <div class="font-row">
+                        <span class="font-row-label">📏 Hiện tại</span>
+                        <input type="range" min="8" max="40" id="fs_diemYeu" oninput="manualFontSize('diemYeu', this.value)">
+                        <span class="fs-val" id="fv_diemYeu">21px</span>
+                    </div>
+                    <div class="font-row max-row">
+                        <span class="font-row-label">🟢 Cỡ lớn</span>
+                        <input type="range" min="8" max="40" id="fmax_diemYeu" value="21" oninput="updateFontRange('diemYeu')">
+                        <span class="fs-val" id="fvmax_diemYeu">21px</span>
+                    </div>
+                    <div class="font-row min-row">
+                        <span class="font-row-label">🟠 Cỡ nhỏ</span>
+                        <input type="range" min="8" max="40" id="fmin_diemYeu" value="13" oninput="updateFontRange('diemYeu')">
+                        <span class="fs-val" id="fvmin_diemYeu">13px</span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Bio -->
+            <div class="field-group">
+                <label>
+                    💬 Bio
+                    <span class="char-count" id="cc_bio">0/100</span>
+                </label>
+                <textarea class="field-input" maxlength="100" onfocus="selectElementByKey('bio')" id="fi_bio" rows="2"
+                    maxlength="80" placeholder="Code và cà phê là nguồn sống! 🌙"
+                    oninput="liveUpdate('bio', this)"></textarea>
+                <div class="font-controls">
+                    <div class="font-row" style="margin-bottom: 2px;">
+                        <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8; text-transform: none; font-weight: normal; cursor: pointer; width: 100%;">
+                            <input type="checkbox" id="auto_realName" checked onchange="toggleAutoFont('realName', this.checked)" style="accent-color: #38bdf8; width: 13px; height: 13px; margin: 0;">
+                            ⚡ Tự động co chữ khi gõ dài
+                        </label>
+                    </div>
+                    <div class="font-row">
+                        <span class="font-row-label">📏 Hiện tại</span>
+                        <input type="range" min="8" max="40" id="fs_bio" oninput="manualFontSize('bio', this.value)">
+                        <span class="fs-val" id="fv_bio">24px</span>
+                    </div>
+                    <div class="font-row max-row">
+                        <span class="font-row-label">🟢 Cỡ lớn</span>
+                        <input type="range" min="8" max="40" id="fmax_bio" value="24" oninput="updateFontRange('bio')">
+                        <span class="fs-val" id="fvmax_bio">24px</span>
+                    </div>
+                    <div class="font-row min-row">
+                        <span class="font-row-label">🟠 Cỡ nhỏ</span>
+                        <input type="range" min="8" max="40" id="fmin_bio" value="14" oninput="updateFontRange('bio')">
+                        <span class="fs-val" id="fvmin_bio">14px</span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Zoom card -->
+            <div class="form-group">
+                <label>🔍 Zoom Card</label>
+                <div class="slider-group">
+                    <input type="range" min="0.3" max="1" step="0.05" value="0.65" oninput="changeCardScale(this.value)">
+                    <span id="scaleVal">65%</span>
+                </div>
+            </div>
+
+
+
+            <div style="display:none!important;position:absolute;width:0;height:0;overflow:hidden">
+                <select id="elementSelector"><option value="avatar">avatar</option><option value="realName">realName</option><option value="group">group</option><option value="tinhCach">tinhCach</option><option value="soThich">soThich</option><option value="diemManh">diemManh</option><option value="diemYeu">diemYeu</option><option value="bio">bio</option></select>
+                <textarea id="textInput"></textarea>
+                <input type="range" id="fontSizeRange">
+                <input type="number" id="fontSizeNum">
+            </div>
+            <div class="keyboard-tips">
+                <strong>💡 Phím tắt:</strong><br>
+                • Click vào thẻ để chọn phần tử, dùng <strong>↑↓←→</strong> dịch chuyển 1px<br>
+                • <strong>Shift + Mũi tên</strong> → di chuyển 10px
+            </div>
+        </div>
+
+        <!-- TAB 2: TOẠ ĐỘ CHI TIẾT -->
+        <div class="section" id="layoutTab">
+            <div class="form-group">
+                <label>Vị trí X (Left) & Y (Top)</label>
+                <div class="input-row">
+                    <div class="input-col">
+                        <input type="number" id="posXInput" oninput="onCoordsInput()">
+                        <span>Left (X) px</span>
+                    </div>
+                    <div class="input-col">
+                        <input type="number" id="posYInput" oninput="onCoordsInput()">
+                        <span>Top (Y) px</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Chiều Rộng (Width) & Chiều Cao (Height)</label>
+                <div class="input-row">
+                    <div class="input-col">
+                        <input type="number" id="posWInput" oninput="onCoordsInput()">
+                        <span>Width px</span>
+                    </div>
+                    <div class="input-col">
+                        <input type="number" id="posHInput" oninput="onCoordsInput()">
+                        <span>Height px</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Mã CSS sinh ra (Copy đoạn này gửi lại cho AI)</label>
+                <textarea class="css-box" id="cssOutput" readonly onclick="this.select()"></textarea>
+            </div>
+        </div>
+
+        <!-- TAB 3: GHÉP HÀNG LOẠT -->
+        <div class="section" id="batchTab">
+            <div class="field-group">
+                <label>📋 Nạp File CSV Đăng Ký</label>
+                <input type="file" id="batchCsvInput" accept=".csv" class="field-input" style="padding: 6px; background: #0f172a; border: 1px solid #1e293b;">
+            </div>
+
+            <div class="field-group">
+                <label>🖼️ Nạp Thư Mục Ảnh Avatars</label>
+                <input type="file" id="batchAvatarFolder" webkitdirectory directory multiple class="field-input" style="padding: 6px; background: #0f172a; border: 1px solid #1e293b;">
+                <p style="font-size: 10px; color: #94a3b8; margin-top: 6px; line-height: 1.4;">Tải lên thư mục ảnh avatar đã được vẽ sẵn. Tên tệp ảnh (không dấu hoặc có dấu) cần chứa "Tên Xì Trum" (Ví dụ: <code>Tí_Điệu.png</code> hoặc <code>Tí Điệu.jpg</code>).</p>
+            </div>
+
+            <div class="field-group">
+                <label>📢 Trạng thái & Tiến trình</label>
+                <div id="batchStatusText" style="font-size: 13px; font-weight: bold; color: #f59e0b; margin-bottom: 6px;">Chưa khởi chạy</div>
+                <textarea id="batchLog" readonly placeholder="Tiến trình chạy sẽ hiển thị ở đây..." style="width: 100%; height: 160px; font-family: monospace; font-size: 11px; background: #020617; border: 1px solid #1e293b; color: #10b981; padding: 8px; border-radius: 6px; resize: none;"></textarea>
+            </div>
+
+            <button class="btn btn-primary" id="startBatchBtn" onclick="startBatchProcessing()" style="background: linear-gradient(135deg, #a855f7, #7e22ce); width: 100%; margin-top: 10px; font-weight: bold; padding: 12px; border-radius: 8px;">🚀 Bắt Đầu Ghép Hàng Loạt</button>
+        </div>
+    </div>
+
+    <div class="panel-footer">
+        <button class="btn btn-primary" onclick="saveAllChanges()" style="background: linear-gradient(135deg, #22c55e, #15803d);">💾 Lưu Thay Đổi</button>
+        <button class="btn btn-primary" onclick="captureCard()">📸 Chụp Ảnh Thẻ</button>
+        <button class="btn btn-primary" onclick="exportCoords()">📋 Sao Chép Tọa Độ</button>
+        <button class="btn btn-secondary" onclick="resetDefaultCoords()">🔄 Khôi Phục Mặc Định</button>
+    </div>
+</div>
+
+<script>
+/* ── Dữ liệu demo thành viên ── */
+const DATA = [
+    { smurfName:'Tí Coding',   realName:'Nguyễn Văn An',  group:'N1T2', tinhCach:'Hài hước, Năng động',    soThich:'Lập trình, Guitar',      diemManh:'Kiên nhẫn, Sáng tạo',      diemYeu:'Hay quên, Thức khuya',   bio:'Code và cà phê là nguồn sống! 🌙',       img:'avatars/smurf_avatar_coding_cropped_3_4.png' },
+    { smurfName:'Tí Mèo Mun',  realName:'Trần Thị Bích',  group:'N1T3', tinhCach:'Nhiệt tình, Thân thiện', soThich:'Vẽ tranh, Nuôi mèo',      diemManh:'Sáng tạo, Tỉ mỉ',         diemYeu:'Cầu toàn, Chậm quyết định', bio:'Mèo mun là boss, tôi chỉ là sen thôi! 🐈', img:'avatars/smurf_avatar_cat_cropped_3_4.png' },
+    { smurfName:'Tí Bác Sĩ',   realName:'Võ Quang Hùng',  group:'N1T5', tinhCach:'Điềm tĩnh, Cẩn thận',   soThich:'Đọc sách y khoa, Cờ vua', diemManh:'Chính xác, Tập trung cao', diemYeu:'Ít nói chuyện phiếm',    bio:'Mỗi bệnh nhân là một cuốn sách 📖',       img:'avatars/smurf_avatar_doctor_cropped_3_4.png' },
+];
+
+/* ── Tọa độ mặc định ban đầu ── */
+const DEFAULT_COORDS = {
+    avatar:   { left: 80, top: 138, width: 589, height: 823 },
+    realName: { left: 812, top: 147, width: 552, height: 112, fontSize: 47 },
+    group:    { left: 1130, top: 274, width: 194, height: 47, fontSize: 34 },
+    tinhCach: { left: 879, top: 410, width: 188, height: 121, fontSize: 30 },
+    soThich:  { left: 1236, top: 411, width: 185, height: 122, fontSize: 30 },
+    diemManh: { left: 880, top: 619, width: 185, height: 124, fontSize: 30 },
+    diemYeu:  { left: 1225, top: 622, width: 200, height: 125, fontSize: 30 },
+    bio:      { left: 738, top: 778, width: 696, height: 194, fontSize: 34 }
+};
+
+/* Khởi tạo từ localStorage nếu có, không thì lấy mặc định. Đồng thời merge để tránh mất thuộc tính */
+let savedCoords = {};
+try {
+    savedCoords = JSON.parse(localStorage.getItem('smurf_coords')) || {};
+} catch(e) {}
+
+let coords = {};
+for (const key in DEFAULT_COORDS) {
+    coords[key] = Object.assign({}, DEFAULT_COORDS[key], savedCoords[key] || {});
+}
+
+/* ── Ánh xạ từ khóa selector sang ID thẻ DOM thực tế ── */
+const elementMap = {
+    avatar:   { boxId: 'avatarBox' },
+    realName: { boxId: 'nameBox', textId: 'realName' },
+    group:    { boxId: 'groupBox' },
+    tinhCach: { boxId: 'tinhCachBox' },
+    soThich:  { boxId: 'soThichBox' },
+    diemManh: { boxId: 'diemManhBox' },
+    diemYeu:  { boxId: 'diemYeuBox' },
+    bio:      { boxId: 'bioBox', textId: 'bioText' }
+};
+
+let currentKey = 'avatar';
+let selectedElement = null;
+let cardScale = 0.65;
+let activeMember = DATA[0];
+
+/* ── THIẾT LẬP BAN ĐẦU ── */
+window.onload = () => {
+    applyAllCoords();
+    renderMiniGrid();
+    selectElementByKey('avatar');
+    updateCssOutput();
+    
+    // Populate live form với dữ liệu demo đầu tiên
+    populateLiveForm(DATA[0]);
+    
+    // Đăng ký các sự kiện kéo thả chuột
+    setupDragAndDrop();
+    
+    // Load nội dung đã lưu
+    if (typeof loadSavedContent === 'function') loadSavedContent();
+};
+
+/* Áp dụng tọa độ CSS lên toàn bộ thẻ */
+function applyAllCoords() {
+    for (const key in coords) {
+        const item = coords[key];
+        const dom = document.getElementById(elementMap[key].boxId);
+        if (!dom) continue;
+        
+        dom.style.left = item.left + 'px';
+        dom.style.top = item.top + 'px';
+        dom.style.width = item.width + 'px';
+        dom.style.height = item.height + 'px';
+        
+        if (item.fontSize) {
+            const textEl = elementMap[key].textId ? document.getElementById(elementMap[key].textId) : dom;
+            if (textEl) textEl.style.fontSize = item.fontSize + 'px';
+        }
+    }
+}
+
+/* Đổi TAB bên điều khiển */
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.panel-content .section').forEach(sec => sec.classList.remove('active'));
+    
+    event.currentTarget.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+/* Chọn phần tử thông qua menu Dropdown */
+function onSelectorChange() {
+    const key = document.getElementById('elementSelector').value;
+    selectElementByKey(key);
+}
+
+function selectElementByKey(key) {
+    currentKey = key;
+    const selector = document.getElementById('elementSelector');
+    if (selector) selector.value = key;
+    
+    // Gỡ bỏ viền highlight cũ
+    document.querySelectorAll('.overlay').forEach(el => el.classList.remove('selected-active'));
+    
+    const dom = document.getElementById(elementMap[key].boxId);
+    if (dom) {
+        dom.classList.add('selected-active');
+        selectedElement = dom;
+    }
+    
+    // Cập nhật giao diện điều khiển nội dung (null-safe)
+    const isText = key !== 'avatar';
+    const cig = document.getElementById('contentInputGroup');
+    const fsg = document.getElementById('fontSizeGroup');
+    if (cig) cig.style.display = isText ? 'block' : 'none';
+    if (fsg) fsg.style.display = isText ? 'block' : 'none';
+    
+    if (isText) {
+        const textEl = elementMap[key].textId ? document.getElementById(elementMap[key].textId) : dom;
+        if (textEl) {
+            const ti = document.getElementById('textInput');
+            if (ti) ti.value = textEl.textContent.trim();
+        }
+        const fSize = coords[key].fontSize || 20;
+        const fsr = document.getElementById('fontSizeRange');
+        const fsn = document.getElementById('fontSizeNum');
+        if (fsr) fsr.value = fSize;
+        if (fsn) fsn.value = fSize;
+    }
+    
+    // Cập nhật tab Tọa độ
+    const posX = document.getElementById('posXInput');
+    const posY = document.getElementById('posYInput');
+    const posW = document.getElementById('posWInput');
+    const posH = document.getElementById('posHInput');
+    if (posX) posX.value = coords[key].left;
+    if (posY) posY.value = coords[key].top;
+    if (posW) posW.value = coords[key].width;
+    if (posH) posH.value = coords[key].height;
+}
+
+/* ── XỬ LÝ SỰ KIỆN NHẬP LIỆU ── */
+
+// Giới hạn ký tự & màu sắc counter
+const FIELD_LIMITS = {
+    realName: 40, group: 6,
+    tinhCach: 50, soThich: 50, diemManh: 50, diemYeu: 50,
+    bio: 100
+};
+
+// Font-size ranges cho từng field (min, max, default)
+const FONT_RANGES = {
+    realName: { min: 20, max: 38, def: 38, auto: true },
+    group:    { min: 18, max: 28, def: 28, auto: true },
+    tinhCach: { min: 13, max: 21, def: 21, auto: true },
+    soThich:  { min: 13, max: 21, def: 21, auto: true },
+    diemManh: { min: 13, max: 21, def: 21, auto: true },
+    diemYeu:  { min: 13, max: 21, def: 21, auto: true },
+    bio:      { min: 14, max: 24, def: 24, auto: true },
+};
+
+// Thresholds để hiện warning
+const WARN_THRESHOLD = { realName: 25, group: 4, tinhCach: 35, soThich: 35, diemManh: 35, diemYeu: 35, bio: 70 };
+
+function liveUpdate(key, inputEl) {
+    const val = inputEl.value;
+    const limit = FIELD_LIMITS[key];
+    const len = val.length;
+    const cc = document.getElementById('cc_' + key);
+    if (cc) {
+        cc.textContent = len + '/' + limit;
+        cc.className = 'char-count';
+        if (len >= limit)           cc.classList.add('danger');
+        else if (len >= WARN_THRESHOLD[key]) cc.classList.add('warn');
+    }
+    inputEl.className = 'field-input';
+    if (len >= limit)           inputEl.classList.add('danger');
+    else if (len >= WARN_THRESHOLD[key]) inputEl.classList.add('warn');
+
+    // Cập nhật DOM thẻ
+    const dom = document.getElementById(elementMap[key].boxId);
+    const textEl = elementMap[key].textId ? document.getElementById(elementMap[key].textId) : dom;
+    if (textEl) {
+        textEl.textContent = val;
+        // Auto fit font size
+        autoFitFontSize(key, val, textEl);
+    }
+    // Đồng bộ textarea ẩn (null-safe)
+    const textInputEl = document.getElementById('textInput');
+    if (textInputEl) textInputEl.value = val;
+    // Đồng bộ activeMember
+    if (key === 'realName') activeMember.realName = val;
+    else if (key === 'group') activeMember.group = val;
+    else if (activeMember[key] !== undefined) activeMember[key] = val;
+    renderMiniGrid();
+}
+
+function autoFitFontSize(key, text, textEl) {
+    const range = FONT_RANGES[key];
+    if (!range || range.auto === false) return;
+    
+    const dom = document.getElementById(elementMap[key].boxId);
+    if (!textEl || !dom) return;
+    
+    const cleanText = text.trim();
+    if (!cleanText) return;
+    
+    let currentSize = range.max;
+    textEl.style.fontSize = currentSize + 'px';
+    
+    const words = cleanText.split(/\s+/);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const clientWidth = dom.clientWidth;
+    const clientHeight = dom.clientHeight;
+    
+    // Bù trừ padding biên trong
+    const paddingX = (key === 'realName') ? 80 : 15; 
+    
+    while (currentSize > range.min) {
+        const style = window.getComputedStyle(textEl);
+        const fontFamily = style.fontFamily || 'Quicksand';
+        const fontWeight = style.fontWeight || '700';
+        ctx.font = `${fontWeight} ${currentSize}px ${fontFamily}`;
+        
+        let overflow = false;
+        
+        if (key === 'realName' || key === 'group') {
+            // Đối với các trường hiển thị 1 dòng (không xuống hàng): Kiểm tra tổng độ rộng của toàn bộ chuỗi
+            const totalWidth = ctx.measureText(cleanText).width;
+            overflow = totalWidth > (clientWidth - paddingX);
+        } else {
+            // Đối với các trường nhiều dòng (chips, bio): Kiểm tra tràn từ đơn hoặc tràn chiều cao hộp
+            let wordOverflow = false;
+            for (const word of words) {
+                const wordWidth = ctx.measureText(word).width;
+                if (wordWidth > (clientWidth - paddingX)) {
+                    wordOverflow = true;
+                    break;
+                }
+            }
+            textEl.style.fontSize = currentSize + 'px';
+            const heightOverflow = dom.scrollHeight > clientHeight;
+            overflow = wordOverflow || heightOverflow;
+        }
+        
+        if (overflow) {
+            currentSize--;
+        } else {
+            break;
+        }
+    }
+    
+    textEl.style.fontSize = currentSize + 'px';
+    coords[key].fontSize = currentSize;
+    
+    const slider = document.getElementById('fs_' + key);
+    const label = document.getElementById('fv_' + key);
+    if (slider) slider.value = currentSize;
+    if (label) label.textContent = currentSize + 'px';
+}
+
+// Populate form từ activeMember khi switch member
+function populateLiveForm(member) {
+    const fields = ['realName','group','tinhCach','soThich','diemManh','diemYeu','bio'];
+    fields.forEach(key => {
+        const el = document.getElementById('fi_' + key);
+        if (!el) return;
+        const val = member[key] || '';
+        el.value = val;
+        // Counter
+        const limit = FIELD_LIMITS[key];
+        const cc = document.getElementById('cc_' + key);
+        if (cc) cc.textContent = val.length + '/' + limit;
+        // Font size on card
+        const dom = document.getElementById(elementMap[key].boxId);
+        const textEl = elementMap[key].textId ? document.getElementById(elementMap[key].textId) : dom;
+        if (textEl) { textEl.textContent = val; autoFitFontSize(key, val, textEl); }
+        // Sync slider + display
+        const range = FONT_RANGES[key];
+        if (range) {
+            const fs = coords[key].fontSize || range.def;
+            const slider = document.getElementById('fs_' + key);
+            const label = document.getElementById('fv_' + key);
+            if (slider) slider.value = fs;
+            if (label) label.textContent = fs + 'px';
+            const fmax = document.getElementById('fmax_' + key);
+            const fmin = document.getElementById('fmin_' + key);
+            if (fmax) fmax.value = range.max;
+            if (fmin) fmin.value = range.min;
+            
+            // Sync auto checkbox & rows
+            const isAuto = range.auto !== false;
+            const autoCb = document.getElementById('auto_' + key);
+            if (autoCb) autoCb.checked = isAuto;
+            if (fmax) fmax.closest('.font-row').style.display = isAuto ? 'flex' : 'none';
+            if (fmin) fmin.closest('.font-row').style.display = isAuto ? 'flex' : 'none';
+        }
+    });
+}
+
+
+// Bật/tắt chế độ tự động co chữ
+function toggleAutoFont(key, isAuto) {
+    if (!FONT_RANGES[key]) return;
+    FONT_RANGES[key].auto = isAuto;
+    
+    // Tìm dòng max-row và min-row để ẩn/hiện
+    const maxSlider = document.getElementById('fmax_' + key);
+    const minSlider = document.getElementById('fmin_' + key);
+    if (maxSlider) {
+        maxSlider.closest('.font-row').style.display = isAuto ? 'flex' : 'none';
+    }
+    if (minSlider) {
+        minSlider.closest('.font-row').style.display = isAuto ? 'flex' : 'none';
+    }
+    
+    if (isAuto) {
+        const inputEl = document.getElementById('fi_' + key);
+        if (inputEl) liveUpdate(key, inputEl);
+    }
+    saveToLocal();
+}
+
+// Chỉnh font-size thủ công bằng slider
+function manualFontSize(key, val) {
+    val = parseInt(val) || 12;
+    const dom = document.getElementById(elementMap[key].boxId);
+    const textEl = elementMap[key].textId ? document.getElementById(elementMap[key].textId) : dom;
+    if (textEl) textEl.style.fontSize = val + 'px';
+    coords[key].fontSize = val;
+    const label = document.getElementById('fv_' + key);
+    if (label) label.textContent = val + 'px';
+    
+    // Tự động tắt "Tự động co chữ" khi người dùng chỉnh thủ công
+    const autoCb = document.getElementById('auto_' + key);
+    if (autoCb && autoCb.checked) {
+        autoCb.checked = false;
+        toggleAutoFont(key, false);
+    }
+    saveToLocal();
+}
+
+// Cập nhật FONT_RANGES khi user thay đổi min/max slider
+function updateFontRange(key) {
+    const fmaxSlider = document.getElementById('fmax_' + key);
+    const fminSlider = document.getElementById('fmin_' + key);
+    const fmax = parseInt(fmaxSlider.value) || 20;
+    const fmin = parseInt(fminSlider.value) || 10;
+    FONT_RANGES[key].max = fmax;
+    FONT_RANGES[key].min = fmin;
+    // Sync labels
+    const lmax = document.getElementById('fvmax_' + key);
+    const lmin = document.getElementById('fvmin_' + key);
+    if (lmax) lmax.textContent = fmax + 'px';
+    if (lmin) lmin.textContent = fmin + 'px';
+    // Re-apply auto fit with new range
+    const inputEl = document.getElementById('fi_' + key);
+    if (inputEl) liveUpdate(key, inputEl);
+}
+
+// Thay đổi Text trực tiếp (legacy, kept for compatibility)
+function onTextInput() {
+    const text = document.getElementById('textInput').value;
+    const key = currentKey;
+    const dom = document.getElementById(elementMap[key].boxId);
+    const textEl = elementMap[key].textId ? document.getElementById(elementMap[key].textId) : dom;
+    if (textEl) {
+        textEl.textContent = text;
+        if (key === 'realName') activeMember.realName = text;
+        else if (key === 'group') activeMember.group = text;
+        else if (activeMember[key] !== undefined) activeMember[key] = text;
+        renderMiniGrid();
+    }
+}
+
+// Thay đổi Font Size trực tiếp
+function onFontSizeInput(val) {
+    val = parseInt(val) || 12;
+    document.getElementById('fontSizeRange').value = val;
+    document.getElementById('fontSizeNum').value = val;
+    
+    coords[currentKey].fontSize = val;
+    const dom = document.getElementById(elementMap[currentKey].boxId);
+    const textEl = elementMap[currentKey].textId ? document.getElementById(elementMap[currentKey].textId) : dom;
+    if (textEl) textEl.style.fontSize = val + 'px';
+    
+    saveToLocal();
+    updateCssOutput();
+}
+
+// Thay đổi Tọa độ thủ công từ ô Input
+function onCoordsInput() {
+    const l = parseInt(document.getElementById('posXInput').value) || 0;
+    const t = parseInt(document.getElementById('posYInput').value) || 0;
+    const w = parseInt(document.getElementById('posWInput').value) || 10;
+    const h = parseInt(document.getElementById('posHInput').value) || 10;
+    
+    updateElementPosition(currentKey, l, t, w, h);
+}
+
+function updateElementPosition(key, left, top, width, height) {
+    coords[key].left = left;
+    coords[key].top = top;
+    coords[key].width = width;
+    coords[key].height = height;
+    
+    const dom = document.getElementById(elementMap[key].boxId);
+    if (dom) {
+        dom.style.left = left + 'px';
+        dom.style.top = top + 'px';
+        dom.style.width = width + 'px';
+        dom.style.height = height + 'px';
+        
+        // Tự động co chữ thích ứng với kích thước hộp mới
+        if (key !== 'avatar') {
+            const textEl = elementMap[key].textId ? document.getElementById(elementMap[key].textId) : dom;
+            if (textEl) {
+                autoFitFontSize(key, textEl.textContent, textEl);
+            }
+        }
+    }
+    
+    // Cập nhật giá trị hiển thị trên panel
+    if (key === currentKey) {
+        const posX = document.getElementById('posXInput');
+        const posY = document.getElementById('posYInput');
+        const posW = document.getElementById('posWInput');
+        const posH = document.getElementById('posHInput');
+        if (posX) posX.value = left;
+        if (posY) posY.value = top;
+        if (posW) posW.value = width;
+        if (posH) posH.value = height;
+    }
+    
+    saveToLocal();
+    updateCssOutput();
+}
+
+// Zoom xem trước toàn card
+function changeCardScale(val) {
+    cardScale = parseFloat(val);
+    document.getElementById('scaleVal').textContent = Math.round(cardScale * 100) + '%';
+    document.getElementById('cardScaleWrapper').style.transform = `scale(${cardScale})`;
+}
+
+/* ── CHỨC NĂNG KÉO THẢ CHUỘT (DRAG & RESIZE) ── */
+function setupDragAndDrop() {
+    console.log("🔧 [DragAndDrop] Khởi động hệ thống kéo thả...");
+    let activeDrag = false;
+    let activeResize = false;
+    let startX, startY;
+    let initX, initY, initW, initH;
+    let dragKey = null;
+    
+    // Thêm resize handles vào tất cả overlays
+    document.querySelectorAll('.overlay').forEach(overlay => {
+        const handle = document.createElement('div');
+        handle.className = 'resize-handle';
+        overlay.appendChild(handle);
+    });
+    
+    // Event delegation trên card container
+    const cardEl = document.getElementById('cardContainer');
+    if (!cardEl) {
+        console.error("❌ Không tìm thấy element #cardContainer!");
+        return;
+    }
+    
+    cardEl.addEventListener('mousedown', (e) => {
+        console.log("🖱️ [Mousedown] Click trúng element:", e.target);
+        
+        // Tìm overlay gần nhất (parent hoặc chính nó)
+        const resizeHandle = e.target.closest('.resize-handle');
+        const overlay = e.target.closest('.overlay');
+        
+        console.log("🔍 [Mousedown] Overlay gần nhất:", overlay, "| Handle kích thước:", resizeHandle);
+        
+        if (!overlay) {
+            console.log("ℹ️ [Mousedown] Không tìm thấy box overlay dưới điểm click, bỏ qua.");
+            return;
+        }
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const key = overlay.getAttribute('data-key');
+        console.log("🔑 [Mousedown] Đang tương tác với phím dữ liệu (data-key):", key);
+        if (!key) return;
+        
+        selectElementByKey(key);
+        dragKey = key;
+        
+        if (resizeHandle) {
+            activeResize = true;
+            console.log("📐 [Mousedown] Chế độ RESIZE kích thước kích hoạt.");
+        } else {
+            activeDrag = true;
+            console.log("🖐️ [Mousedown] Chế độ DRAG di chuyển kích hoạt.");
+        }
+        
+        startX = e.clientX;
+        startY = e.clientY;
+        
+        initX = coords[key].left;
+        initY = coords[key].top;
+        initW = coords[key].width;
+        initH = coords[key].height;
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+    
+    function onMouseMove(e) {
+        if (!dragKey) return;
+        // Đền bù tỷ lệ zoom (Scale)
+        const dx = (e.clientX - startX) / cardScale;
+        const dy = (e.clientY - startY) / cardScale;
+        
+        if (activeDrag) {
+            const newLeft = Math.round(initX + dx);
+            const newTop = Math.round(initY + dy);
+            console.log(`🏃 [Dragging] key=${dragKey} | x=${newLeft} y=${newTop}`);
+            updateElementPosition(dragKey, newLeft, newTop, initW, initH);
+        } else if (activeResize) {
+            const newWidth = Math.max(20, Math.round(initW + dx));
+            const newHeight = Math.max(20, Math.round(initH + dy));
+            console.log(`📐 [Resizing] key=${dragKey} | w=${newWidth} h=${newHeight}`);
+            updateElementPosition(dragKey, initX, initY, newWidth, newHeight);
+        }
+    }
+    
+    function onMouseUp() {
+        console.log("🏁 [Mouseup] Kết thúc kéo thả cho key:", dragKey);
+        activeDrag = false;
+        activeResize = false;
+        dragKey = null;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
+}
+
+/* ── DI CHUYỂN BẰNG BÀN PHÍM (ARROWS FINE TUNING) ── */
+document.addEventListener('keydown', (e) => {
+    if (!selectedElement) return;
+    
+    // Bỏ qua nếu đang gõ chữ trong ô input
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return;
+    }
+    
+    const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+    if (!arrowKeys.includes(e.key)) return;
+    
+    e.preventDefault();
+    
+    const step = e.shiftKey ? 10 : 1;
+    let l = coords[currentKey].left;
+    let t = coords[currentKey].top;
+    
+    if (e.key === 'ArrowLeft') l -= step;
+    if (e.key === 'ArrowRight') l += step;
+    if (e.key === 'ArrowUp') t -= step;
+    if (e.key === 'ArrowDown') t += step;
+    
+    updateElementPosition(currentKey, l, t, coords[currentKey].width, coords[currentKey].height);
+});
+
+/* ── LƯU TRỮ VÀ XUẤT CODE CSS ── */
+function saveToLocal() {
+    localStorage.setItem('smurf_coords', JSON.stringify(coords));
+}
+
+function updateCssOutput() {
+    let cssText = `/* CSS Tọa Độ Mới Nhất Dành Cho Canva 1516x1038 background */\n\n`;
+    
+    cssText += `.overlay-avatar {\n  left: ${coords.avatar.left}px;\n  top: ${coords.avatar.top}px;\n  width: ${coords.avatar.width}px;\n  height: ${coords.avatar.height}px;\n}\n\n`;
+    cssText += `.overlay-real-name {\n  left: ${coords.realName.left}px;\n  top: ${coords.realName.top}px;\n  width: ${coords.realName.width}px;\n  height: ${coords.realName.height}px;\n}\n.real-name-txt {\n  font-size: ${coords.realName.fontSize}px;\n}\n\n`;
+    cssText += `.overlay-group {\n  left: ${coords.group.left}px;\n  top: ${coords.group.top}px;\n  width: ${coords.group.width}px;\n  height: ${coords.group.height}px;\n  font-size: ${coords.group.fontSize}px;\n}\n\n`;
+    
+    cssText += `.chip-tinh-cach-val {\n  left: ${coords.tinhCach.left}px;\n  top: ${coords.tinhCach.top}px;\n  width: ${coords.tinhCach.width}px;\n  height: ${coords.tinhCach.height}px;\n}\n`;
+    cssText += `.chip-so-thich-val {\n  left: ${coords.soThich.left}px;\n  top: ${coords.soThich.top}px;\n  width: ${coords.soThich.width}px;\n  height: ${coords.soThich.height}px;\n}\n`;
+    cssText += `.chip-diem-manh-val {\n  left: ${coords.diemManh.left}px;\n  top: ${coords.diemManh.top}px;\n  width: ${coords.diemManh.width}px;\n  height: ${coords.diemManh.height}px;\n}\n`;
+    cssText += `.chip-diem-yeu-val {\n  left: ${coords.diemYeu.left}px;\n  top: ${coords.diemYeu.top}px;\n  width: ${coords.diemYeu.width}px;\n  height: ${coords.diemYeu.height}px;\n}\n`;
+    cssText += `.overlay-chip-val {\n  font-size: ${coords.tinhCach.fontSize}px;\n}\n\n`;
+    
+    cssText += `.overlay-bio {\n  left: ${coords.bio.left}px;\n  top: ${coords.bio.top}px;\n  width: ${coords.bio.width}px;\n  height: ${coords.bio.height}px;\n}\n.bio-txt {\n  font-size: ${coords.bio.fontSize}px;\n}`;
+    
+    document.getElementById('cssOutput').value = cssText;
+}
+
+function exportCoords() {
+    const css = document.getElementById('cssOutput').value;
+    navigator.clipboard.writeText(css).then(() => {
+        alert('Đã copy đoạn cấu hình CSS vào clipboard! Hãy dán (Ctrl+V) nó vào khung chat gửi lại cho AI để lưu cấu hình.');
+    }).catch(err => {
+        console.error('Không thể copy: ', err);
+    });
+}
+
+function resetDefaultCoords() {
+    if (confirm('Bạn có chắc chắn muốn khôi phục lại các tọa độ mặc định ban đầu không?')) {
+        coords = JSON.parse(JSON.stringify(DEFAULT_COORDS));
+        saveToLocal();
+        applyAllCoords();
+        selectElementByKey(currentKey);
+        updateCssOutput();
+    }
+}
+
+/* ── POPULATE DỮ LIỆU DEMO ── */
+function showDemo(d) {
+    activeMember = d;
+    document.getElementById('smurfAvatar').src = d.img;
+    
+    document.getElementById('realName').textContent = d.realName;
+    document.getElementById('groupBox').textContent = d.group;
+    document.getElementById('tinhCachBox').textContent = d.tinhCach;
+    document.getElementById('soThichBox').textContent = d.soThich;
+    document.getElementById('diemManhBox').textContent = d.diemManh;
+    document.getElementById('diemYeuBox').textContent = d.diemYeu;
+    document.getElementById('bioText').textContent = d.bio;
+    
+    // Populate live form + auto fit fonts
+    populateLiveForm(d);
+    
+    // Cập nhật trạng thái active của grid bên dưới
+    document.querySelectorAll('.card-mini').forEach((card, idx) => {
+        if (DATA[idx].smurfName === d.smurfName) {
+            card.classList.add('active');
+        } else {
+            card.classList.remove('active');
+        }
+    });
+}
+
+function renderMiniGrid() {
+    const grid = document.getElementById('miniGrid');
+    grid.innerHTML = '';
+    
+    DATA.forEach(d => {
+        const el = document.createElement('div');
+        el.className = `card-mini ${activeMember.smurfName === d.smurfName ? 'active' : ''}`;
+        el.innerHTML = `
+            <img src="${d.img}" alt="${d.smurfName}">
+            <div>${d.smurfName}</div>
+        `;
+        el.onclick = () => showDemo(d);
+        grid.appendChild(el);
+    });
+}
+
+/* ── LƯU & CHỤP ẢNH ── */
+function saveAllChanges() {
+    // Save coords to localStorage
+    saveToLocal();
+    
+    // Save current content data
+    const contentData = {
+        realName: document.getElementById('fi_realName')?.value || '',
+        group: document.getElementById('fi_group')?.value || '',
+        tinhCach: document.getElementById('fi_tinhCach')?.value || '',
+        soThich: document.getElementById('fi_soThich')?.value || '',
+        diemManh: document.getElementById('fi_diemManh')?.value || '',
+        diemYeu: document.getElementById('fi_diemYeu')?.value || '',
+        bio: document.getElementById('fi_bio')?.value || '',
+    };
+    localStorage.setItem('smurf_content', JSON.stringify(contentData));
+    
+    // Save font ranges
+    const fontRangesData = {};
+    for (const key in FONT_RANGES) {
+        fontRangesData[key] = { ...FONT_RANGES[key] };
+    }
+    localStorage.setItem('smurf_font_ranges', JSON.stringify(fontRangesData));
+    
+    // Save font sizes
+    const fontSizes = {};
+    for (const key in coords) {
+        if (coords[key].fontSize) fontSizes[key] = coords[key].fontSize;
+    }
+    localStorage.setItem('smurf_font_sizes', JSON.stringify(fontSizes));
+    
+    alert('✅ Đã lưu tất cả thay đổi!\n\n• Tọa độ & kích thước\n• Nội dung text\n• Cỡ chữ & khoảng co dãn');
+}
+
+function captureCard(customName, callback) {
+    const card = document.getElementById('cardContainer');
+    const scaleWrapper = document.getElementById('cardScaleWrapper');
+    if (!card || !scaleWrapper) { 
+        alert('Không tìm thấy thẻ!'); 
+        if (callback) callback();
+        return; 
+    }
+    
+    const prevKey = currentKey;
+    
+    // Tạm thời tắt viền chọn và nút màu cam
+    document.querySelectorAll('.overlay').forEach(el => el.classList.remove('selected-active'));
+    document.querySelectorAll('.resize-handle').forEach(el => el.style.display = 'none');
+    document.body.classList.remove('edit-mode');
+    
+    // Di chuyển cardContainer trực tiếp ra thẻ body để bypass lỗi tính toán tọa độ scale(0.65) của thẻ cha
+    const originalSibling = card.nextSibling;
+    document.body.appendChild(card);
+    
+    // Đặt vị trí fixed tạm thời với tỉ lệ 100% (không có scale cha)
+    card.style.position = 'fixed';
+    card.style.top = '0';
+    card.style.left = '0';
+    card.style.transform = 'none';
+    card.style.zIndex = '999999';
+    
+    const runCapture = () => {
+        // Chờ 80ms để trình duyệt thực hiện reflow bố cục thẻ ở tỉ lệ 100% thực
+        setTimeout(() => {
+            html2canvas(card, { 
+                scale: 2, 
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+                width: 1516,
+                height: 1038,
+                onclone: (clonedDoc) => {
+                    // Copy font chữ đã nạp từ document gốc sang document clone để tránh lỗi font chữ fallback
+                    if (document.fonts) {
+                        document.fonts.forEach(font => {
+                            clonedDoc.fonts.add(font);
+                        });
+                    }
+                }
+            }).then(canvas => {
+                downloadCanvas(canvas, customName);
+                
+                // Trả card về lại vị trí cũ bên trong wrapper
+                card.style.position = '';
+                card.style.top = '';
+                card.style.left = '';
+                card.style.transform = '';
+                card.style.zIndex = '';
+                if (originalSibling) {
+                    scaleWrapper.insertBefore(card, originalSibling);
+                } else {
+                    scaleWrapper.appendChild(card);
+                }
+                
+                restoreEditMode(prevKey);
+                if (callback) callback();
+            }).catch(err => {
+                alert('Lỗi chụp ảnh thẻ: ' + err.message);
+                
+                // Trả card về lại vị trí cũ bên trong wrapper nếu lỗi
+                card.style.position = '';
+                card.style.top = '';
+                card.style.left = '';
+                card.style.transform = '';
+                card.style.zIndex = '';
+                if (originalSibling) {
+                    scaleWrapper.insertBefore(card, originalSibling);
+                } else {
+                    scaleWrapper.appendChild(card);
+                }
+                
+                restoreEditMode(prevKey);
+                if (callback) callback();
+            });
+        }, 80);
+    };
+
+    if (typeof html2canvas !== 'undefined') {
+        runCapture();
+    } else {
+        alert('Đang tải thư viện ảnh, vui lòng thử lại sau 1 giây...');
+        
+        // Trả card về vị trí cũ
+        card.style.position = '';
+        card.style.top = '';
+        card.style.left = '';
+        card.style.transform = '';
+        card.style.zIndex = '';
+        if (originalSibling) {
+            scaleWrapper.insertBefore(card, originalSibling);
+        } else {
+            scaleWrapper.appendChild(card);
+        }
+        
+        restoreEditMode(prevKey);
+        if (callback) callback();
+    }
+}
+
+function downloadCanvas(canvas, customName) {
+    try {
+        const name = customName || (document.getElementById('fi_realName')?.value || 'card').replace(/\s+/g, '_');
+        const link = document.createElement('a');
+        link.download = 'the_cu_dan_' + name + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } catch(err) {
+        alert('Lỗi xuất file ảnh (do bảo mật file trình duyệt): ' + err.message + '\n\nHướng dẫn khắc phục:\n1. Mở trang qua địa chỉ: http://localhost:8888/resident_card.html\n2. Hoặc sử dụng nút "Lưu Thay Đổi" và gửi file CSS cho AI chụp giúp.');
+    }
+}
+
+function restoreEditMode(prevKey) {
+    document.body.classList.add('edit-mode');
+    document.querySelectorAll('.resize-handle').forEach(el => el.style.display = '');
+    if (prevKey) {
+        selectElementByKey(prevKey);
+    }
+}
+
+/* ── BỘ XỬ LÝ GHÉP THẺ HÀNG LOẠT (BATCH COMPOSITE) ── */
+let loadedAvatarFiles = {};
+
+// Lắng nghe chọn thư mục ảnh avatar
+document.getElementById('batchAvatarFolder').addEventListener('change', function(e) {
+    const files = e.target.files;
+    loadedAvatarFiles = {};
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const name = file.name.toLowerCase();
+        loadedAvatarFiles[name] = file;
+    }
+    logBatch(`📁 Đã nạp ${files.length} ảnh avatar từ thư mục.`);
+});
+
+function logBatch(msg) {
+    const logArea = document.getElementById('batchLog');
+    const time = new Date().toLocaleTimeString('vi-VN');
+    logArea.value += `[${time}] ${msg}\n`;
+    logArea.scrollTop = logArea.scrollHeight;
+}
+
+// Phân tích CSV nâng cao
+function parseCSV(text) {
+    const lines = text.split(/\r\n|\n/);
+    const result = [];
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const row = [];
+        let insideQuote = false;
+        let entry = "";
+        for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+            if (char === '"') {
+                insideQuote = !insideQuote;
+            } else if (char === ',' && !insideQuote) {
+                row.push(entry.replace(/^"|"$/g, '').trim());
+                entry = "";
+            } else {
+                entry += char;
+            }
+        }
+        row.push(entry.replace(/^"|"$/g, '').trim());
+        result.push(row);
+    }
+    return result;
+}
+
+async function startBatchProcessing() {
+    const csvInput = document.getElementById('batchCsvInput');
+    const startBtn = document.getElementById('startBatchBtn');
+    const statusText = document.getElementById('batchStatusText');
+    
+    if (!csvInput.files || csvInput.files.length === 0) {
+        alert("Vui lòng chọn tệp CSV danh sách cư dân!");
+        return;
+    }
+    
+    startBtn.disabled = true;
+    startBtn.style.opacity = '0.5';
+    startBtn.textContent = '⏳ Đang xử lý...';
+    
+    const file = csvInput.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+        const text = e.target.result;
+        const rows = parseCSV(text);
+        
+        if (rows.length <= 1) {
+            alert("Tệp CSV không có dữ liệu thành viên (chỉ có tiêu đề hoặc trống)!");
+            startBtn.disabled = false;
+            startBtn.style.opacity = '1';
+            startBtn.textContent = '🚀 Bắt Đầu Ghép Hàng Loạt';
+            return;
+        }
+        
+        logBatch(`📊 Bắt đầu xử lý danh sách gồm ${rows.length - 1} cư dân...`);
+        
+        // Loop qua từng dòng (bỏ dòng tiêu đề index 0)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length < 5) continue;
+            
+            const smurfName = row[4] || "";
+            const realName = row[5] || "";
+            const group = row[6] || "";
+            const tinhCach = row[7] || "";
+            const soThich = row[8] || "";
+            const diemManh = row[9] || "";
+            const diemYeu = row[10] || "";
+            const bio = row[11] || "";
+            
+            if (!smurfName) continue;
+            
+            statusText.textContent = `Đang xử lý ${i}/${rows.length - 1}: ${smurfName}`;
+            logBatch(`⚡ Đang nạp dữ liệu cho cư dân: ${smurfName} (${realName})`);
+            
+            // 1. Cập nhật giao diện text
+            document.getElementById('realName').textContent = realName;
+            document.getElementById('groupBox').textContent = group;
+            document.getElementById('tinhCachBox').textContent = tinhCach;
+            document.getElementById('soThichBox').textContent = soThich;
+            document.getElementById('diemManhBox').textContent = diemManh;
+            document.getElementById('diemYeuBox').textContent = diemYeu;
+            document.getElementById('bioText').textContent = bio;
+            
+            // Đồng bộ sang các ô input panel để autoFitFontSize đọc đúng
+            if (document.getElementById('fi_realName')) document.getElementById('fi_realName').value = realName;
+            if (document.getElementById('fi_group')) document.getElementById('fi_group').value = group;
+            if (document.getElementById('fi_tinhCach')) document.getElementById('fi_tinhCach').value = tinhCach;
+            if (document.getElementById('fi_soThich')) document.getElementById('fi_soThich').value = soThich;
+            if (document.getElementById('fi_diemManh')) document.getElementById('fi_diemManh').value = diemManh;
+            if (document.getElementById('fi_diemYeu')) document.getElementById('fi_diemYeu').value = diemYeu;
+            if (document.getElementById('fi_bio')) document.getElementById('fi_bio').value = bio;
+            
+            // 2. Chạy Smart Auto Fit Font Size cho tất cả các trường
+            autoFitFontSize('realName', realName, document.getElementById('realName'));
+            autoFitFontSize('group', group, document.getElementById('groupBox'));
+            autoFitFontSize('tinhCach', tinhCach, document.getElementById('tinhCachBox'));
+            autoFitFontSize('soThich', soThich, document.getElementById('soThichBox'));
+            autoFitFontSize('diemManh', diemManh, document.getElementById('diemManhBox'));
+            autoFitFontSize('diemYeu', diemYeu, document.getElementById('diemYeuBox'));
+            autoFitFontSize('bio', bio, document.getElementById('bioText'));
+            
+            // 3. Khớp ảnh avatar cục bộ
+            let avatarLoaded = false;
+            const possibleNames = [
+                smurfName.toLowerCase() + '.png',
+                smurfName.toLowerCase() + '.jpg',
+                smurfName.toLowerCase() + '.jpeg',
+                smurfName.toLowerCase().replace(/\s+/g, '_') + '.png',
+                smurfName.toLowerCase().replace(/\s+/g, '_') + '.jpg',
+                smurfName.toLowerCase().replace(/\s+/g, '_') + '.jpeg',
+                smurfName.toLowerCase().replace('tí', 'ti') + '.png',
+                smurfName.toLowerCase().replace('tí', 'ti') + '.jpg'
+            ];
+            
+            let matchedFile = null;
+            for (let name of possibleNames) {
+                if (loadedAvatarFiles[name]) {
+                    matchedFile = loadedAvatarFiles[name];
+                    break;
+                }
+            }
+            
+            if (matchedFile) {
+                avatarLoaded = await new Promise((resolve) => {
+                    const imgReader = new FileReader();
+                    imgReader.onload = function(evt) {
+                        const imgEl = document.getElementById('smurfAvatar');
+                        imgEl.onload = () => resolve(true);
+                        imgEl.onerror = () => resolve(false);
+                        imgEl.src = evt.target.result;
+                    };
+                    imgReader.readAsDataURL(matchedFile);
+                });
+                logBatch(`   🖼️ Đã khớp ảnh avatar: ${matchedFile.name}`);
+            } else {
+                logBatch(`   ⚠️ Không tìm thấy ảnh avatar khớp cho "${smurfName}", sử dụng ảnh mặc định.`);
+                // Chờ một khoảng nhỏ để trình duyệt cập nhật layout
+                await new Promise(r => setTimeout(r, 100));
+            }
+            
+            // 4. Gọi Chụp Ảnh Thẻ Cư Dân
+            logBatch(`   📸 Đang render và tải thẻ cư dân...`);
+            await new Promise((resolve) => {
+                captureCard(smurfName, resolve);
+            });
+            
+            logBatch(`   ✅ Đã xong thẻ của: ${smurfName}`);
+            
+            // Chờ 300ms nghỉ giữa các đợt tải để tránh quá tải trình duyệt
+            await new Promise(r => setTimeout(r, 300));
+        }
+        
+        statusText.textContent = 'Hoàn tất ghép hàng loạt!';
+        logBatch('🎉 ĐÃ HOÀN TẤT TẤT CẢ THẺ CƯ DÂN!');
+        startBtn.disabled = false;
+        startBtn.style.opacity = '1';
+        startBtn.textContent = '🚀 Bắt Đầu Ghép Hàng Loạt';
+    };
+    
+    reader.readAsText(file, 'UTF-8');
+}
+
+// Load saved content on startup
+function loadSavedContent() {
+    // 1. Load font ranges first
+    const savedRanges = localStorage.getItem('smurf_font_ranges');
+    if (savedRanges) {
+        try {
+            const ranges = JSON.parse(savedRanges);
+            for (const key in ranges) {
+                if (FONT_RANGES[key]) {
+                    FONT_RANGES[key].max = ranges[key].max;
+                    FONT_RANGES[key].min = ranges[key].min;
+                    FONT_RANGES[key].auto = ranges[key].auto;
+                    
+                    // Sync sliders in DOM
+                    const fmax = document.getElementById('fmax_' + key);
+                    const fmin = document.getElementById('fmin_' + key);
+                    const lmax = document.getElementById('fvmax_' + key);
+                    const lmin = document.getElementById('fvmin_' + key);
+                    const autoCb = document.getElementById('auto_' + key);
+                    
+                    const isAuto = ranges[key].auto !== false;
+                    if (autoCb) autoCb.checked = isAuto;
+                    if (fmax) {
+                        fmax.value = ranges[key].max;
+                        fmax.closest('.font-row').style.display = isAuto ? 'flex' : 'none';
+                    }
+                    if (fmin) {
+                        fmin.value = ranges[key].min;
+                        fmin.closest('.font-row').style.display = isAuto ? 'flex' : 'none';
+                    }
+                    if (lmax) lmax.textContent = ranges[key].max + 'px';
+                    if (lmin) lmin.textContent = ranges[key].min + 'px';
+                }
+            }
+        } catch(e) {}
+    }
+
+    // 2. Load saved text content second
+    const saved = localStorage.getItem('smurf_content');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            const fields = ['realName','group','tinhCach','soThich','diemManh','diemYeu','bio'];
+            fields.forEach(key => {
+                const el = document.getElementById('fi_' + key);
+                if (el && data[key] !== undefined) {
+                    el.value = data[key];
+                    liveUpdate(key, el);
+                }
+            });
+        } catch(e) {}
+    }
+    
+    // 3. Re-apply manual font sizes for non-auto fields
+    for (const key in FONT_RANGES) {
+        if (FONT_RANGES[key].auto === false && coords[key] && coords[key].fontSize) {
+            const dom = document.getElementById(elementMap[key].boxId);
+            const textEl = elementMap[key].textId ? document.getElementById(elementMap[key].textId) : dom;
+            if (textEl) {
+                textEl.style.fontSize = coords[key].fontSize + 'px';
+            }
+            // Sync slider value
+            const slider = document.getElementById('fs_' + key);
+            const label = document.getElementById('fv_' + key);
+            if (slider) slider.value = coords[key].fontSize;
+            if (label) label.textContent = coords[key].fontSize + 'px';
+        }
+    }
+}
+</script>
+</body>
+</html>
