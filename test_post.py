@@ -27,8 +27,10 @@ req = urllib.request.Request(
 
 try:
     with urllib.request.urlopen(req) as response:
-        html = response.read().decode("utf-8")
+        raw = response.read()
+        html = raw.decode("utf-8")
         print("Status:", response.status)
-        print("Body:", html)
+        import sys
+        sys.stdout.buffer.write(b"Body: " + raw + b"\n")
 except Exception as e:
     print("Error:", e)
