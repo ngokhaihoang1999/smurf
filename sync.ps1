@@ -65,9 +65,9 @@ $onChange = Register-ObjectEvent $watcher "Changed" -Action {
     # 2. Run Git Push to repository
     Write-Host "Executing git push..." -ForegroundColor Yellow
     try {
-        git add .
-        git commit -m "Auto sync: $fileName - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-        git push
+        & 'C:\Program Files\Git\cmd\git.exe' add .
+        & 'C:\Program Files\Git\cmd\git.exe' commit -m "Auto sync: $fileName - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+        & 'C:\Program Files\Git\cmd\git.exe' push
         Write-Host "Git Push successful!" -ForegroundColor Green
     } catch {
         Write-Host "Git Push failed: $_" -ForegroundColor Red
