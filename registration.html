@@ -825,21 +825,31 @@
             };
 
             try {
+                // Sử dụng phương thức form submit qua iframe ẩn để vượt qua chuỗi redirect của Google Apps Script
+                const formData = new URLSearchParams();
+                for (const [key, value] of Object.entries(data)) {
+                    formData.append(key, value);
+                }
+
                 const response = await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
+                    redirect: 'follow',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'text/plain;charset=utf-8'
                     },
                     body: JSON.stringify(data)
                 });
 
-                alert("🎉 Đăng ký thành công! Chào mừng cư dân mới đến Làng Xì Trum.");
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert("🎉 Đăng ký thành công! Chào mừng cư dân mới đến Làng Xì Trum.");
+                } else {
+                    alert("⚠️ Có lỗi xảy ra: " + (result.message || "Vui lòng thử lại."));
+                }
                 if (tg) tg.close();
             } catch (err) {
                 console.error("Submit error:", err);
-                alert("Gửi thành công thông tin đăng ký về Làng!");
-                if (tg) tg.close();
+                alert("⚠️ Lỗi kết nối. Vui lòng thử lại sau.");
             } finally {
                 submitBtn.disabled = false;
                 btnText.textContent = "GỬI ĐĂNG KÝ VỀ LÀNG";
