@@ -597,7 +597,7 @@
     <!-- SCRIPT LOGIC                            -->
     <!-- ═══════════════════════════════════════ -->
     <script>
-        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx3zWye3YGMKFpZ6G9tHOz_oKf4s6RWluKYMjG6nGvxRVVFEmhgcOIhRGaM-B1fG_lGew/exec";
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzvH1zgIVFQUXaSz_JhScriUOUByapUN5zXavJ9AowcTsqy-Q1EuWoXLALD082zPOyTow/exec";
 
         // State
         let currentUser = null;
@@ -618,15 +618,9 @@
             }
         }
 
-        // ── INIT: Lookup user ──
+        // ── INIT: Lookup user (uses JSONP to bypass CORS in Telegram WebView) ──
         async function initApp() {
             showView('loading');
-            
-            // Show skip button after 4 seconds
-            setTimeout(() => {
-                const skipBtn = document.getElementById('skip-loading-btn');
-                if (skipBtn) skipBtn.style.display = 'inline-block';
-            }, 4000);
             
             // For testing outside Telegram: allow URL param override
             const urlParams = new URLSearchParams(window.location.search);
@@ -638,22 +632,52 @@
                 return;
             }
 
-            try {
-                console.log('Looking up Telegram ID:', telegramId);
-                const resp = await gasRequest({ action: 'lookup', telegramId });
-                console.log('Lookup response:', resp);
-                if (resp.exists && resp.data) {
+            // JSONP lookup (bypasses CORS completely)
+            gasLookupJsonp(telegramId, (resp) => {
+                if (resp && resp.exists && resp.data) {
                     currentUser = resp.data;
                     showProfileView();
                 } else {
                     showView('register');
                     setupRegistrationForm();
                 }
-            } catch (err) {
-                console.error('Lookup failed:', err);
+            }, () => {
+                // Error/timeout fallback
                 showView('register');
                 setupRegistrationForm();
+            });
+        }
+
+        // ── JSONP GET (works in ALL browsers including Telegram WebView) ──
+        function gasLookupJsonp(tid, onSuccess, onError) {
+            const callbackName = '_gasCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            // Timeout after 8 seconds
+            const timeout = setTimeout(() => {
+                cleanup();
+                console.warn('JSONP lookup timed out');
+                onError();
+            }, 8000);
+            
+            function cleanup() {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                if (script.parentNode) script.parentNode.removeChild(script);
             }
+            
+            window[callbackName] = function(data) {
+                cleanup();
+                onSuccess(data);
+            };
+            
+            script.onerror = function() {
+                cleanup();
+                onError();
+            };
+            
+            script.src = GAS_WEBAPP_URL + '?action=lookup&telegramId=' + encodeURIComponent(tid) + '&callback=' + callbackName;
+            document.head.appendChild(script);
         }
 
         // ── VIEW SWITCHER ──

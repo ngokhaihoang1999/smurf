@@ -312,7 +312,37 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput("✅ API Làng Xì Trum V2 đang hoạt động! Actions: lookup, register, update, listAll");
+  try {
+    var action = (e.parameter && e.parameter.action) || "";
+    var result;
+    
+    switch (action) {
+      case "lookup":
+        result = handleLookup({ telegramId: e.parameter.telegramId || "" });
+        break;
+      case "listAll":
+        result = handleListAll();
+        break;
+      default:
+        result = { status: "ok", message: "API Làng Xì Trum V2.2 — Use ?action=lookup&telegramId=xxx or ?action=listAll" };
+    }
+    
+    var jsonStr = JSON.stringify(result);
+    
+    // JSONP support: if callback param exists, wrap in callback
+    var callback = e.parameter && e.parameter.callback;
+    if (callback) {
+      return ContentService.createTextOutput(callback + "(" + jsonStr + ")")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    
+    return ContentService.createTextOutput(jsonStr)
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 // Hàm test permission (chạy 1 lần trên GAS web UI để kích hoạt cấp quyền)
