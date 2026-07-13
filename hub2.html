@@ -244,8 +244,7 @@
                             <!-- Encouragement Note -->
                             <div class="bg-smurf-blueLight/50 border border-smurf-blueLight p-3 rounded-2xl flex flex-col gap-1.5 text-xs text-slate-700">
                                 <span class="font-bold text-smurf-blue flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">sparkles</span>
-                                    Hãy thể hiện chất riêng của bạn!
+                                    ✨ Hãy thể hiện chất riêng của bạn!
                                 </span>
                                 <p class="leading-relaxed">Hãy thỏa sức lựa chọn để tạo nên một hình mẫu Xì Trum độc bản mang đậm dấu ấn cá nhân của chính bạn. ✨</p>
                                 <p class="leading-relaxed font-semibold text-slate-600">💡 Mẹo: Bạn có thể chỉ cần chuyển sang tab <b>Upload ảnh</b> để tải lên ảnh mong muốn, Admin sẽ dựa trên ảnh đó để thiết kế avatar đồng bộ phong cách cho bạn!</p>
@@ -257,7 +256,7 @@
                                 <button type="button" id="tab-design-upload" class="flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-smurf-blue">Upload ảnh</button>
                             </div>
 
-                            <!-- Manual Container -->
+                             <!-- Manual Container -->
                             <div class="flex flex-col gap-4" id="design-manual-container">
                                 <!-- Giới tính Smurf -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Giới Tính Xì Trum</label>
@@ -271,12 +270,12 @@
                                 <!-- Kiểu Mũ -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Kiểu Mũ</label>
                                     <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-hat">
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                         <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
                                         <button type="button" data-val="Mũ trắng cổ điển" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Mũ trắng cổ điển</button>
                                         <button type="button" data-val="Mũ đỏ (Papa)" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Mũ đỏ (Papa)</button>
                                         <button type="button" data-val="Mũ hoa" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Mũ hoa</button>
                                         <button type="button" data-val="Không mũ + tóc" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Không mũ + tóc</button>
-                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                     </div></div>
                                     <input type="text" id="custom-hat-input" placeholder="Mô tả kiểu mũ..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
                                     <input type="hidden" id="input-hat" value="Không"/>
@@ -284,6 +283,7 @@
                                 <!-- Màu mũ -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Màu Mũ</label>
                                     <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-hatcolor">
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                         <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
                                         <button type="button" data-val="Trắng" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Trắng</button>
                                         <button type="button" data-val="Đỏ" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Đỏ</button>
@@ -291,7 +291,6 @@
                                         <button type="button" data-val="Hồng" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Hồng</button>
                                         <button type="button" data-val="Tím" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tím</button>
                                         <button type="button" data-val="Xanh lá" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Xanh lá</button>
-                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                     </div></div>
                                     <input type="text" id="custom-hatcolor-input" placeholder="Nhập màu..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
                                     <input type="hidden" id="input-hatcolor" value="Không"/>
@@ -299,12 +298,12 @@
                                 <!-- Màu tóc -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Màu Tóc</label>
                                     <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-hair">
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                         <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
                                         <button type="button" data-val="Vàng (Smurfette)" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Vàng (Smurfette)</button>
                                         <button type="button" data-val="Đen" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Đen</button>
                                         <button type="button" data-val="Nâu" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Nâu</button>
                                         <button type="button" data-val="Đỏ" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Đỏ</button>
-                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                     </div></div>
                                     <input type="text" id="custom-hair-input" placeholder="Mô tả tóc..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
                                     <input type="hidden" id="input-hair" value="Không"/>
@@ -312,11 +311,11 @@
                                 <!-- Phụ kiện mặt -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Phụ Kiện Mặt</label>
                                     <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-faceacc">
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                         <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
                                         <button type="button" data-val="Kính tròn" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Kính tròn</button>
                                         <button type="button" data-val="Kính râm" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Kính râm</button>
                                         <button type="button" data-val="Mặt nạ" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Mặt nạ</button>
-                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                     </div></div>
                                     <input type="text" id="custom-faceacc-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
                                     <input type="hidden" id="input-faceacc" value="Không"/>
@@ -324,12 +323,12 @@
                                 <!-- Trang phục -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Trang Phục</label>
                                     <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-outfit">
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                         <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
                                         <button type="button" data-val="Quần trắng cổ điển" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Quần trắng cổ điển</button>
                                         <button type="button" data-val="Váy" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Váy</button>
                                         <button type="button" data-val="Áo yếm" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Áo yếm</button>
                                         <button type="button" data-val="Cape choàng" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Cape choàng</button>
-                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                     </div></div>
                                     <input type="text" id="custom-outfit-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
                                     <input type="hidden" id="input-outfit" value="Không"/>
@@ -337,13 +336,13 @@
                                 <!-- Đạo cụ -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Đạo Cụ Cầm Tay</label>
                                     <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-prop">
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                         <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
                                         <button type="button" data-val="Sách" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Sách</button>
                                         <button type="button" data-val="Guitar" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Guitar</button>
                                         <button type="button" data-val="Laptop" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Laptop</button>
                                         <button type="button" data-val="Bút vẽ" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Bút vẽ</button>
                                         <button type="button" data-val="Cờ lê" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Cờ lê</button>
-                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                     </div></div>
                                     <input type="text" id="custom-prop-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
                                     <input type="hidden" id="input-prop" value="Không"/>
@@ -351,12 +350,12 @@
                                 <!-- Biểu cảm -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Biểu Cảm</label>
                                     <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-expression">
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                         <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
                                         <button type="button" data-val="Vui vẻ" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Vui vẻ</button>
                                         <button type="button" data-val="Ngầu" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Ngầu</button>
                                         <button type="button" data-val="Dễ thương" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Dễ thương</button>
                                         <button type="button" data-val="Tinh nghịch" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Tinh nghịch</button>
-                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                     </div></div>
                                     <input type="text" id="custom-expression-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
                                     <input type="hidden" id="input-expression" value="Không"/>
@@ -364,11 +363,11 @@
                                 <!-- Pose -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Dáng Đứng (Pose)</label>
                                     <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-pose">
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                         <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
                                         <button type="button" data-val="Đứng thẳng" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Đứng thẳng</button>
                                         <button type="button" data-val="Vẫy tay" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Vẫy tay</button>
                                         <button type="button" data-val="Giơ ngón cái" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Giơ ngón cái</button>
-                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                     </div></div>
                                     <input type="text" id="custom-pose-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
                                     <input type="hidden" id="input-pose" value="Không"/>
@@ -376,11 +375,11 @@
                                 <!-- Bối cảnh -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Bối Cảnh</label>
                                     <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-bg">
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                         <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
                                         <button type="button" data-val="Làng Xì Trum" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Làng Xì Trum</button>
                                         <button type="button" data-val="Trong nhà nấm" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Trong nhà nấm</button>
                                         <button type="button" data-val="Rừng nấm" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Rừng nấm</button>
-                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
                                     </div></div>
                                     <input type="text" id="custom-bg-input" placeholder="Mô tả bối cảnh..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
                                     <input type="hidden" id="input-background" value="Không"/>
@@ -778,6 +777,21 @@
             const chevron = document.getElementById('avatar-section-chevron');
             section.classList.toggle('hidden');
             chevron.style.transform = section.classList.contains('hidden') ? '' : 'rotate(180deg)';
+            
+            // Scroll peek animation on expand
+            if (!section.classList.contains('hidden')) {
+                setTimeout(() => {
+                    const scrolls = section.querySelectorAll('.custom-scroll');
+                    scrolls.forEach(el => {
+                        // Scroll right by 60px smoothly
+                        el.scrollTo({ left: 60, behavior: 'smooth' });
+                        // Scroll back to 0 after 600ms
+                        setTimeout(() => {
+                            el.scrollTo({ left: 0, behavior: 'smooth' });
+                        }, 600);
+                    });
+                }, 200);
+            }
         }
 
         // ── PREVIEW BINDINGS ──

@@ -144,7 +144,7 @@ body.dotted-bg {
     top: 0;
     bottom: 0;
     width: 40px;
-    background: linear-gradient(to right, transparent, var(--smurf-cream));
+    background: linear-gradient(to right, transparent, #ffffff);
     pointer-events: none;
     z-index: 2;
 }
