@@ -152,6 +152,12 @@ body.dotted-bg {
 .custom-scroll {
     padding-top: 6px !important;
     margin-top: -6px !important;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+.custom-scroll:active {
+    cursor: grabbing;
 }
 
 .custom-scroll::-webkit-scrollbar {
