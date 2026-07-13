@@ -100,7 +100,7 @@
     <!-- ═══════════════════════════════════════ -->
     <!-- VIEW: LOADING                          -->
     <!-- ═══════════════════════════════════════ -->
-    <div id="view-loading" class="loading-spinner w-full hidden">
+    <div id="view-loading" class="loading-spinner w-full">
         <div class="spinner"></div>
         <p class="font-fredoka text-lg text-smurf-blue">Đang kết nối Làng Xì Trum...</p>
         <p class="text-xs text-slate-400 font-bold">Xác minh cư dân qua Telegram</p>
@@ -110,7 +110,7 @@
     <!-- ═══════════════════════════════════════ -->
     <!-- VIEW: REGISTRATION (User mới)          -->
     <!-- ═══════════════════════════════════════ -->
-    <div id="view-register" class="w-full">
+    <div id="view-register" class="w-full hidden">
         <!-- Header -->
         <header class="wood-texture fixed top-0 w-full max-w-md mx-auto left-0 right-0 z-50 text-white flex items-center justify-between px-6 h-14 shadow-lg rounded-b-2xl">
             <div class="flex items-center gap-2">
@@ -624,28 +624,44 @@
             }
         }
 
-        // ── INIT: Show form first, lookup in background ──
+        // ── INIT: Show loading first, lookup in background ──
         async function initApp() {
             // For testing outside Telegram: allow URL param override
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('tid')) telegramId = urlParams.get('tid');
 
-            // Always show register form first (no loading screen!)
-            showView('register');
-            setupRegistrationForm();
-
-            // If we have a Telegram ID, try background lookup
+            // If we have a Telegram ID, try background lookup while showing loading
             if (telegramId) {
+                showView('loading');
+                const skipBtn = document.getElementById('skip-loading-btn');
+                if (skipBtn) skipBtn.style.display = 'none'; // reset skip button
+                
+                // Show manual skip button after 3 seconds in case network is very slow
+                const skipTimeout = setTimeout(() => {
+                    if (skipBtn) skipBtn.style.display = 'block';
+                }, 3000);
+
                 gasLookupJsonp(telegramId, (resp) => {
+                    clearTimeout(skipTimeout);
                     if (resp && resp.exists && resp.data) {
                         currentUser = resp.data;
                         showProfileView();
+                    } else {
+                        // User does not exist -> show registration form
+                        showView('register');
+                        setupRegistrationForm();
                     }
-                    // If not found → user stays on register form (already showing)
                 }, () => {
-                    // Error/timeout → user stays on register form
-                    console.warn('Background lookup failed, staying on register form');
+                    clearTimeout(skipTimeout);
+                    // Connection error/timeout -> let them register anyway
+                    console.warn('Background lookup failed, showing register form');
+                    showView('register');
+                    setupRegistrationForm();
                 });
+            } else {
+                // No Telegram ID -> immediately show register form
+                showView('register');
+                setupRegistrationForm();
             }
         }
 
