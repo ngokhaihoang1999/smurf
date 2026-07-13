@@ -231,9 +231,9 @@
             <span class="material-symbols-outlined text-smurf-yellow text-3xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">park</span>
             <h1 class="font-fredoka text-2xl tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">Quảng Trường Cư Dân</h1>
         </div>
-        <div onclick="window.location.href='registration.html'" class="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1 shadow-sm">
-            <span class="material-symbols-outlined text-sm">add_circle</span>
-            Đăng ký thẻ
+        <div onclick="window.location.href='hub7.html'" class="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1 shadow-sm">
+            <span class="material-symbols-outlined text-sm">home</span>
+            Vào Làng
         </div>
     </header>
 
@@ -378,19 +378,30 @@
                 });
                 const result = await resp.json();
                 if (result.status === 'success' && result.residents) {
-                    RESIDENTS_DATA = result.residents.map(r => ({
-                        smurfName: r.smurfName || '',
-                        realName: r.realName || '',
-                        group: r.group || '',
-                        tinhCach: r.personality || '',
-                        soThich: r.hobbies || '',
-                        diemManh: r.strength || '',
-                        diemYeu: r.weakness || '',
-                        bio: r.bio || '',
-                        telegramId: r.telegramId || '',
-                        avatar: `avatars/avatar_${r.telegramId}.png`,
-                        cardFront: ''
-                    }));
+                    RESIDENTS_DATA = result.residents
+                        .filter(r => {
+                            const smurf = (r.smurfName || '').toLowerCase();
+                            const real = (r.realName || '').toLowerCase();
+                            const grp = (r.group || '').toLowerCase();
+                            const tid = String(r.telegramId || '');
+                            if (smurf.includes('test') || real.includes('test') || grp.includes('nhóm a') || grp === 'a' || tid === '123456' || tid === '123') {
+                                return false;
+                            }
+                            return true;
+                        })
+                        .map(r => ({
+                            smurfName: r.smurfName || '',
+                            realName: r.realName || '',
+                            group: r.group || '',
+                            tinhCach: r.personality || '',
+                            soThich: r.hobbies || '',
+                            diemManh: r.strength || '',
+                            diemYeu: r.weakness || '',
+                            bio: r.bio || '',
+                            telegramId: r.telegramId || '',
+                            avatar: `avatars/avatar_${r.telegramId}.png`,
+                            cardFront: ''
+                        }));
                 }
             } catch (err) {
                 console.error('Failed to load residents:', err);
