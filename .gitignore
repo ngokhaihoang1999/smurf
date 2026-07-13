@@ -43,7 +43,7 @@ frames/
 test_assets/
 scratch/
 bg_v4_*.png
-card_bg*.png
+
 smurfette_*.png
 test_*.html
 smurf_canvas_player.html
