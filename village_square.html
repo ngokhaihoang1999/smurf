@@ -191,20 +191,20 @@
         }
         /* ── SLIDE TRANSITION FOR MODAL NAVIGATION ── */
         @keyframes slideOutLeft {
-            0% { transform: scale(1) translateX(0); opacity: 1; filter: blur(0); }
-            100% { transform: scale(0.92) translateX(-180px); opacity: 0; filter: blur(4px); }
+            0% { transform: scale(1) translateX(0); opacity: 1; }
+            100% { transform: scale(0.92) translateX(-180px); opacity: 0; }
         }
         @keyframes slideInRight {
-            0% { transform: scale(0.92) translateX(180px); opacity: 0; filter: blur(4px); }
-            100% { transform: scale(1) translateX(0); opacity: 1; filter: blur(0); }
+            0% { transform: scale(0.92) translateX(180px); opacity: 0; }
+            100% { transform: scale(1) translateX(0); opacity: 1; }
         }
         @keyframes slideOutRight {
-            0% { transform: scale(1) translateX(0); opacity: 1; filter: blur(0); }
-            100% { transform: scale(0.92) translateX(180px); opacity: 0; filter: blur(4px); }
+            0% { transform: scale(1) translateX(0); opacity: 1; }
+            100% { transform: scale(0.92) translateX(180px); opacity: 0; }
         }
         @keyframes slideInLeft {
-            0% { transform: scale(0.92) translateX(-180px); opacity: 0; filter: blur(4px); }
-            100% { transform: scale(1) translateX(0); opacity: 1; filter: blur(0); }
+            0% { transform: scale(0.92) translateX(-180px); opacity: 0; }
+            100% { transform: scale(1) translateX(0); opacity: 1; }
         }
         
         .animate-slide-out-left {
@@ -276,7 +276,7 @@
                 <!-- Mặt sau: Thẻ Dọc 3:4 (Thẻ Thống kê) -->
                 <div class="card-face card-back flex flex-col justify-between p-0 overflow-hidden" style="background: #ffffff; border-radius: 28px;">
                     <div class="w-full relative overflow-hidden" style="aspect-ratio: 3/4;">
-                        <img id="m-card-avatar" src="" alt="Avatar" class="w-full h-full object-cover">
+                        <img id="m-card-avatar" src="" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                         <!-- Group Badge Overlay -->
                         <span class="absolute top-4 right-4 bg-smurf-blue text-white px-3 py-1 rounded-full text-xs font-bold shadow-md uppercase" id="m-card-group">Nhóm</span>
                         <!-- Decorative icon -->
@@ -309,7 +309,7 @@
                         <!-- Avatar (nằm ở trục dọc x=80 y=138 w=589 h=823) -->
                         <div style="position: absolute; left: 80px; top: 138px; width: 589px; height: 823px; z-index: 1;">
                             <div style="width: 100%; height: 100%; overflow: hidden; background: #e8f4f8; border-radius: 12px;">
-                                <img id="m-preview-smurf-avatar" src="" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;">
+                                <img id="m-preview-smurf-avatar" src="" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                             </div>
                         </div>
 
@@ -341,13 +341,13 @@
     </div>
         
         <!-- Controls below modal card -->
-        <div id="modal-controls" class="fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-4 z-[52] opacity-0 transition-opacity duration-300">
-            <button onclick="toggleModalFlip()" class="mushroom-btn px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-[0px_8px_24px_rgba(239,68,68,0.25)]">
-                <span class="material-symbols-outlined">flip</span>
+        <div id="modal-controls" class="fixed bottom-6 left-4 right-4 flex gap-3.5 z-[52] opacity-0 transition-opacity duration-300 max-w-md mx-auto justify-center">
+            <button onclick="toggleModalFlip()" class="mushroom-btn flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0px_8px_24px_rgba(239,68,68,0.25)] text-sm whitespace-nowrap min-w-0">
+                <span class="material-symbols-outlined text-lg">flip</span>
                 Lật Mặt Thẻ
             </button>
-            <button onclick="closeModal()" class="px-6 py-2.5 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl active:scale-95 transition-all flex items-center gap-2">
-                <span class="material-symbols-outlined">close</span>
+            <button onclick="closeModal()" class="flex-1 py-3 px-4 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl active:scale-95 transition-all flex items-center justify-center gap-2 text-sm whitespace-nowrap min-w-0">
+                <span class="material-symbols-outlined text-lg">close</span>
                 Đóng lại
             </button>
         </div>
@@ -582,9 +582,6 @@
                 container.style.width = dims.width + 'px';
                 container.style.height = dims.height + 'px';
                 
-                controls.style.transition = 'none';
-                controls.style.top = (dims.top + dims.height + 16) + 'px';
-                
                 resizeModalCard();
             }
         });
@@ -647,31 +644,26 @@
             modal.classList.remove('pointer-events-none');
             modal.classList.add('opacity-100');
             
-            // Setup controls initial top position (matches grid card bottom, to transition along with the morph!)
+            // Setup controls
             const controls = document.getElementById('modal-controls');
-            controls.style.transition = 'none';
-            controls.style.top = (rect.top + rect.height + 10) + 'px';
             controls.classList.add('opacity-100');
 
             // Force browser reflow to apply initial positioning
             void container.offsetWidth;
 
-            // Animate card container to centered position while transitioning controls top
+            // Animate card container to centered position
             const dims = getModalTargetDimensions(modalFlipped);
 
-            container.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.2)';
+            container.style.transition = 'top 0.4s cubic-bezier(0.16, 1, 0.3, 1), left 0.4s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s cubic-bezier(0.16, 1, 0.3, 1), height 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             container.style.top = dims.top + 'px';
             container.style.left = dims.left + 'px';
             container.style.width = dims.width + 'px';
             container.style.height = dims.height + 'px';
             
-            controls.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.2)';
-            controls.style.top = (dims.top + dims.height + 16) + 'px';
-            
             // Flip the card Y-rotation to show horizontal card
             card3d.classList.add('flipped');
 
-            startScaleTracking(600);
+            startScaleTracking(400);
         }
 
         function toggleModalFlip() {
@@ -688,16 +680,13 @@
                 card3d.classList.remove('flipped');
             }
             
-            container.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.2)';
+            container.style.transition = 'top 0.4s cubic-bezier(0.16, 1, 0.3, 1), left 0.4s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s cubic-bezier(0.16, 1, 0.3, 1), height 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             container.style.top = dims.top + 'px';
             container.style.left = dims.left + 'px';
             container.style.width = dims.width + 'px';
             container.style.height = dims.height + 'px';
             
-            controls.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.2)';
-            controls.style.top = (dims.top + dims.height + 16) + 'px';
-            
-            startScaleTracking(600);
+            startScaleTracking(400);
         }
 
         function closeModal() {
@@ -720,25 +709,25 @@
                 card3d.classList.remove('flipped');
 
                 // Animate card container coordinates back to clicked grid item coordinates
-                container.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.2)';
+                container.style.transition = 'top 0.4s cubic-bezier(0.16, 1, 0.3, 1), left 0.4s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s cubic-bezier(0.16, 1, 0.3, 1), height 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
                 container.style.top = lastClickedRect.top + 'px';
                 container.style.left = lastClickedRect.left + 'px';
                 container.style.width = lastClickedRect.width + 'px';
                 container.style.height = lastClickedRect.height + 'px';
 
-                // Animate controls coordinates back to clicked grid item bottom
-                controls.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.2)';
-                controls.style.top = (lastClickedRect.top + lastClickedRect.height + 10) + 'px';
-
                 // Performance fix: Restore grid card opacity immediately so there is zero delay!
                 lastClickedElement.style.opacity = '1';
 
-                startScaleTracking(600);
+                startScaleTracking(400);
 
                 closeTimeoutId = setTimeout(() => {
                     container.style.display = 'none';
+                    container.style.top = '';
+                    container.style.left = '';
+                    container.style.width = '';
+                    container.style.height = '';
                     closeTimeoutId = null;
-                }, 600); // Wait for transition animation to finish
+                }, 400); // Wait for transition animation to finish
             } else {
                 container.style.display = 'none';
             }
@@ -815,10 +804,6 @@
                 document.getElementById('m-preview-diem-yeu').textContent = item.diemYeu || '';
                 document.getElementById('m-preview-bio').textContent = item.bio || '';
                 adjustAllCardFonts('m-preview-');
-                
-                const dims = getModalTargetDimensions(modalFlipped);
-                controls.style.transition = 'none';
-                controls.style.top = (dims.top + dims.height + 16) + 'px';
                 
                 resizeModalCard();
                 
