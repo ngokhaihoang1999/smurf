@@ -385,11 +385,22 @@
             </button>
         </div>
         
-        <!-- Prev/Next Navigation Buttons (responsive floating) -->
-        <button onclick="navigateModal('prev')" class="fixed bottom-20 left-4 lg:left-8 lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
+        <!-- Page Indicator & Navigation Row (mobile-only) -->
+        <div id="modal-nav-row" class="fixed bottom-20 left-0 right-0 flex lg:hidden justify-center items-center gap-4 z-[102] opacity-0 transition-opacity duration-300 pointer-events-auto">
+            <button onclick="navigateModal('prev')" class="w-10 h-10 bg-white/95 hover:bg-white text-slate-800 rounded-full shadow-md border border-slate-100 flex items-center justify-center active:scale-90 transition-transform">
+                <span class="material-symbols-outlined text-xl font-bold">chevron_left</span>
+            </button>
+            <span id="modal-page-indicator" class="text-white font-bold text-sm bg-slate-950/40 px-3.5 py-1 rounded-full backdrop-blur-sm">1 / 12</span>
+            <button onclick="navigateModal('next')" class="w-10 h-10 bg-white/95 hover:bg-white text-slate-800 rounded-full shadow-md border border-slate-100 flex items-center justify-center active:scale-90 transition-transform">
+                <span class="material-symbols-outlined text-xl font-bold">chevron_right</span>
+            </button>
+        </div>
+        
+        <!-- Prev/Next Navigation Buttons (desktop-only) -->
+        <button onclick="navigateModal('prev')" class="hidden lg:flex fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer items-center justify-center">
             <span class="material-symbols-outlined text-2xl font-bold">chevron_left</span>
         </button>
-        <button onclick="navigateModal('next')" class="fixed bottom-20 right-4 lg:right-8 lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
+        <button onclick="navigateModal('next')" class="hidden lg:flex fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer items-center justify-center">
             <span class="material-symbols-outlined text-2xl font-bold">chevron_right</span>
         </button>
     </div>
@@ -694,15 +705,15 @@
             const container = document.getElementById('modalCardContainer');
             if (!container) return;
             
+            const dims = getModalTargetDimensions(modalFlipped);
             let scale;
             if (isMobilePortrait() && modalFlipped) {
                 if (manualRotateLandscape) {
-                    scale = container.getBoundingClientRect().width / 1516;
+                    scale = dims.width / 1516;
                 } else {
-                    scale = container.getBoundingClientRect().height / 1516;
+                    scale = dims.height / 1516;
                 }
             } else {
-                const dims = getModalTargetDimensions(modalFlipped);
                 scale = dims.width / 1516;
             }
             
@@ -819,6 +830,10 @@
             // Setup controls
             const controls = document.getElementById('modal-controls');
             controls.classList.add('opacity-100');
+            
+            const navRow = document.getElementById('modal-nav-row');
+            navRow.classList.add('opacity-100');
+            updatePageIndicator();
 
             // Play: transition transform to scale(1) translate3d(0,0,0)
             container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
@@ -889,6 +904,8 @@
             // Hide overlay background and controls
             backdrop.classList.remove('opacity-100');
             controls.classList.remove('opacity-100');
+            const navRow = document.getElementById('modal-nav-row');
+            navRow.classList.remove('opacity-100');
 
             if (lastClickedRect && lastClickedElement) {
                 // Ensure card is flipped back to vertical front before closing to zoom back to grid position cleanly
@@ -1066,6 +1083,7 @@
                 adjustAllCardFonts('m-preview-');
                 
                 resizeModalCard();
+                updatePageIndicator();
                 
                 // Remove slide-out class and apply slide-in class
                 animator.classList.remove(outClass);
@@ -1107,6 +1125,45 @@
                 }
             });
         }
+
+        function updatePageIndicator() {
+            const indicator = document.getElementById('modal-page-indicator');
+            if (!indicator || !activeModalItem) return;
+            
+            const idx = filteredResidentsList.findIndex(x => x.smurfName === activeModalItem.smurfName);
+            if (idx !== -1) {
+                indicator.textContent = `${idx + 1} / ${filteredResidentsList.length}`;
+            }
+        }
+
+        // Swipe Gestures for Mobile Navigation
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        function handleSwipe() {
+            const diffX = touchEndX - touchStartX;
+            if (Math.abs(diffX) > 60) { // threshold of 60px
+                if (diffX > 0) {
+                    navigateModal('prev');
+                } else {
+                    navigateModal('next');
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('modalCardContainer');
+            if (container) {
+                container.addEventListener('touchstart', e => {
+                    touchStartX = e.changedTouches[0].screenX;
+                }, { passive: true });
+                
+                container.addEventListener('touchend', e => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    handleSwipe();
+                }, { passive: true });
+            }
+        });
 
         // Run initial render — fetch live data from GAS
         loadResidents();
