@@ -104,6 +104,7 @@
         <div class="spinner"></div>
         <p class="font-fredoka text-lg text-smurf-blue">Đang kết nối Làng Xì Trum...</p>
         <p class="text-xs text-slate-400 font-bold">Xác minh cư dân qua Telegram</p>
+        <button onclick="showView('register'); setupRegistrationForm();" class="mt-4 text-xs text-smurf-blue underline font-bold" style="display:none" id="skip-loading-btn">Bỏ qua → Đăng ký mới</button>
     </div>
 
     <!-- ═══════════════════════════════════════ -->
@@ -621,19 +622,26 @@
         async function initApp() {
             showView('loading');
             
+            // Show skip button after 4 seconds
+            setTimeout(() => {
+                const skipBtn = document.getElementById('skip-loading-btn');
+                if (skipBtn) skipBtn.style.display = 'inline-block';
+            }, 4000);
+            
             // For testing outside Telegram: allow URL param override
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('tid')) telegramId = urlParams.get('tid');
 
             if (!telegramId) {
-                // No Telegram ID → show registration
                 showView('register');
                 setupRegistrationForm();
                 return;
             }
 
             try {
+                console.log('Looking up Telegram ID:', telegramId);
                 const resp = await gasRequest({ action: 'lookup', telegramId });
+                console.log('Lookup response:', resp);
                 if (resp.exists && resp.data) {
                     currentUser = resp.data;
                     showProfileView();
@@ -968,15 +976,28 @@
             document.getElementById('edit-sheet').classList.remove('active');
         }
 
-        // ── GAS REQUEST HELPER ──
+        // ── GAS REQUEST HELPER (with 8s timeout) ──
         async function gasRequest(data) {
-            const response = await fetch(GAS_WEBAPP_URL, {
-                method: 'POST',
-                redirect: 'follow',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(data)
-            });
-            return response.json();
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            try {
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(data),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response.json();
+            } catch (err) {
+                clearTimeout(timeoutId);
+                if (err.name === 'AbortError') {
+                    console.warn('GAS request timed out (8s)');
+                    throw new Error('Request timeout');
+                }
+                throw err;
+            }
         }
 
         // ── BOOT ──
