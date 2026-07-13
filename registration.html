@@ -618,34 +618,29 @@
             }
         }
 
-        // ── INIT: Lookup user (uses JSONP to bypass CORS in Telegram WebView) ──
+        // ── INIT: Show form first, lookup in background ──
         async function initApp() {
-            showView('loading');
-            
             // For testing outside Telegram: allow URL param override
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('tid')) telegramId = urlParams.get('tid');
 
-            if (!telegramId) {
-                showView('register');
-                setupRegistrationForm();
-                return;
-            }
+            // Always show register form first (no loading screen!)
+            showView('register');
+            setupRegistrationForm();
 
-            // JSONP lookup (bypasses CORS completely)
-            gasLookupJsonp(telegramId, (resp) => {
-                if (resp && resp.exists && resp.data) {
-                    currentUser = resp.data;
-                    showProfileView();
-                } else {
-                    showView('register');
-                    setupRegistrationForm();
-                }
-            }, () => {
-                // Error/timeout fallback
-                showView('register');
-                setupRegistrationForm();
-            });
+            // If we have a Telegram ID, try background lookup
+            if (telegramId) {
+                gasLookupJsonp(telegramId, (resp) => {
+                    if (resp && resp.exists && resp.data) {
+                        currentUser = resp.data;
+                        showProfileView();
+                    }
+                    // If not found → user stays on register form (already showing)
+                }, () => {
+                    // Error/timeout → user stays on register form
+                    console.warn('Background lookup failed, staying on register form');
+                });
+            }
         }
 
         // ── JSONP GET (works in ALL browsers including Telegram WebView) ──
