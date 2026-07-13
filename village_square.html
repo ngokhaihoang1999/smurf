@@ -290,9 +290,9 @@
     </main>
 
     <!-- ── DETAIL MODAL (3D CARD FLIP & aspect ratio morph) ── -->
-    <div id="detail-modal" class="fixed inset-0 z-[100] pointer-events-none opacity-0 transition-opacity duration-300">
+    <div id="detail-modal" class="fixed inset-0 z-[100] pointer-events-none hidden">
         <!-- Backdrop -->
-        <div id="modal-backdrop" onclick="closeModal()" class="absolute inset-0 bg-slate-900/50 backdrop-blur-md transition-opacity duration-300"></div>
+        <div id="modal-backdrop" onclick="closeModal()" class="absolute inset-0 bg-slate-950/70 opacity-0 transition-opacity duration-300"></div>
         
         <!-- Morphing Card container (positioned absolutely/fixed for transition) -->
         <div class="modal-card-container shadow-[0_20px_50px_rgba(0,0,0,0.35)] rounded-[28px]" id="modalCardContainer" style="position: fixed; z-index: 101; display: none; will-change: transform;">
@@ -625,7 +625,7 @@
             const controls = document.getElementById('modal-controls');
             if (!controls) return;
             
-            if (activeModalItem && document.getElementById('detail-modal').classList.contains('opacity-100')) {
+            if (activeModalItem && !document.getElementById('detail-modal').classList.contains('hidden')) {
                 if (isMobileLandscape()) {
                     const dims = getModalTargetDimensions(modalFlipped);
                     const combinedWidth = dims.width + 20 + 180;
@@ -673,19 +673,19 @@
             if (!cardFront) return;
             
             if (isMobilePortrait() && modalFlipped) {
+                const dims = getModalTargetDimensions(true);
                 if (manualRotateLandscape) {
-                    cardFront.style.width = '';
-                    cardFront.style.height = '';
+                    cardFront.style.width = dims.width + 'px';
+                    cardFront.style.height = dims.height + 'px';
                     cardFront.classList.add('non-rotated-landscape');
                 } else {
-                    const dims = getModalTargetDimensions(true);
                     cardFront.style.width = dims.height + 'px';
                     cardFront.style.height = dims.width + 'px';
                     cardFront.classList.remove('non-rotated-landscape');
                 }
             } else {
-                cardFront.style.width = '';
-                cardFront.style.height = '';
+                cardFront.style.removeProperty('width');
+                cardFront.style.removeProperty('height');
                 cardFront.classList.remove('non-rotated-landscape');
             }
         }
@@ -724,7 +724,7 @@
 
         // Adjust dimensions dynamically on screen resize
         window.addEventListener('resize', () => {
-            if (activeModalItem && document.getElementById('detail-modal').classList.contains('opacity-100')) {
+            if (activeModalItem && !document.getElementById('detail-modal').classList.contains('hidden')) {
                 const container = document.getElementById('modalCardContainer');
                 const controls = document.getElementById('modal-controls');
                 const dims = getModalTargetDimensions(modalFlipped);
@@ -808,15 +808,17 @@
 
             // Fade in modal overlay and controls
             const modal = document.getElementById('detail-modal');
-            modal.classList.remove('pointer-events-none');
-            modal.classList.add('opacity-100');
+            modal.classList.remove('hidden');
+            
+            // Force browser reflow to apply initial inverted transform and unhide modal
+            void container.offsetWidth;
+            
+            const backdrop = document.getElementById('modal-backdrop');
+            backdrop.classList.add('opacity-100');
             
             // Setup controls
             const controls = document.getElementById('modal-controls');
             controls.classList.add('opacity-100');
-
-            // Force browser reflow to apply initial inverted transform
-            void container.offsetWidth;
 
             // Play: transition transform to scale(1) translate3d(0,0,0)
             container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
@@ -881,11 +883,11 @@
             }
             const container = document.getElementById('modalCardContainer');
             const modal = document.getElementById('detail-modal');
+            const backdrop = document.getElementById('modal-backdrop');
             const controls = document.getElementById('modal-controls');
 
             // Hide overlay background and controls
-            modal.classList.add('pointer-events-none');
-            modal.classList.remove('opacity-100');
+            backdrop.classList.remove('opacity-100');
             controls.classList.remove('opacity-100');
 
             if (lastClickedRect && lastClickedElement) {
@@ -921,6 +923,7 @@
                     container.style.left = '';
                     container.style.width = '';
                     container.style.height = '';
+                    modal.classList.add('hidden');
                     closeTimeoutId = null;
                     adjustControlsLayout();
                 }, 400); // Wait for transition animation to finish
@@ -933,6 +936,7 @@
                 container.style.height = '';
                 manualRotateLandscape = false;
                 updateRotateButtonState();
+                modal.classList.add('hidden');
                 adjustControlsLayout();
             }
         }
