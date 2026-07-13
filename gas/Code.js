@@ -185,15 +185,24 @@ function handleRegister(data) {
       var filename = "ref_" + (data.smurfName || "card").replace(/\s+/g, "_") + "_" + new Date().getTime() + "." + ext;
       var blob = Utilities.newBlob(decodedData, contentType, filename);
       
-      var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+      var folder;
+      try {
+        folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+      } catch (folderErr) {
+        folder = DriveApp.getRootFolder();
+      }
       var file = folder.createFile(blob);
       file.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
-      fileUrl = "https://drive.google.com/uc?export=view&id=" + file.getId();
+      fileUrl = '=IMAGE("https://drive.google.com/uc?export=view&id=' + file.getId() + '")';
     } catch (fileErr) {
       fileUrl = "Error upload: " + fileErr.toString();
     }
   } else if (data.referenceImage) {
-    fileUrl = data.referenceImage;
+    if (data.referenceImage.indexOf("http") === 0) {
+      fileUrl = '=IMAGE("' + data.referenceImage + '")';
+    } else {
+      fileUrl = data.referenceImage;
+    }
   }
   
   // Ghi dòng mới
