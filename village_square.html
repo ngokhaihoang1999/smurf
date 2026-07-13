@@ -156,9 +156,31 @@
 
         /* ── MORPHING MODAL FOR DETAIL CARD ── */
         .modal-overlay {
-            background: rgba(15, 23, 42, 0.5);
-            backdrop-filter: blur(8px);
+            background: rgba(15, 23, 42, 0.7);
             transition: opacity 0.3s ease;
+        }
+        
+        @media (min-width: 640px) {
+            .modal-overlay {
+                backdrop-filter: blur(8px);
+                background: rgba(15, 23, 42, 0.5);
+            }
+        }
+        
+        /* Auto-rotate horizontal card face on mobile portrait */
+        @media (max-width: 640px) and (orientation: portrait) {
+            .card-front {
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) rotate(90deg) rotateY(180deg) !important;
+                position: absolute !important;
+                transform-origin: center center !important;
+            }
+            #modalCardScaleWrapper {
+                transform-origin: center center !important;
+                top: 50% !important;
+                left: 50% !important;
+            }
         }
         
         .modal-card-container {
@@ -264,12 +286,12 @@
     </main>
 
     <!-- ── DETAIL MODAL (3D CARD FLIP & aspect ratio morph) ── -->
-    <div id="detail-modal" class="fixed inset-0 z-50 pointer-events-none opacity-0 transition-opacity duration-300">
+    <div id="detail-modal" class="fixed inset-0 z-[100] pointer-events-none opacity-0 transition-opacity duration-300">
         <!-- Backdrop -->
         <div id="modal-backdrop" onclick="closeModal()" class="absolute inset-0 bg-slate-900/50 backdrop-blur-md transition-opacity duration-300"></div>
         
         <!-- Morphing Card container (positioned absolutely/fixed for transition) -->
-        <div class="modal-card-container shadow-[0_20px_50px_rgba(0,0,0,0.35)] rounded-[28px]" id="modalCardContainer" style="position: fixed; z-index: 51; display: none; will-change: transform, top, left, width, height;">
+        <div class="modal-card-container shadow-[0_20px_50px_rgba(0,0,0,0.35)] rounded-[28px]" id="modalCardContainer" style="position: fixed; z-index: 101; display: none; will-change: transform;">
             <div id="modalCardAnimator" class="h-full w-full" style="will-change: transform;">
                 <div class="modal-card-3d h-full w-full" id="modalCard3d" style="will-change: transform;">
                 
@@ -341,7 +363,7 @@
     </div>
         
         <!-- Controls below modal card -->
-        <div id="modal-controls" class="fixed bottom-6 left-4 right-4 flex gap-3.5 z-[52] opacity-0 transition-opacity duration-300 max-w-md mx-auto justify-center">
+        <div id="modal-controls" class="fixed bottom-6 left-4 right-4 flex gap-3.5 z-[102] opacity-0 transition-opacity duration-300 max-w-md mx-auto justify-center">
             <button onclick="toggleModalFlip()" class="mushroom-btn flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0px_8px_24px_rgba(239,68,68,0.25)] text-sm whitespace-nowrap min-w-0">
                 <span class="material-symbols-outlined text-lg">flip</span>
                 Lật Mặt Thẻ
@@ -353,10 +375,10 @@
         </div>
         
         <!-- Prev/Next Navigation Buttons -->
-        <button onclick="navigateModal('prev')" class="fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-[53] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
+        <button onclick="navigateModal('prev')" class="fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
             <span class="material-symbols-outlined text-2xl font-bold">chevron_left</span>
         </button>
-        <button onclick="navigateModal('next')" class="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-[53] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
+        <button onclick="navigateModal('next')" class="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
             <span class="material-symbols-outlined text-2xl font-bold">chevron_right</span>
         </button>
     </div>
@@ -478,48 +500,93 @@
         let lastClickedElement = null;
         let closeTimeoutId = null;
 
-        function resizeModalCard() {
-            const container = document.getElementById('modalCardContainer');
-            if (!container) return;
-            // Calculate scale based on the target viewport width depending on flip state to avoid transition width lagging
-            const targetWidth = modalFlipped ? Math.min(window.innerWidth * 0.92, 780) : Math.min(window.innerWidth * 0.92, 400);
-            const scale = targetWidth / 1516;
-            
-            const wrapper = document.getElementById('modalCardScaleWrapper');
-            if (wrapper) {
-                wrapper.style.transform = `translateX(-50%) scale(${scale})`;
-            }
+        // Screen orientation detection helpers
+        function isMobilePortrait() {
+            return window.innerWidth < 640 && window.innerHeight > window.innerWidth;
+        }
+
+        function isMobileLandscape() {
+            return window.innerWidth < 1024 && window.innerWidth > window.innerHeight;
         }
 
         // Adjust dimensions dynamically on screen resize
         function getModalTargetDimensions(isFlipped) {
             let targetWidth, targetHeight;
-            const paddingHeight = 120; // Space for margins and controls below the card
             
-            if (isFlipped) {
-                targetWidth = Math.min(window.innerWidth * 0.92, 780);
-                targetHeight = targetWidth / 1.46;
+            if (isMobilePortrait()) {
+                const paddingHeight = 120;
+                if (isFlipped) {
+                    // Rotated state: visual width is along screen height, visual height is along screen width
+                    let vHeight = Math.min(window.innerWidth * 0.92, 400);
+                    let vWidth = vHeight * 1.46;
+                    
+                    const maxHeight = window.innerHeight - paddingHeight;
+                    if (vWidth > maxHeight) {
+                        vWidth = Math.max(280, maxHeight);
+                        vHeight = vWidth / 1.46;
+                    }
+                    
+                    targetWidth = vHeight; // DOM width
+                    targetHeight = vWidth; // DOM height
+                } else {
+                    // Normal vertical state
+                    targetWidth = Math.min(window.innerWidth * 0.92, 400);
+                    targetHeight = targetWidth * (4/3) + 80;
+                    
+                    const maxHeight = window.innerHeight - paddingHeight;
+                    if (targetHeight > maxHeight) {
+                        targetHeight = Math.max(280, maxHeight);
+                        targetWidth = (targetHeight - 80) * (3/4);
+                    }
+                }
+            } else if (isMobileLandscape()) {
+                const paddingHeight = 40; // Side controls, so very small vertical padding
+                const maxCardWidth = window.innerWidth - 220; // 180px controls + 40px gap/padding
+                const maxCardHeight = window.innerHeight - paddingHeight;
                 
-                // If height exceeds viewport, shrink responsive to window height
-                const maxHeight = window.innerHeight - paddingHeight;
-                if (targetHeight > maxHeight) {
-                    targetHeight = Math.max(200, maxHeight);
-                    targetWidth = targetHeight * 1.46;
+                if (isFlipped) {
+                    targetWidth = Math.min(maxCardWidth, maxCardHeight * 1.46);
+                    targetHeight = targetWidth / 1.46;
+                } else {
+                    targetHeight = Math.min(maxCardHeight, (maxCardWidth * 4/3) + 80);
+                    targetWidth = (targetHeight - 80) * (3/4);
                 }
             } else {
-                targetWidth = Math.min(window.innerWidth * 0.92, 400);
-                targetHeight = targetWidth * (4/3) + 80;
-                
-                // If height exceeds viewport, shrink responsive to window height
-                const maxHeight = window.innerHeight - paddingHeight;
-                if (targetHeight > maxHeight) {
-                    targetHeight = Math.max(280, maxHeight);
-                    targetWidth = (targetHeight - 80) * (3/4);
+                // Desktop / normal landscape orientation
+                const paddingHeight = 120;
+                if (isFlipped) {
+                    targetWidth = Math.min(window.innerWidth * 0.92, 780);
+                    targetHeight = targetWidth / 1.46;
+                    
+                    const maxHeight = window.innerHeight - paddingHeight;
+                    if (targetHeight > maxHeight) {
+                        targetHeight = Math.max(200, maxHeight);
+                        targetWidth = targetHeight * 1.46;
+                    }
+                } else {
+                    targetWidth = Math.min(window.innerWidth * 0.92, 400);
+                    targetHeight = targetWidth * (4/3) + 80;
+                    
+                    const maxHeight = window.innerHeight - paddingHeight;
+                    if (targetHeight > maxHeight) {
+                        targetHeight = Math.max(280, maxHeight);
+                        targetWidth = (targetHeight - 80) * (3/4);
+                    }
                 }
             }
             
-            const targetLeft = (window.innerWidth - targetWidth) / 2;
-            const targetTop = (window.innerHeight - targetHeight - 65) / 2; // Shift up slightly to fit controls below
+            // Calculate placement
+            let targetLeft, targetTop;
+            if (isMobileLandscape()) {
+                // Side-by-side layout: center the combination of card + controls
+                const combinedWidth = targetWidth + 20 + 180; // card + gap + controls
+                targetLeft = (window.innerWidth - combinedWidth) / 2;
+                targetTop = (window.innerHeight - targetHeight) / 2;
+            } else {
+                // Centered card, controls below
+                targetLeft = (window.innerWidth - targetWidth) / 2;
+                targetTop = (window.innerHeight - targetHeight - 65) / 2; // Shift up slightly for controls
+            }
             
             return {
                 width: targetWidth,
@@ -529,24 +596,130 @@
             };
         }
 
+        // Auto-reposition controls for landscape layouts
+        function adjustControlsLayout() {
+            const controls = document.getElementById('modal-controls');
+            if (!controls) return;
+            
+            if (activeModalItem && document.getElementById('detail-modal').classList.contains('opacity-100')) {
+                if (isMobileLandscape()) {
+                    const dims = getModalTargetDimensions(modalFlipped);
+                    const combinedWidth = dims.width + 20 + 180;
+                    const cardLeft = (window.innerWidth - combinedWidth) / 2;
+                    
+                    controls.style.position = 'fixed';
+                    controls.style.top = dims.top + 'px';
+                    controls.style.left = (cardLeft + dims.width + 20) + 'px';
+                    controls.style.width = '180px';
+                    controls.style.height = dims.height + 'px';
+                    controls.style.bottom = 'auto';
+                    controls.style.right = 'auto';
+                    controls.style.transform = 'none';
+                    controls.style.flexDirection = 'column';
+                    controls.style.justifyContent = 'center';
+                } else {
+                    controls.style.position = '';
+                    controls.style.top = '';
+                    controls.style.left = '';
+                    controls.style.width = '';
+                    controls.style.height = '';
+                    controls.style.bottom = '';
+                    controls.style.right = '';
+                    controls.style.transform = '';
+                    controls.style.flexDirection = '';
+                    controls.style.justifyContent = '';
+                }
+            } else {
+                controls.style.position = '';
+                controls.style.top = '';
+                controls.style.left = '';
+                controls.style.width = '';
+                controls.style.height = '';
+                controls.style.bottom = '';
+                controls.style.right = '';
+                controls.style.transform = '';
+                controls.style.flexDirection = '';
+                controls.style.justifyContent = '';
+            }
+        }
+
+        // Apply physical aspect swap dimensions dynamically to card-front for rotation styling
+        function updateCardFrontDimensions() {
+            const cardFront = document.querySelector('.card-front');
+            if (!cardFront) return;
+            
+            if (isMobilePortrait() && modalFlipped) {
+                const dims = getModalTargetDimensions(true);
+                cardFront.style.width = dims.height + 'px';
+                cardFront.style.height = dims.width + 'px';
+            } else {
+                cardFront.style.width = '';
+                cardFront.style.height = '';
+            }
+        }
+
+        function resizeModalCard() {
+            const container = document.getElementById('modalCardContainer');
+            if (!container) return;
+            
+            let scale;
+            if (isMobilePortrait() && modalFlipped) {
+                scale = container.getBoundingClientRect().height / 1516;
+            } else {
+                const dims = getModalTargetDimensions(modalFlipped);
+                scale = dims.width / 1516;
+            }
+            
+            const wrapper = document.getElementById('modalCardScaleWrapper');
+            if (wrapper) {
+                if (isMobilePortrait() && modalFlipped) {
+                    wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                } else {
+                    wrapper.style.transform = `translateX(-50%) scale(${scale})`;
+                }
+            }
+            
+            adjustControlsLayout();
+            updateCardFrontDimensions();
+        }
+
         let scaleAnimationId = null;
-        function startScaleTracking(duration = 600) {
+        function startScaleTracking(duration = 400) {
             if (scaleAnimationId) cancelAnimationFrame(scaleAnimationId);
             const startTime = performance.now();
             
+            const container = document.getElementById('modalCardContainer');
+            const wrapper = document.getElementById('modalCardScaleWrapper');
+            if (!container || !wrapper) return;
+            
+            const transformStr = wrapper.style.transform || '';
+            const match = transformStr.match(/scale\(([^)]+)\)/);
+            const startScale = match ? parseFloat(match[1]) : 0.5;
+            
+            const targetDims = getModalTargetDimensions(modalFlipped);
+            let endScale;
+            if (isMobilePortrait() && modalFlipped) {
+                endScale = targetDims.height / 1516;
+            } else {
+                endScale = targetDims.width / 1516;
+            }
+            
             function track() {
                 const elapsed = performance.now() - startTime;
-                const container = document.getElementById('modalCardContainer');
-                if (container) {
-                    const currentWidth = container.getBoundingClientRect().width;
-                    const scale = currentWidth / 1516;
-                    const wrapper = document.getElementById('modalCardScaleWrapper');
-                    if (wrapper) {
-                        wrapper.style.transform = `translateX(-50%) scale(${scale})`;
-                    }
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const currentScale = startScale + (endScale - startScale) * easeProgress;
+                
+                if (isMobilePortrait() && modalFlipped) {
+                    wrapper.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+                } else {
+                    wrapper.style.transform = `translateX(-50%) scale(${currentScale})`;
                 }
                 
-                if (elapsed < duration) {
+                adjustControlsLayout();
+                
+                if (progress < 1) {
                     scaleAnimationId = requestAnimationFrame(track);
                 } else {
                     scaleAnimationId = null;
@@ -554,19 +727,6 @@
                 }
             }
             scaleAnimationId = requestAnimationFrame(track);
-        }
-
-        function resizeModalCard() {
-            const container = document.getElementById('modalCardContainer');
-            if (!container) return;
-            // Calculate scale based on the target viewport width depending on flip state to avoid transition width lagging
-            const dims = getModalTargetDimensions(modalFlipped);
-            const scale = dims.width / 1516;
-            
-            const wrapper = document.getElementById('modalCardScaleWrapper');
-            if (wrapper) {
-                wrapper.style.transform = `translateX(-50%) scale(${scale})`;
-            }
         }
 
         // Adjust dimensions dynamically on screen resize
@@ -597,6 +757,7 @@
             activeModalItem = item;
             // The card in the grid is vertical. Clicking it will pop up and flip Y to reveal the horizontal card
             modalFlipped = true; 
+            updateCardFrontDimensions();
             
             // Get bounding rect of the clicked card for Shared Element Transition
             const rect = cardElement.getBoundingClientRect();
@@ -671,6 +832,7 @@
             const container = document.getElementById('modalCardContainer');
             const controls = document.getElementById('modal-controls');
             modalFlipped = !modalFlipped;
+            updateCardFrontDimensions();
             
             const dims = getModalTargetDimensions(modalFlipped);
             
@@ -707,6 +869,8 @@
                 // Ensure card is flipped back to vertical front before closing to zoom back to grid position cleanly
                 const card3d = document.getElementById('modalCard3d');
                 card3d.classList.remove('flipped');
+                modalFlipped = false;
+                updateCardFrontDimensions();
 
                 // Animate card container coordinates back to clicked grid item coordinates
                 container.style.transition = 'top 0.4s cubic-bezier(0.16, 1, 0.3, 1), left 0.4s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s cubic-bezier(0.16, 1, 0.3, 1), height 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
@@ -727,9 +891,11 @@
                     container.style.width = '';
                     container.style.height = '';
                     closeTimeoutId = null;
+                    adjustControlsLayout();
                 }, 400); // Wait for transition animation to finish
             } else {
                 container.style.display = 'none';
+                adjustControlsLayout();
             }
         }
 
