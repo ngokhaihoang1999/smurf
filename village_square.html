@@ -363,45 +363,40 @@
 
     <!-- Script Logic -->
     <script>
-        // Danh sách cư dân mẫu (đồng bộ với Plan)
-        const RESIDENTS_DATA = [
-            { 
-                smurfName: 'Tí Coding', 
-                realName: 'Nguyễn Văn An', 
-                group: 'N1T2', 
-                tinhCach: 'Hài hước, Năng động', 
-                soThich: 'Lập trình, Guitar', 
-                diemManh: 'Kiên nhẫn, Sáng tạo', 
-                diemYeu: 'Hay quên, Thức khuya',
-                bio: 'Code và cà phê là nguồn sống! 🌙',
-                avatar: 'avatars/smurf_avatar_coding_cropped_3_4.png',
-                cardFront: 'the_cu_dan_Tí_Coding.png'
-            },
-            { 
-                smurfName: 'Tí Mèo Mun', 
-                realName: 'Trần Thị Bích', 
-                group: 'N1T3', 
-                tinhCach: 'Nhiệt tình, Thân thiện', 
-                soThich: 'Vẽ tranh, Nuôi mèo', 
-                diemManh: 'Sáng tạo, Tỉ mỉ', 
-                diemYeu: 'Cầu toàn, Chậm quyết định',
-                bio: 'Mèo mun là boss, tôi chỉ là sen thôi! 🐈',
-                avatar: 'avatars/smurf_avatar_cat_cropped_3_4.png',
-                cardFront: 'the_cu_dan_Tí_Mèo_Mun.png'
-            },
-            { 
-                smurfName: 'Tí Bác Sĩ', 
-                realName: 'Võ Quang Hùng', 
-                group: 'N2T1', 
-                tinhCach: 'Điềm tĩnh, Cẩn thiện', 
-                soThich: 'Đọc sách y khoa, Cờ vua', 
-                diemManh: 'Chính xác, Tập trung cao', 
-                diemYeu: 'Ít nói chuyện phiếm',
-                bio: 'Mỗi bệnh nhân là một cuốn sách 📖',
-                avatar: 'avatars/smurf_avatar_doctor_cropped_3_4.png',
-                cardFront: 'the_cu_dan_Tí_Bác_Sĩ.png'
+        // ═══ LIVE DATA from GAS API ═══
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx3zWye3YGMKFpZ6G9tHOz_oKf4s6RWluKYMjG6nGvxRVVFEmhgcOIhRGaM-B1fG_lGew/exec";
+        let RESIDENTS_DATA = [];
+
+        async function loadResidents() {
+            const grid = document.getElementById('residents-grid');
+            grid.innerHTML = `<div class="col-span-full py-12 text-center"><div class="spinner" style="width:32px;height:32px;border:3px solid #e0f2fe;border-top-color:#00a2ff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div><p class="text-slate-400 font-bold text-sm mt-3">Đang tải dữ liệu cư dân...</p></div>`;
+            try {
+                const resp = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST', redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'listAll' })
+                });
+                const result = await resp.json();
+                if (result.status === 'success' && result.residents) {
+                    RESIDENTS_DATA = result.residents.map(r => ({
+                        smurfName: r.smurfName || '',
+                        realName: r.realName || '',
+                        group: r.group || '',
+                        tinhCach: r.personality || '',
+                        soThich: r.hobbies || '',
+                        diemManh: r.strength || '',
+                        diemYeu: r.weakness || '',
+                        bio: r.bio || '',
+                        telegramId: r.telegramId || '',
+                        avatar: `avatars/avatar_${r.telegramId}.png`,
+                        cardFront: ''
+                    }));
+                }
+            } catch (err) {
+                console.error('Failed to load residents:', err);
             }
-        ];
+            renderGrid();
+        }
 
         let activeFilter = 'ALL';
         let searchQuery = '';
@@ -432,22 +427,18 @@
 
             filtered.forEach(item => {
                 const cardHtml = `
-                    <div class="card-scene smurf-card flex flex-col overflow-hidden" onclick="openModal('${item.smurfName}', this)">
-                        <!-- Full Bleed Avatar (Aspect ratio 3:4) -->
+                    <div class="card-scene smurf-card flex flex-col overflow-hidden" onclick="openModal('${item.smurfName.replace(/'/g, "\\'")}', this)">
                         <div class="w-full relative overflow-hidden" style="aspect-ratio: 3/4;">
-                            <img src="${item.avatar}" alt="Avatar" class="w-full h-full object-cover">
-                            <!-- Decorative icon -->
+                            <img src="${item.avatar}" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                             <span class="absolute top-3 left-3 bg-white/80 backdrop-blur-sm text-smurf-blue p-1 rounded-full text-[11px] font-bold shadow-md material-symbols-outlined">park</span>
                         </div>
-                        
-                        <!-- Compact Info Section below avatar -->
                         <div class="w-full py-2.5 px-3.5 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 58px;">
                             <div class="flex justify-between items-center w-full">
                                 <span class="font-bold text-[13px] text-slate-700 truncate mr-2" style="max-width: 140px;">${item.realName}</span>
                                 <span class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase">${item.group}</span>
                             </div>
                             <div class="text-[10px] text-slate-400 font-bold mt-1 truncate">
-                                ${item.soThich.split(',')[0]} • ${item.tinhCach.split(',')[0]}
+                                ${(item.soThich || '').split(',')[0] || '—'} • ${(item.tinhCach || '').split(',')[0] || '—'}
                             </div>
                         </div>
                     </div>
@@ -833,8 +824,8 @@
             }, 300);
         }
 
-        // Run initial render
-        renderGrid();
+        // Run initial render — fetch live data from GAS
+        loadResidents();
     </script>
 </body>
 </html>

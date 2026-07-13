@@ -19,11 +19,32 @@ Thumbs.db
 output/
 temp/
 *.tmp
+*.log
+
+# Bảo mật (chứa bot token & plan nội bộ)
+RESIDENT_CARD_PLAN.md
+
+# Admin tools (local only)
+resident_card.html
+cutout_tool.html
+
+# Python & PowerShell scripts (local only)
+*.py
+*.ps1
+
+# Generated outputs
+registration.csv
+generated_prompts.txt
 the_cu_dan_*.png
+
+# Assets không cần public
+processed_assets/
+frames/
+test_assets/
+scratch/
+bg_v4_*.png
+card_bg*.png
+smurfette_*.png
 test_*.html
 smurf_canvas_player.html
 scene_editor.html
-cutout_tool.html
-bg_v4_*.png
-smurfette_*.png
-*.log

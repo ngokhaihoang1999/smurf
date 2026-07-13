@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <title>Làng Xì Trum 🏘️ — Trang Chủ</title>
+    <meta name="description" content="Làng Xì Trum — Cộng đồng Xì Trum HCM2. Đăng ký cư dân, tạo avatar, khám phá quảng trường làng!"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="styles.css" rel="stylesheet"/>
+    <style>
+        body {
+            background: linear-gradient(180deg, #87CEEB 0%, #B8E6FF 30%, #E0F2FE 55%, #d4f0d4 75%, #8BC34A 90%, #6d9b3a 100%);
+            min-height: 100vh;
+            font-family: 'Quicksand', sans-serif;
+            overflow-x: hidden;
+        }
+        .hero-title { text-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .mushroom-house {
+            font-size: 80px;
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));
+            animation: bob 4s ease-in-out infinite;
+        }
+        .cta-btn {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .cta-btn:active { transform: translateY(4px) scale(0.97); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center px-6 py-10">
+    <!-- Clouds -->
+    <div class="cloud" style="top: 5%; animation-duration: 20s; animation-delay: 0s; font-size: 36px;">☁️</div>
+    <div class="cloud" style="top: 12%; animation-duration: 28s; animation-delay: 8s; font-size: 28px;">☁️</div>
+    <div class="cloud" style="top: 18%; animation-duration: 24s; animation-delay: 4s; font-size: 24px;">☁️</div>
+
+    <!-- Hero -->
+    <div class="flex flex-col items-center gap-4 mt-8 relative z-10">
+        <div class="mushroom-house">🏘️</div>
+        <h1 class="font-baloo text-5xl font-extrabold text-white hero-title text-center leading-tight">
+            Làng<br>Xì Trum
+        </h1>
+        <p class="text-white/90 font-bold text-sm text-center max-w-xs leading-relaxed">
+            Cộng đồng HCM2 · Đăng ký cư dân · Nhận thẻ avatar riêng
+        </p>
+    </div>
+
+    <!-- CTAs -->
+    <div class="flex flex-col gap-4 mt-10 w-full max-w-xs relative z-10">
+        <a href="registration.html" class="cta-btn mushroom-btn w-full py-4 rounded-2xl font-fredoka text-lg text-center flex items-center justify-center gap-3 relative overflow-hidden no-underline">
+            <div class="absolute inset-x-0 top-0 h-1/2 bg-white opacity-20 rounded-t-2xl"></div>
+            <span class="material-symbols-outlined text-xl relative z-10" style="font-variation-settings: 'FILL' 1;">person_add</span>
+            <span class="relative z-10">Vào Làng / Đăng Ký</span>
+        </a>
+        <a href="village_square.html" class="cta-btn w-full py-4 rounded-2xl font-fredoka text-lg text-center flex items-center justify-center gap-3 bg-white text-smurf-blue border-2 border-smurf-blue no-underline font-bold">
+            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">park</span>
+            Quảng Trường Làng
+        </a>
+    </div>
+
+    <!-- Ground decorations -->
+    <div class="fixed bottom-0 left-0 right-0 flex justify-around items-end pb-4 pointer-events-none opacity-70 z-0">
+        <span class="text-3xl">🍄</span>
+        <span class="text-2xl">🌿</span>
+        <span class="text-4xl">🍄</span>
+        <span class="text-2xl">🌿</span>
+        <span class="text-3xl">🍄</span>
+    </div>
+
+    <!-- Footer -->
+    <p class="text-white/50 text-xs font-bold mt-12 relative z-10">Made with 💙 by HCM2</p>
+</body>
+</html>
