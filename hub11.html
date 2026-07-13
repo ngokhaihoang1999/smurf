@@ -468,27 +468,23 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex gap-3">
-                <button onclick="openCardSheet()" class="flex-1 mushroom-btn py-3 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-2 relative overflow-hidden">
+            <div class="flex">
+                <button onclick="openCardSheet()" class="w-full mushroom-btn py-3.5 rounded-2xl font-fredoka text-base flex items-center justify-center gap-2 relative overflow-hidden">
                     <div class="absolute inset-x-0 top-0 h-1/2 bg-white opacity-15 rounded-t-2xl"></div>
                     <span class="material-symbols-outlined text-lg relative z-10">badge</span>
-                    <span class="relative z-10">Xem Thẻ</span>
-                </button>
-                <button onclick="openEditSheet()" class="flex-1 py-3 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-2 bg-white border-2 border-smurf-blue text-smurf-blue font-bold transition-all active:scale-95">
-                    <span class="material-symbols-outlined text-lg">edit</span>
-                    Sửa Info
+                    <span class="relative z-10">Xem Thẻ Cư Dân</span>
                 </button>
             </div>
         </main>
 
         <!-- Bottom Nav -->
         <nav class="bottom-nav max-w-md mx-auto">
-            <div class="nav-item active" onclick="window.location.reload()">
+            <div id="nav-item-home" class="nav-item active" onclick="showHome()">
                 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
                 <span>Trang Chủ</span>
             </div>
-            <div class="nav-item" onclick="openCardSheet()">
-                <span class="material-symbols-outlined">badge</span>
+            <div id="nav-item-profile" class="nav-item" onclick="closeCardSheet(); openEditSheet();">
+                <span class="material-symbols-outlined">account_circle</span>
                 <span>Hồ Sơ</span>
             </div>
             <div class="nav-item" onclick="window.location.href='village_square.html'">
@@ -991,6 +987,20 @@
         }
 
         // ── BOTTOM SHEETS ──
+        function updateNavActive(activeId) {
+            const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            const activeItem = document.getElementById(activeId);
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+        }
+        function showHome() {
+            closeCardSheet();
+            closeEditSheet();
+            updateNavActive('nav-item-home');
+        }
         function openCardSheet() {
             document.getElementById('card-sheet-overlay').classList.add('active');
             document.getElementById('card-sheet').classList.add('active');
@@ -1016,10 +1026,12 @@
 
             document.getElementById('edit-sheet-overlay').classList.add('active');
             document.getElementById('edit-sheet').classList.add('active');
+            updateNavActive('nav-item-profile');
         }
         function closeEditSheet() {
             document.getElementById('edit-sheet-overlay').classList.remove('active');
             document.getElementById('edit-sheet').classList.remove('active');
+            updateNavActive('nav-item-home');
         }
 
         // ── GAS REQUEST HELPER (with 8s timeout) ──

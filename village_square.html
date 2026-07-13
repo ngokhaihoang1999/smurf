@@ -213,20 +213,20 @@
         }
         /* ── SLIDE TRANSITION FOR MODAL NAVIGATION ── */
         @keyframes slideOutLeft {
-            0% { transform: scale(1) translateX(0); opacity: 1; }
-            100% { transform: scale(0.92) translateX(-180px); opacity: 0; }
+            0% { transform: translate3d(0, 0, 0); opacity: 1; }
+            100% { transform: translate3d(-180px, 0, 0); opacity: 0; }
         }
         @keyframes slideInRight {
-            0% { transform: scale(0.92) translateX(180px); opacity: 0; }
-            100% { transform: scale(1) translateX(0); opacity: 1; }
+            0% { transform: translate3d(180px, 0, 0); opacity: 0; }
+            100% { transform: translate3d(0, 0, 0); opacity: 1; }
         }
         @keyframes slideOutRight {
-            0% { transform: scale(1) translateX(0); opacity: 1; }
-            100% { transform: scale(0.92) translateX(180px); opacity: 0; }
+            0% { transform: translate3d(0, 0, 0); opacity: 1; }
+            100% { transform: translate3d(180px, 0, 0); opacity: 0; }
         }
         @keyframes slideInLeft {
-            0% { transform: scale(0.92) translateX(-180px); opacity: 0; }
-            100% { transform: scale(1) translateX(0); opacity: 1; }
+            0% { transform: translate3d(-180px, 0, 0); opacity: 0; }
+            100% { transform: translate3d(0, 0, 0); opacity: 1; }
         }
         
         .animate-slide-out-left {
@@ -253,7 +253,7 @@
             <span class="material-symbols-outlined text-smurf-yellow text-3xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">park</span>
             <h1 class="font-fredoka text-2xl tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">Quảng Trường Cư Dân</h1>
         </div>
-        <div onclick="window.location.href='hub11.html'" class="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1 shadow-sm">
+        <div onclick="window.location.href='registration.html'" class="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1 shadow-sm">
             <span class="material-symbols-outlined text-sm">home</span>
             Vào Làng
         </div>
@@ -363,7 +363,12 @@
     </div>
         
         <!-- Controls below modal card -->
-        <div id="modal-controls" class="fixed bottom-6 left-4 right-4 flex gap-3.5 z-[102] opacity-0 transition-opacity duration-300 max-w-md mx-auto justify-center">
+        <div id="modal-controls" class="fixed bottom-6 left-4 right-4 flex gap-3.5 z-[102] opacity-0 transition-opacity duration-300 max-w-md mx-auto justify-center items-stretch">
+            <!-- Prev button (mobile-only) -->
+            <button onclick="navigateModal('prev')" class="lg:hidden px-3.5 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl active:scale-95 transition-all flex items-center justify-center shadow-sm">
+                <span class="material-symbols-outlined text-xl font-bold">chevron_left</span>
+            </button>
+
             <button onclick="toggleModalFlip()" class="mushroom-btn flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0px_8px_24px_rgba(239,68,68,0.25)] text-sm whitespace-nowrap min-w-0">
                 <span class="material-symbols-outlined text-lg">flip</span>
                 Lật Mặt Thẻ
@@ -372,13 +377,18 @@
                 <span class="material-symbols-outlined text-lg">close</span>
                 Đóng lại
             </button>
+
+            <!-- Next button (mobile-only) -->
+            <button onclick="navigateModal('next')" class="lg:hidden px-3.5 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl active:scale-95 transition-all flex items-center justify-center shadow-sm">
+                <span class="material-symbols-outlined text-xl font-bold">chevron_right</span>
+            </button>
         </div>
         
-        <!-- Prev/Next Navigation Buttons -->
-        <button onclick="navigateModal('prev')" class="fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
+        <!-- Prev/Next Navigation Buttons (desktop-only) -->
+        <button onclick="navigateModal('prev')" class="hidden lg:flex fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer items-center justify-center">
             <span class="material-symbols-outlined text-2xl font-bold">chevron_left</span>
         </button>
-        <button onclick="navigateModal('next')" class="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
+        <button onclick="navigateModal('next')" class="hidden lg:flex fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer items-center justify-center">
             <span class="material-symbols-outlined text-2xl font-bold">chevron_right</span>
         </button>
     </div>
@@ -906,11 +916,11 @@
             const controls = document.getElementById('modal-controls');
             if (!animator || !controls) return;
             
-            // Disable pointer events on navigation buttons to prevent double clicks during animation
-            const prevBtn = document.querySelector('button[onclick*="prev"]');
-            const nextBtn = document.querySelector('button[onclick*="next"]');
-            if (prevBtn) prevBtn.style.pointerEvents = 'none';
-            if (nextBtn) nextBtn.style.pointerEvents = 'none';
+            // Disable pointer events on all navigation buttons to prevent double clicks during animation
+            const prevBtns = document.querySelectorAll('button[onclick*="prev"]');
+            const nextBtns = document.querySelectorAll('button[onclick*="next"]');
+            prevBtns.forEach(btn => btn.style.pointerEvents = 'none');
+            nextBtns.forEach(btn => btn.style.pointerEvents = 'none');
             
             // 1. Trigger Slide-out animation
             const outClass = direction === 'next' ? 'animate-slide-out-left' : 'animate-slide-out-right';
@@ -975,14 +985,16 @@
                 
                 // Remove slide-out class and apply slide-in class
                 animator.classList.remove(outClass);
+                void animator.offsetWidth; // Force layout flush to restart animation cleanly without stutters
+                
                 const inClass = direction === 'next' ? 'animate-slide-in-right' : 'animate-slide-in-left';
                 animator.classList.add(inClass);
                 
                 // 3. Clean up slide-in class after it completes and restore pointer events
                 setTimeout(() => {
                     animator.classList.remove(inClass);
-                    if (prevBtn) prevBtn.style.pointerEvents = 'auto';
-                    if (nextBtn) nextBtn.style.pointerEvents = 'auto';
+                    prevBtns.forEach(btn => btn.style.pointerEvents = 'auto');
+                    nextBtns.forEach(btn => btn.style.pointerEvents = 'auto');
                 }, 350);
                 
             }, 300);
