@@ -715,7 +715,7 @@
             document.getElementById('profile-real-name').textContent = d.realName || '';
             document.getElementById('profile-group').textContent = d.group || '';
             document.getElementById('profile-bio').textContent = d.bio ? `"${d.bio}"` : '';
-            document.getElementById('profile-username').textContent = telegramUsername ? '@' + telegramUsername : (telegramFirstName || 'Cư dân');
+            document.getElementById('profile-username').textContent = telegramId ? 'ID: ' + telegramId : 'Cư dân';
             
             // Populate card sheet
             document.getElementById('card-sheet-avatar').src = avatarUrl;
@@ -737,7 +737,7 @@
             document.getElementById('telegram-id').value = telegramId;
             document.getElementById('telegram-username').value = telegramUsername;
             document.getElementById('telegram-first-name').value = telegramFirstName;
-            document.getElementById('tg-username').textContent = telegramUsername ? '@' + telegramUsername : (telegramFirstName || 'Khách');
+            document.getElementById('tg-username').textContent = telegramId ? 'ID: ' + telegramId : 'Khách';
             
             setupPreview();
             setupCustomSelectors();
