@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <title>Làng Xì Trum - Avatar Hub</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="styles.css" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        smurf: {
+                            blue: "#00a2ff",
+                            blueLight: "#e0f2fe",
+                            red: "#ef4444",
+                            redLight: "#fee2e2",
+                            yellow: "#ffb300",
+                            yellowLight: "#fef3c7",
+                            green: "#22c55e",
+                            greenLight: "#dcfce7",
+                            cream: "#fafaf6",
+                            wood: "#904d00",
+                            woodDark: "#6e3900"
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        quicksand: ['Quicksand', 'sans-serif'],
+                        baloo: ['"Baloo 2"', 'cursive'],
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body {
+            background-color: #fafaf6;
+            color: #171c22;
+            font-family: 'Quicksand', sans-serif;
+            background-image: radial-gradient(#99cbff 1.5px, transparent 1.5px);
+            background-size: 20px 20px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00a2ff !important;
+            box-shadow: 0 0 0 4px rgba(0, 162, 255, 0.15) !important;
+        }
+        .char-counter { font-size: 11px; font-weight: bold; color: #94a3b8; }
+
+        /* Avatar Hub Sky */
+        .avatar-stage {
+            background: linear-gradient(180deg, #87CEEB 0%, #B8E6FF 40%, #E0F2FE 70%, #d4f0d4 85%, #8BC34A 100%);
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+            min-height: 280px;
+        }
+        /* Name Plate */
+        .name-plate {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+            border: 3px solid #00a2ff;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,162,255,0.15), inset 0 1px 0 rgba(255,255,255,0.8);
+            position: relative;
+        }
+        .name-plate::before {
+            content: '💎';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+        }
+        /* Placeholder badge */
+        .avatar-pending {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(8px);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+    <!-- ═══════════════════════════════════════ -->
+    <!-- VIEW: LOADING                          -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="view-loading" class="loading-spinner w-full hidden">
+        <div class="spinner"></div>
+        <p class="font-fredoka text-lg text-smurf-blue">Đang kết nối Làng Xì Trum...</p>
+        <p class="text-xs text-slate-400 font-bold">Xác minh cư dân qua Telegram</p>
+        <button onclick="showView('register'); setupRegistrationForm();" class="mt-4 text-xs text-smurf-blue underline font-bold" style="display:none" id="skip-loading-btn">Bỏ qua → Đăng ký mới</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- VIEW: REGISTRATION (User mới)          -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="view-register" class="w-full">
+        <!-- Header -->
+        <header class="wood-texture fixed top-0 w-full max-w-md mx-auto left-0 right-0 z-50 text-white flex items-center justify-between px-6 h-14 shadow-lg rounded-b-2xl">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-smurf-yellow text-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">park</span>
+                <h1 class="font-fredoka text-xl tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">Đăng Ký Cư Dân</h1>
+            </div>
+            <div class="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full border border-white/30 backdrop-blur-md">
+                <span id="tg-username" class="text-xs font-bold text-white">Khách</span>
+                <span class="material-symbols-outlined text-white text-sm">account_circle</span>
+            </div>
+        </header>
+
+        <main class="w-full max-w-md mx-auto px-4 pt-20 z-10 flex flex-col gap-5 pb-28">
+            <!-- Live Preview Card -->
+            <section class="w-full">
+                <div style="width: 100%; overflow: hidden; border-radius: 24px; background: #ffffff; border: 2px solid #eaeef6; box-shadow: 0px 8px 24px rgba(0, 98, 157, 0.12); padding: 10px; position: relative;" id="preview-parent">
+                    <div id="cardScaleWrapper" style="width: 1516px; height: 1038px; transform-origin: top center; position: absolute; left: 50%; transform: translateX(-50%) scale(0.23); border-radius: 40px; overflow: hidden; background: #000;">
+                        <img id="preview-card-bg" src="card_bg.png" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='card_bg.png'">
+                        <div style="position: absolute; left: 80px; top: 138px; width: 589px; height: 823px; z-index: 1;">
+                            <div style="width: 100%; height: 100%; overflow: hidden; background: #e8f4f8; border-radius: 12px;">
+                                <img id="preview-smurf-avatar" src="avatars/smurf_basic_placeholder.png" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                            </div>
+                        </div>
+                        <img id="preview-card-cutout" src="card_bg_cutout.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; object-fit: fill; display: block;" onerror="this.style.display='none'">
+                        <div style="position: absolute; left: 812px; top: 147px; width: 552px; height: 112px; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 0 40px;">
+                            <div id="preview-real-name" style="font-family: 'Baloo 2', cursive; font-size: 47px; font-weight: 800; color: #ffffff; text-shadow: 0 3px 6px rgba(0,0,0,0.15); text-align: center; white-space: nowrap; overflow: hidden; width: 100%;">Tên thật</div>
+                        </div>
+                        <div id="preview-group" style="position: absolute; left: 1130px; top: 274px; width: 194px; height: 47px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', cursive; font-size: 34px; font-weight: 800; color: #0b4375; text-align: center;">Nhóm</div>
+                        <div id="preview-tinh-cach" style="position: absolute; left: 879px; top: 410px; width: 188px; height: 121px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 30px; font-weight: 700; color: #111111; text-align: center; line-height: 1.35; word-break: normal; overflow-wrap: break-word;">Tính cách</div>
+                        <div id="preview-so-thich" style="position: absolute; left: 1236px; top: 411px; width: 185px; height: 122px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 30px; font-weight: 700; color: #111111; text-align: center; line-height: 1.35; word-break: normal; overflow-wrap: break-word;">Sở thích</div>
+                        <div id="preview-diem-manh" style="position: absolute; left: 880px; top: 619px; width: 185px; height: 124px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 30px; font-weight: 700; color: #111111; text-align: center; line-height: 1.35; word-break: normal; overflow-wrap: break-word;">Điểm mạnh</div>
+                        <div id="preview-diem-yeu" style="position: absolute; left: 1225px; top: 622px; width: 200px; height: 125px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 30px; font-weight: 700; color: #111111; text-align: center; line-height: 1.35; word-break: normal; overflow-wrap: break-word;">Điểm yếu</div>
+                        <div style="position: absolute; left: 738px; top: 778px; width: 696px; height: 194px; z-index: 20; display: flex; align-items: center; justify-content: center; padding-left: 65px; padding-right: 40px;">
+                            <div id="preview-bio" style="font-family: 'Quicksand', sans-serif; font-size: 34px; font-style: italic; font-weight: 600; color: #2b78bf; text-align: center; line-height: 1.45; width: 100%; word-break: normal; overflow-wrap: break-word;">Tự bạch mô tả bản thân...</div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-xs font-bold text-slate-400 text-center mt-2">💡 Avatar sẽ được Admin tạo riêng cho bạn sau.</p>
+            </section>
+
+            <!-- Registration Form -->
+            <form id="registry-form" onsubmit="submitRegistration(event)" class="flex flex-col gap-5">
+                <input type="hidden" id="telegram-id" name="telegramId" value=""/>
+                <input type="hidden" id="telegram-username" name="telegramUsername" value=""/>
+                <input type="hidden" id="telegram-first-name" name="telegramFirstName" value=""/>
+
+                <!-- Section 1: Thông Tin Cá Nhân -->
+                <section class="w-full">
+                    <div class="smurf-card p-4 flex flex-col gap-3">
+                        <div class="flex items-center gap-2 border-b-3 border-smurf-blueLight pb-2 mb-1">
+                            <span class="material-symbols-outlined text-smurf-blue text-xl" style="font-variation-settings: 'FILL' 1;">groups</span>
+                            <h3 class="font-fredoka text-lg text-smurf-blue">Thông Tin Cá Nhân</h3>
+                        </div>
+                        <!-- Tên Xì Trum -->
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between items-center">
+                                <label class="text-xs font-bold text-slate-500">Tên Xì Trum (Bắt đầu "Tí")</label>
+                                <span class="char-counter" id="cnt-smurf-name">3/20</span>
+                            </div>
+                            <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-bold rounded-xl transition-all text-sm" id="input-smurf-name" name="smurfName" type="text" value="Tí " required maxlength="20" placeholder="Ví dụ: Tí Điệu, Tí Đô..."/>
+                        </div>
+                        <!-- Tên Thật -->
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between items-center">
+                                <label class="text-xs font-bold text-slate-500">Tên Thật</label>
+                                <span class="char-counter" id="cnt-real-name">0/30</span>
+                            </div>
+                            <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-bold rounded-xl transition-all text-sm" id="input-real-name" name="realName" placeholder="Nhập họ tên thật..." type="text" required maxlength="30"/>
+                        </div>
+                        <!-- Nhóm -->
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-slate-500">Nhóm</label>
+                            <select class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-bold rounded-xl transition-all text-sm" id="input-group" name="group" required>
+                                <option value="">Chọn nhóm...</option>
+                                <option value="N1T1">N1T1</option><option value="N1T2">N1T2</option><option value="N1T3">N1T3</option><option value="N1T4">N1T4</option><option value="N1T5">N1T5</option>
+                                <option value="N2T1">N2T1</option><option value="N2T2">N2T2</option><option value="N2T3">N2T3</option><option value="N2T4">N2T4</option><option value="N2T5">N2T5</option>
+                            </select>
+                        </div>
+                        <!-- Giới tính -->
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-slate-500">Giới Tính</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-700 text-sm"><input type="radio" name="personalGender" value="Nam" checked class="w-4 h-4 text-smurf-blue"> Nam</label>
+                                <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-700 text-sm"><input type="radio" name="personalGender" value="Nữ" class="w-4 h-4 text-smurf-blue"> Nữ</label>
+                            </div>
+                        </div>
+                        <!-- Sở thích, Tính cách -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex justify-between"><label class="text-xs font-bold text-slate-500">Sở Thích</label><span class="char-counter" id="cnt-hobbies">0/40</span></div>
+                                <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-bold rounded-xl transition-all text-sm" id="input-hobbies" name="hobbies" placeholder="Ca hát, Code..." type="text" required maxlength="40"/>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <div class="flex justify-between"><label class="text-xs font-bold text-slate-500">Tính Cách</label><span class="char-counter" id="cnt-personality">0/40</span></div>
+                                <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-bold rounded-xl transition-all text-sm" id="input-personality" name="personality" placeholder="Hài hước..." type="text" required maxlength="40"/>
+                            </div>
+                        </div>
+                        <!-- Điểm mạnh, yếu -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex justify-between"><label class="text-xs font-bold text-slate-500">Điểm Mạnh</label><span class="char-counter" id="cnt-strength">0/30</span></div>
+                                <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-bold rounded-xl transition-all text-sm" id="input-strength" name="strength" placeholder="Kiên nhẫn..." type="text" required maxlength="30"/>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <div class="flex justify-between"><label class="text-xs font-bold text-slate-500">Điểm Yếu</label><span class="char-counter" id="cnt-weakness">0/30</span></div>
+                                <input class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-bold rounded-xl transition-all text-sm" id="input-weakness" name="weakness" placeholder="Hay quên..." type="text" required maxlength="30"/>
+                            </div>
+                        </div>
+                        <!-- Bio -->
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between"><label class="text-xs font-bold text-slate-500">Tự Giới Thiệu (tối đa 100 ký tự)</label><span class="char-counter" id="cnt-bio">0/100</span></div>
+                            <textarea class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 p-2.5 font-bold rounded-xl transition-all resize-none text-sm" id="input-bio" name="bio" placeholder="Tôi thích tìm tòi và đam mê..." rows="2" maxlength="100" required></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Thiết Kế Avatar (Collapsible) -->
+                <section class="w-full">
+                    <div class="smurf-card-red p-4 flex flex-col gap-4">
+                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleAvatarSection()">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-smurf-red text-xl" style="font-variation-settings: 'FILL' 1;">palette</span>
+                                <h3 class="font-fredoka text-lg text-smurf-red">Thiết Kế Avatar</h3>
+                            </div>
+                            <span class="material-symbols-outlined text-slate-400 transition-transform" id="avatar-section-chevron">expand_more</span>
+                        </div>
+                        <p class="text-[11px] font-bold text-slate-400 -mt-2">Bấm để mở rộng • Admin sẽ dựa vào đây để tạo avatar cho bạn</p>
+                        
+                        <!-- Collapsible content -->
+                        <div id="avatar-design-section" class="flex flex-col gap-4 hidden">
+                            <!-- Tab Manual / Upload -->
+                            <div class="flex gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+                                <button type="button" id="tab-design-manual" class="flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all bg-smurf-blue text-white shadow-sm">Tự chọn chi tiết</button>
+                                <button type="button" id="tab-design-upload" class="flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-smurf-blue">Upload ảnh</button>
+                            </div>
+
+                            <!-- Manual Container -->
+                            <div class="flex flex-col gap-4" id="design-manual-container">
+                                <!-- Giới tính Smurf -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Giới Tính Xì Trum</label>
+                                    <div class="flex flex-wrap gap-2" id="grid-gender">
+                                        <button type="button" data-val="Nam (Smurf)" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Nam (Smurf)</button>
+                                        <button type="button" data-val="Nữ (Smurfette)" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Nữ (Smurfette)</button>
+                                    </div>
+                                    <input type="text" id="custom-gender-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
+                                    <input type="hidden" id="input-gender" value="Nam (Smurf)"/>
+                                </div>
+                                <!-- Kiểu Mũ -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Kiểu Mũ</label>
+                                    <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-hat">
+                                        <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
+                                        <button type="button" data-val="Mũ trắng cổ điển" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Mũ trắng cổ điển</button>
+                                        <button type="button" data-val="Mũ đỏ (Papa)" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Mũ đỏ (Papa)</button>
+                                        <button type="button" data-val="Mũ hoa" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Mũ hoa</button>
+                                        <button type="button" data-val="Không mũ + tóc" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Không mũ + tóc</button>
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
+                                    </div></div>
+                                    <input type="text" id="custom-hat-input" placeholder="Mô tả kiểu mũ..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
+                                    <input type="hidden" id="input-hat" value="Không"/>
+                                </div>
+                                <!-- Màu mũ -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Màu Mũ</label>
+                                    <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-hatcolor">
+                                        <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
+                                        <button type="button" data-val="Trắng" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Trắng</button>
+                                        <button type="button" data-val="Đỏ" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Đỏ</button>
+                                        <button type="button" data-val="Vàng" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Vàng</button>
+                                        <button type="button" data-val="Hồng" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Hồng</button>
+                                        <button type="button" data-val="Tím" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tím</button>
+                                        <button type="button" data-val="Xanh lá" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Xanh lá</button>
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
+                                    </div></div>
+                                    <input type="text" id="custom-hatcolor-input" placeholder="Nhập màu..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
+                                    <input type="hidden" id="input-hatcolor" value="Không"/>
+                                </div>
+                                <!-- Màu tóc -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Màu Tóc</label>
+                                    <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-hair">
+                                        <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
+                                        <button type="button" data-val="Vàng (Smurfette)" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Vàng (Smurfette)</button>
+                                        <button type="button" data-val="Đen" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Đen</button>
+                                        <button type="button" data-val="Nâu" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Nâu</button>
+                                        <button type="button" data-val="Đỏ" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Đỏ</button>
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
+                                    </div></div>
+                                    <input type="text" id="custom-hair-input" placeholder="Mô tả tóc..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
+                                    <input type="hidden" id="input-hair" value="Không"/>
+                                </div>
+                                <!-- Phụ kiện mặt -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Phụ Kiện Mặt</label>
+                                    <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-faceacc">
+                                        <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
+                                        <button type="button" data-val="Kính tròn" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Kính tròn</button>
+                                        <button type="button" data-val="Kính râm" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Kính râm</button>
+                                        <button type="button" data-val="Mặt nạ" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Mặt nạ</button>
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
+                                    </div></div>
+                                    <input type="text" id="custom-faceacc-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
+                                    <input type="hidden" id="input-faceacc" value="Không"/>
+                                </div>
+                                <!-- Trang phục -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Trang Phục</label>
+                                    <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-outfit">
+                                        <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
+                                        <button type="button" data-val="Quần trắng cổ điển" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Quần trắng cổ điển</button>
+                                        <button type="button" data-val="Váy" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Váy</button>
+                                        <button type="button" data-val="Áo yếm" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Áo yếm</button>
+                                        <button type="button" data-val="Cape choàng" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Cape choàng</button>
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
+                                    </div></div>
+                                    <input type="text" id="custom-outfit-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
+                                    <input type="hidden" id="input-outfit" value="Không"/>
+                                </div>
+                                <!-- Đạo cụ -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Đạo Cụ Cầm Tay</label>
+                                    <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-prop">
+                                        <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
+                                        <button type="button" data-val="Sách" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Sách</button>
+                                        <button type="button" data-val="Guitar" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Guitar</button>
+                                        <button type="button" data-val="Laptop" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Laptop</button>
+                                        <button type="button" data-val="Bút vẽ" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Bút vẽ</button>
+                                        <button type="button" data-val="Cờ lê" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Cờ lê</button>
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
+                                    </div></div>
+                                    <input type="text" id="custom-prop-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
+                                    <input type="hidden" id="input-prop" value="Không"/>
+                                </div>
+                                <!-- Biểu cảm -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Biểu Cảm</label>
+                                    <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-expression">
+                                        <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
+                                        <button type="button" data-val="Vui vẻ" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Vui vẻ</button>
+                                        <button type="button" data-val="Ngầu" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Ngầu</button>
+                                        <button type="button" data-val="Dễ thương" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Dễ thương</button>
+                                        <button type="button" data-val="Tinh nghịch" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Tinh nghịch</button>
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
+                                    </div></div>
+                                    <input type="text" id="custom-expression-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
+                                    <input type="hidden" id="input-expression" value="Không"/>
+                                </div>
+                                <!-- Pose -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Dáng Đứng (Pose)</label>
+                                    <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-pose">
+                                        <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
+                                        <button type="button" data-val="Đứng thẳng" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Đứng thẳng</button>
+                                        <button type="button" data-val="Vẫy tay" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Vẫy tay</button>
+                                        <button type="button" data-val="Giơ ngón cái" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Giơ ngón cái</button>
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
+                                    </div></div>
+                                    <input type="text" id="custom-pose-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
+                                    <input type="hidden" id="input-pose" value="Không"/>
+                                </div>
+                                <!-- Bối cảnh -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Bối Cảnh</label>
+                                    <div class="scroll-wrapper"><div class="flex overflow-x-auto gap-2 pb-2 custom-scroll" id="grid-bg">
+                                        <button type="button" data-val="Không" class="pill-btn px-3 py-1.5 rounded-xl text-xs active">Không</button>
+                                        <button type="button" data-val="Làng Xì Trum" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Làng Xì Trum</button>
+                                        <button type="button" data-val="Trong nhà nấm" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Trong nhà nấm</button>
+                                        <button type="button" data-val="Rừng nấm" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Rừng nấm</button>
+                                        <button type="button" data-val="custom" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Tự điền ✏️</button>
+                                    </div></div>
+                                    <input type="text" id="custom-bg-input" placeholder="Mô tả bối cảnh..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
+                                    <input type="hidden" id="input-background" value="Không"/>
+                                </div>
+                                <!-- Chi tiết bổ sung -->
+                                <div><label class="text-xs font-bold text-slate-500 block mb-1">Chi Tiết Bổ Sung (Tùy chọn)</label>
+                                    <textarea name="additionalInfo" placeholder="VD: Tui muốn đeo tai nghe gaming..." rows="2" class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl resize-none text-xs"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Upload Container -->
+                            <div class="flex flex-col gap-4 hidden" id="design-upload-container">
+                                <div><label class="text-xs font-bold text-slate-500">📎 Tải Lên Ảnh Tham Khảo</label>
+                                    <input type="file" id="input-ref-file" accept="image/*" class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 rounded-xl text-xs mt-1">
+                                    <input type="hidden" name="referenceImage" id="reference-image-base64" value=""/>
+                                </div>
+                                <div><label class="text-xs font-bold text-slate-500">Ghi Chú Ảnh</label>
+                                    <textarea name="referenceNotes" placeholder="Ghi chú thêm..." rows="2" class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 rounded-xl resize-none text-xs mt-1"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Submit -->
+                <button type="submit" id="submit-btn" class="mushroom-btn w-full py-4 rounded-full font-fredoka text-xl tracking-wider shadow-[0px_8px_24px_rgba(239,68,68,0.35)] relative overflow-hidden">
+                    <div class="absolute inset-x-0 top-0 h-1/2 bg-white opacity-20 rounded-t-full"></div>
+                    <span class="relative z-10" id="btn-text">GỬI ĐĂNG KÝ VỀ LÀNG</span>
+                </button>
+                <div class="h-20"></div>
+            </form>
+        </main>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- VIEW: PROFILE (Avatar Hub)             -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="view-profile" class="w-full hidden">
+        <!-- Header -->
+        <header class="wood-texture fixed top-0 w-full max-w-md mx-auto left-0 right-0 z-50 text-white flex items-center justify-between px-5 h-12 shadow-lg rounded-b-2xl">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-smurf-yellow text-xl">park</span>
+                <h1 class="font-fredoka text-lg text-white">Làng Xì Trum</h1>
+            </div>
+            <div class="flex items-center gap-1.5 bg-white/20 px-2.5 py-1 rounded-full border border-white/30 backdrop-blur-md">
+                <span id="profile-username" class="text-[11px] font-bold text-white">Khách</span>
+                <span class="material-symbols-outlined text-white text-sm">account_circle</span>
+            </div>
+        </header>
+
+        <main class="w-full max-w-md mx-auto px-4 pt-16 pb-20 flex flex-col gap-4">
+            <!-- Avatar Stage -->
+            <div class="avatar-stage p-4 flex flex-col items-center justify-center relative" style="min-height: 280px;">
+                <!-- Clouds -->
+                <div class="cloud" style="top: 12%; animation-duration: 18s; animation-delay: 0s;">☁️</div>
+                <div class="cloud" style="top: 8%; animation-duration: 22s; animation-delay: 6s; font-size: 22px;">☁️</div>
+                <div class="cloud" style="top: 20%; animation-duration: 25s; animation-delay: 12s; font-size: 20px;">☁️</div>
+                <!-- Sparkles -->
+                <div class="sparkle" style="top: 15%; left: 15%; animation-delay: 0s;">✨</div>
+                <div class="sparkle" style="top: 25%; right: 12%; animation-delay: 0.7s;">✨</div>
+                <div class="sparkle" style="top: 10%; right: 30%; animation-delay: 1.4s;">✨</div>
+                <div class="sparkle" style="bottom: 25%; left: 20%; animation-delay: 2.1s;">✨</div>
+                <!-- Avatar -->
+                <div class="avatar-bob relative z-10 mt-4">
+                    <img id="profile-avatar" src="avatars/smurf_basic_placeholder.png" alt="Avatar" 
+                         style="width: 160px; height: 213px; object-fit: cover; border-radius: 16px; border: 4px solid white; box-shadow: 0 8px 30px rgba(0,0,0,0.15);"
+                         onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                </div>
+                <div class="avatar-shadow mt-1"></div>
+                <!-- Pending badge (shown when no custom avatar) -->
+                <div class="avatar-pending" id="avatar-pending-badge">🎨 Avatar đang được vẽ...</div>
+                <!-- Ground decorations -->
+                <div class="absolute bottom-3 left-6 text-2xl pointer-events-none">🍄</div>
+                <div class="absolute bottom-3 right-6 text-2xl pointer-events-none">🍄</div>
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 text-xl pointer-events-none">🌿</div>
+            </div>
+
+            <!-- Name Plate -->
+            <div class="name-plate px-6 py-3 text-center">
+                <h2 class="font-fredoka text-xl text-smurf-blue pl-3" id="profile-smurf-name">Tí Coding</h2>
+                <p class="text-sm font-bold text-slate-500 pl-3" id="profile-subtitle">
+                    <span id="profile-real-name">Nguyễn Văn An</span> · <span id="profile-group">N1T2</span>
+                </p>
+                <p class="text-xs text-slate-400 italic mt-1 pl-3" id="profile-bio">"Code và cà phê là nguồn sống!"</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+                <button onclick="openCardSheet()" class="flex-1 mushroom-btn py-3 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-2 relative overflow-hidden">
+                    <div class="absolute inset-x-0 top-0 h-1/2 bg-white opacity-15 rounded-t-2xl"></div>
+                    <span class="material-symbols-outlined text-lg relative z-10">badge</span>
+                    <span class="relative z-10">Xem Thẻ</span>
+                </button>
+                <button onclick="openEditSheet()" class="flex-1 py-3 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-2 bg-white border-2 border-smurf-blue text-smurf-blue font-bold transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-lg">edit</span>
+                    Sửa Info
+                </button>
+            </div>
+        </main>
+
+        <!-- Bottom Nav -->
+        <nav class="bottom-nav max-w-md mx-auto">
+            <div class="nav-item active" onclick="window.location.reload()">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+                <span>Trang Chủ</span>
+            </div>
+            <div class="nav-item" onclick="openCardSheet()">
+                <span class="material-symbols-outlined">badge</span>
+                <span>Hồ Sơ</span>
+            </div>
+            <div class="nav-item" onclick="window.location.href='village_square.html'">
+                <span class="material-symbols-outlined">park</span>
+                <span>Làng</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- BOTTOM SHEET: Xem Thẻ Cư Dân           -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="bottom-sheet-overlay" id="card-sheet-overlay" onclick="closeCardSheet()"></div>
+    <div class="bottom-sheet" id="card-sheet" style="max-height: 80vh;">
+        <div class="bottom-sheet-handle"></div>
+        <div class="px-4 pb-6 pt-2">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-fredoka text-lg text-smurf-blue">🪪 Thẻ Cư Dân</h3>
+                <button onclick="closeCardSheet()" class="text-slate-400 hover:text-slate-600 p-1"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div style="width: 100%; overflow: hidden; border-radius: 20px; background: #000; position: relative;" id="card-sheet-parent">
+                <div id="cardSheetScaleWrapper" style="width: 1516px; height: 1038px; transform-origin: top center; position: absolute; left: 50%; transform: translateX(-50%) scale(0.23); border-radius: 40px; overflow: hidden; background: #000;">
+                    <img src="card_bg.png" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='card_bg.png'">
+                    <div style="position: absolute; left: 80px; top: 138px; width: 589px; height: 823px; z-index: 1;">
+                        <div style="width: 100%; height: 100%; overflow: hidden; background: #e8f4f8; border-radius: 12px;">
+                            <img id="card-sheet-avatar" src="avatars/smurf_basic_placeholder.png" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;">
+                        </div>
+                    </div>
+                    <img src="card_bg_cutout.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; object-fit: fill;" onerror="this.style.display='none'">
+                    <div style="position: absolute; left: 812px; top: 147px; width: 552px; height: 112px; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 0 40px;">
+                        <div id="cs-real-name" style="font-family: 'Baloo 2', cursive; font-size: 47px; font-weight: 800; color: #ffffff; text-shadow: 0 3px 6px rgba(0,0,0,0.15); text-align: center; white-space: nowrap; overflow: hidden; width: 100%;">Tên</div>
+                    </div>
+                    <div id="cs-group" style="position: absolute; left: 1130px; top: 274px; width: 194px; height: 47px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', cursive; font-size: 34px; font-weight: 800; color: #0b4375;">Nhóm</div>
+                    <div id="cs-tinh-cach" style="position: absolute; left: 879px; top: 410px; width: 188px; height: 121px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 30px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Tính cách</div>
+                    <div id="cs-so-thich" style="position: absolute; left: 1236px; top: 411px; width: 185px; height: 122px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 30px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Sở thích</div>
+                    <div id="cs-diem-manh" style="position: absolute; left: 880px; top: 619px; width: 185px; height: 124px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 30px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Điểm mạnh</div>
+                    <div id="cs-diem-yeu" style="position: absolute; left: 1225px; top: 622px; width: 200px; height: 125px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 30px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Điểm yếu</div>
+                    <div style="position: absolute; left: 738px; top: 778px; width: 696px; height: 194px; z-index: 20; display: flex; align-items: center; justify-content: center; padding-left: 65px; padding-right: 40px;">
+                        <div id="cs-bio" style="font-family: 'Quicksand'; font-size: 34px; font-style: italic; font-weight: 600; color: #2b78bf; text-align: center; line-height: 1.45; width: 100%; overflow-wrap: break-word;">Bio</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- BOTTOM SHEET: Edit Info                 -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="bottom-sheet-overlay" id="edit-sheet-overlay" onclick="closeEditSheet()"></div>
+    <div class="bottom-sheet" id="edit-sheet" style="max-height: 85vh;">
+        <div class="bottom-sheet-handle"></div>
+        <div class="px-4 pb-6 pt-2">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-fredoka text-lg text-smurf-blue">✏️ Chỉnh Sửa Thông Tin</h3>
+                <button onclick="closeEditSheet()" class="text-slate-400 hover:text-slate-600 p-1"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <form id="edit-form" onsubmit="submitEdit(event)" class="flex flex-col gap-3">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-500">Tên Xì Trum</label>
+                    <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-smurf-name" required maxlength="20"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-500">Tên Thật</label>
+                    <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-real-name" required maxlength="30"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-500">Nhóm</label>
+                    <select class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-group" required>
+                        <option value="N1T1">N1T1</option><option value="N1T2">N1T2</option><option value="N1T3">N1T3</option><option value="N1T4">N1T4</option><option value="N1T5">N1T5</option>
+                        <option value="N2T1">N2T1</option><option value="N2T2">N2T2</option><option value="N2T3">N2T3</option><option value="N2T4">N2T4</option><option value="N2T5">N2T5</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-500">Giới Tính</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-sm"><input type="radio" name="editGender" value="Nam" class="w-4 h-4"> Nam</label>
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-sm"><input type="radio" name="editGender" value="Nữ" class="w-4 h-4"> Nữ</label>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-500">Sở Thích</label>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-hobbies" maxlength="40"/>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-500">Tính Cách</label>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-personality" maxlength="40"/>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-500">Điểm Mạnh</label>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-strength" maxlength="30"/>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-500">Điểm Yếu</label>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-weakness" maxlength="30"/>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-500">Bio</label>
+                    <textarea class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl resize-none text-sm" id="edit-bio" rows="2" maxlength="100"></textarea>
+                </div>
+                <div class="flex gap-3 mt-2">
+                    <button type="submit" id="edit-save-btn" class="flex-1 mushroom-btn py-3 rounded-2xl font-fredoka text-base relative overflow-hidden">
+                        <div class="absolute inset-x-0 top-0 h-1/2 bg-white opacity-15 rounded-t-2xl"></div>
+                        <span class="relative z-10">💾 Lưu</span>
+                    </button>
+                    <button type="button" onclick="closeEditSheet()" class="flex-1 py-3 rounded-2xl font-fredoka text-base bg-slate-100 text-slate-500 font-bold active:scale-95 transition-all">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- SCRIPT LOGIC                            -->
+    <!-- ═══════════════════════════════════════ -->
+    <script>
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzvH1zgIVFQUXaSz_JhScriUOUByapUN5zXavJ9AowcTsqy-Q1EuWoXLALD082zPOyTow/exec";
+
+        // State
+        let currentUser = null;
+        let telegramId = '';
+        let telegramUsername = '';
+        let telegramFirstName = '';
+
+        // ── TELEGRAM SDK ──
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                telegramId = String(user.id || '');
+                telegramUsername = user.username || '';
+                telegramFirstName = user.first_name || '';
+            }
+        }
+
+        // ── INIT: Show form first, lookup in background ──
+        async function initApp() {
+            // For testing outside Telegram: allow URL param override
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('tid')) telegramId = urlParams.get('tid');
+
+            // Always show register form first (no loading screen!)
+            showView('register');
+            setupRegistrationForm();
+
+            // If we have a Telegram ID, try background lookup
+            if (telegramId) {
+                gasLookupJsonp(telegramId, (resp) => {
+                    if (resp && resp.exists && resp.data) {
+                        currentUser = resp.data;
+                        showProfileView();
+                    }
+                    // If not found → user stays on register form (already showing)
+                }, () => {
+                    // Error/timeout → user stays on register form
+                    console.warn('Background lookup failed, staying on register form');
+                });
+            }
+        }
+
+        // ── JSONP GET (works in ALL browsers including Telegram WebView) ──
+        function gasLookupJsonp(tid, onSuccess, onError) {
+            const callbackName = '_gasCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            // Timeout after 8 seconds
+            const timeout = setTimeout(() => {
+                cleanup();
+                console.warn('JSONP lookup timed out');
+                onError();
+            }, 8000);
+            
+            function cleanup() {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                if (script.parentNode) script.parentNode.removeChild(script);
+            }
+            
+            window[callbackName] = function(data) {
+                cleanup();
+                onSuccess(data);
+            };
+            
+            script.onerror = function() {
+                cleanup();
+                onError();
+            };
+            
+            script.src = GAS_WEBAPP_URL + '?action=lookup&telegramId=' + encodeURIComponent(tid) + '&callback=' + callbackName;
+            document.head.appendChild(script);
+        }
+
+        // ── VIEW SWITCHER ──
+        function showView(name) {
+            ['view-loading', 'view-register', 'view-profile'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById('view-' + name).classList.remove('hidden');
+        }
+
+        // ── PROFILE VIEW ──
+        function showProfileView() {
+            showView('profile');
+            const d = currentUser;
+            const avatarUrl = `avatars/avatar_${telegramId}.png`;
+            
+            document.getElementById('profile-avatar').src = avatarUrl;
+            document.getElementById('profile-avatar').onerror = function() {
+                this.src = 'avatars/smurf_basic_placeholder.png';
+                document.getElementById('avatar-pending-badge').style.display = 'block';
+            };
+            
+            // Check if avatar exists (hide pending badge if yes)
+            const testImg = new Image();
+            testImg.onload = () => { document.getElementById('avatar-pending-badge').style.display = 'none'; };
+            testImg.onerror = () => { document.getElementById('avatar-pending-badge').style.display = 'block'; };
+            testImg.src = avatarUrl;
+            
+            document.getElementById('profile-smurf-name').textContent = d.smurfName || 'Cư dân';
+            document.getElementById('profile-real-name').textContent = d.realName || '';
+            document.getElementById('profile-group').textContent = d.group || '';
+            document.getElementById('profile-bio').textContent = d.bio ? `"${d.bio}"` : '';
+            document.getElementById('profile-username').textContent = telegramUsername ? '@' + telegramUsername : (telegramFirstName || 'Cư dân');
+            
+            // Populate card sheet
+            document.getElementById('card-sheet-avatar').src = avatarUrl;
+            document.getElementById('card-sheet-avatar').onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
+            document.getElementById('cs-real-name').textContent = d.realName || '';
+            document.getElementById('cs-group').textContent = d.group || '';
+            document.getElementById('cs-tinh-cach').textContent = d.personality || '';
+            document.getElementById('cs-so-thich').textContent = d.hobbies || '';
+            document.getElementById('cs-diem-manh').textContent = d.strength || '';
+            document.getElementById('cs-diem-yeu').textContent = d.weakness || '';
+            document.getElementById('cs-bio').textContent = d.bio || '';
+            
+            // Auto-resize card in sheet
+            setTimeout(resizeCardSheet, 100);
+        }
+
+        // ── REGISTRATION FORM SETUP ──
+        function setupRegistrationForm() {
+            document.getElementById('telegram-id').value = telegramId;
+            document.getElementById('telegram-username').value = telegramUsername;
+            document.getElementById('telegram-first-name').value = telegramFirstName;
+            document.getElementById('tg-username').textContent = telegramUsername ? '@' + telegramUsername : (telegramFirstName || 'Khách');
+            
+            setupPreview();
+            setupCustomSelectors();
+            setupTabSwitcher();
+            setupFileUpload();
+            setupCounters();
+            setTimeout(resizePreviewCard, 100);
+        }
+
+        // ── PREVIEW CARD RESIZE ──
+        function resizePreviewCard() {
+            const parent = document.getElementById('preview-parent');
+            if (!parent) return;
+            const parentWidth = parent.clientWidth - 20;
+            const scale = parentWidth / 1516;
+            const wrapper = document.getElementById('cardScaleWrapper');
+            if (wrapper) {
+                wrapper.style.transform = `translateX(-50%) scale(${scale})`;
+                parent.style.height = `${1038 * scale + 20}px`;
+            }
+        }
+
+        function resizeCardSheet() {
+            const parent = document.getElementById('card-sheet-parent');
+            if (!parent) return;
+            const parentWidth = parent.clientWidth;
+            const scale = parentWidth / 1516;
+            const wrapper = document.getElementById('cardSheetScaleWrapper');
+            if (wrapper) {
+                wrapper.style.transform = `translateX(-50%) scale(${scale})`;
+                parent.style.height = `${1038 * scale}px`;
+            }
+        }
+
+        // ── AVATAR SECTION TOGGLE ──
+        function toggleAvatarSection() {
+            const section = document.getElementById('avatar-design-section');
+            const chevron = document.getElementById('avatar-section-chevron');
+            section.classList.toggle('hidden');
+            chevron.style.transform = section.classList.contains('hidden') ? '' : 'rotate(180deg)';
+        }
+
+        // ── PREVIEW BINDINGS ──
+        function setupPreview() {
+            const fields = ['input-real-name', 'input-group', 'input-hobbies', 'input-personality', 'input-bio', 'input-strength', 'input-weakness'];
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', updatePreview);
+            });
+            window.addEventListener('resize', resizePreviewCard);
+        }
+
+        function updatePreview() {
+            const set = (id, val, fallback) => { const el = document.getElementById(id); if (el) el.textContent = val || fallback; };
+            set('preview-real-name', document.getElementById('input-real-name')?.value, 'Tên thật');
+            set('preview-group', document.getElementById('input-group')?.value, 'Nhóm');
+            set('preview-so-thich', document.getElementById('input-hobbies')?.value, 'Sở thích');
+            set('preview-tinh-cach', document.getElementById('input-personality')?.value, 'Tính cách');
+            set('preview-bio', document.getElementById('input-bio')?.value, 'Tự bạch...');
+            set('preview-diem-manh', document.getElementById('input-strength')?.value, 'Điểm mạnh');
+            set('preview-diem-yeu', document.getElementById('input-weakness')?.value, 'Điểm yếu');
+            // Name font size auto-fit
+            const nameEl = document.getElementById('preview-real-name');
+            if (nameEl) {
+                const len = nameEl.textContent.length;
+                nameEl.style.fontSize = len > 15 ? '30px' : len > 10 ? '38px' : '47px';
+            }
+        }
+
+        // ── COUNTERS ──
+        function setupCounters() {
+            [['input-smurf-name','cnt-smurf-name',20],['input-real-name','cnt-real-name',30],['input-hobbies','cnt-hobbies',40],
+             ['input-personality','cnt-personality',40],['input-strength','cnt-strength',30],['input-weakness','cnt-weakness',30],['input-bio','cnt-bio',100]
+            ].forEach(([inputId, counterId, max]) => {
+                const el = document.getElementById(inputId);
+                const counter = document.getElementById(counterId);
+                if (!el || !counter) return;
+                const update = () => { counter.textContent = `${el.value.length}/${max}`; updatePreview(); };
+                el.addEventListener('input', update);
+                update();
+            });
+        }
+
+        // ── CUSTOM SELECTORS ──
+        function setupCustomSelectors() {
+            [['grid-gender','input-gender','custom-gender-input'],['grid-hat','input-hat','custom-hat-input'],
+             ['grid-hatcolor','input-hatcolor','custom-hatcolor-input'],['grid-hair','input-hair','custom-hair-input'],
+             ['grid-faceacc','input-faceacc','custom-faceacc-input'],['grid-outfit','input-outfit','custom-outfit-input'],
+             ['grid-prop','input-prop','custom-prop-input'],['grid-expression','input-expression','custom-expression-input'],
+             ['grid-pose','input-pose','custom-pose-input'],['grid-bg','input-background','custom-bg-input']
+            ].forEach(([gridId, hiddenId, customId]) => {
+                const grid = document.getElementById(gridId);
+                const hidden = document.getElementById(hiddenId);
+                const custom = document.getElementById(customId);
+                if (!grid || !hidden) return;
+                grid.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        grid.querySelectorAll('button').forEach(b => b.classList.remove('active', 'pill-btn-red'));
+                        btn.classList.add('active', 'pill-btn-red');
+                        const val = btn.getAttribute('data-val');
+                        if (val === 'custom' && custom) { custom.classList.remove('hidden'); custom.focus(); hidden.value = custom.value; }
+                        else { if (custom) custom.classList.add('hidden'); hidden.value = val; }
+                    });
+                });
+                if (custom) custom.addEventListener('input', () => { hidden.value = custom.value; });
+            });
+        }
+
+        // ── TAB SWITCHER ──
+        function setupTabSwitcher() {
+            const tabManual = document.getElementById('tab-design-manual');
+            const tabUpload = document.getElementById('tab-design-upload');
+            const manualC = document.getElementById('design-manual-container');
+            const uploadC = document.getElementById('design-upload-container');
+            if (!tabManual) return;
+            tabManual.addEventListener('click', () => { tabManual.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all bg-smurf-blue text-white shadow-sm"; tabUpload.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all text-slate-500"; manualC.classList.remove('hidden'); uploadC.classList.add('hidden'); });
+            tabUpload.addEventListener('click', () => { tabUpload.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all bg-smurf-blue text-white shadow-sm"; tabManual.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all text-slate-500"; uploadC.classList.remove('hidden'); manualC.classList.add('hidden'); });
+        }
+
+        // ── FILE UPLOAD ──
+        function setupFileUpload() {
+            const fileInput = document.getElementById('input-ref-file');
+            if (!fileInput) return;
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        document.getElementById('reference-image-base64').value = evt.target.result;
+                        document.getElementById('preview-smurf-avatar').src = evt.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // ── SUBMIT REGISTRATION ──
+        async function submitRegistration(e) {
+            e.preventDefault();
+            const smurfName = document.getElementById('input-smurf-name').value.trim();
+            if (!smurfName.toLowerCase().startsWith('tí')) {
+                alert("Tên Xì Trum phải bắt đầu bằng 'Tí'!");
+                return;
+            }
+            const btn = document.getElementById('submit-btn');
+            const btnText = document.getElementById('btn-text');
+            btn.disabled = true; btnText.textContent = "ĐANG GỬI..."; btn.style.opacity = '0.7';
+
+            const data = {
+                action: 'register',
+                timestamp: new Date().toISOString(),
+                telegramId, telegramUsername, telegramFirstName,
+                smurfName,
+                realName: document.getElementById('input-real-name').value,
+                group: document.getElementById('input-group').value,
+                personalGender: document.querySelector('input[name="personalGender"]:checked')?.value || 'Nam',
+                hobbies: document.getElementById('input-hobbies').value,
+                personality: document.getElementById('input-personality').value,
+                strength: document.getElementById('input-strength').value,
+                weakness: document.getElementById('input-weakness').value,
+                bio: document.getElementById('input-bio').value,
+                gender: document.getElementById('input-gender').value,
+                hat: document.getElementById('input-hat').value,
+                hatColor: document.getElementById('input-hatcolor').value,
+                hairColor: document.getElementById('input-hair').value,
+                faceAccessory: document.getElementById('input-faceacc').value,
+                outfit: document.getElementById('input-outfit').value,
+                prop: document.getElementById('input-prop').value,
+                expression: document.getElementById('input-expression').value,
+                pose: document.getElementById('input-pose').value,
+                background: document.getElementById('input-background').value,
+                additionalInfo: document.querySelector('#registry-form textarea[name="additionalInfo"]')?.value || '',
+                referenceImage: document.getElementById('reference-image-base64')?.value || '',
+                referenceNotes: document.querySelector('#registry-form textarea[name="referenceNotes"]')?.value || ''
+            };
+
+            try {
+                const result = await gasRequest(data);
+                if (result.status === 'success') {
+                    currentUser = { ...data, hobbies: data.hobbies, strength: data.strength, weakness: data.weakness, personality: data.personality };
+                    showProfileView();
+                } else if (result.status === 'duplicate') {
+                    alert("⚠️ Telegram ID này đã đăng ký rồi!");
+                    // Re-lookup and show profile
+                    const lookup = await gasRequest({ action: 'lookup', telegramId });
+                    if (lookup.exists) { currentUser = lookup.data; showProfileView(); }
+                } else {
+                    alert("⚠️ " + (result.message || "Có lỗi xảy ra."));
+                }
+            } catch (err) {
+                console.error('Submit error:', err);
+                alert("⚠️ Lỗi kết nối. Thử lại sau.");
+            } finally {
+                btn.disabled = false; btnText.textContent = "GỬI ĐĂNG KÝ VỀ LÀNG"; btn.style.opacity = '1';
+            }
+        }
+
+        // ── SUBMIT EDIT ──
+        async function submitEdit(e) {
+            e.preventDefault();
+            const saveBtn = document.getElementById('edit-save-btn');
+            saveBtn.disabled = true; saveBtn.style.opacity = '0.7';
+
+            const data = {
+                action: 'update',
+                telegramId,
+                smurfName: document.getElementById('edit-smurf-name').value,
+                realName: document.getElementById('edit-real-name').value,
+                group: document.getElementById('edit-group').value,
+                personalGender: document.querySelector('input[name="editGender"]:checked')?.value || 'Nam',
+                hobbies: document.getElementById('edit-hobbies').value,
+                personality: document.getElementById('edit-personality').value,
+                strength: document.getElementById('edit-strength').value,
+                weakness: document.getElementById('edit-weakness').value,
+                bio: document.getElementById('edit-bio').value
+            };
+
+            try {
+                const result = await gasRequest(data);
+                if (result.status === 'success') {
+                    // Update local state
+                    Object.assign(currentUser, data);
+                    showProfileView();
+                    closeEditSheet();
+                } else {
+                    alert("⚠️ " + (result.message || "Lưu thất bại."));
+                }
+            } catch (err) {
+                console.error('Update error:', err);
+                alert("⚠️ Lỗi kết nối.");
+            } finally {
+                saveBtn.disabled = false; saveBtn.style.opacity = '1';
+            }
+        }
+
+        // ── BOTTOM SHEETS ──
+        function openCardSheet() {
+            document.getElementById('card-sheet-overlay').classList.add('active');
+            document.getElementById('card-sheet').classList.add('active');
+            setTimeout(resizeCardSheet, 50);
+        }
+        function closeCardSheet() {
+            document.getElementById('card-sheet-overlay').classList.remove('active');
+            document.getElementById('card-sheet').classList.remove('active');
+        }
+        function openEditSheet() {
+            if (!currentUser) return;
+            // Pre-fill edit form
+            document.getElementById('edit-smurf-name').value = currentUser.smurfName || '';
+            document.getElementById('edit-real-name').value = currentUser.realName || '';
+            document.getElementById('edit-group').value = currentUser.group || '';
+            const genderRadio = document.querySelector(`input[name="editGender"][value="${currentUser.personalGender || 'Nam'}"]`);
+            if (genderRadio) genderRadio.checked = true;
+            document.getElementById('edit-hobbies').value = currentUser.hobbies || '';
+            document.getElementById('edit-personality').value = currentUser.personality || '';
+            document.getElementById('edit-strength').value = currentUser.strength || '';
+            document.getElementById('edit-weakness').value = currentUser.weakness || '';
+            document.getElementById('edit-bio').value = currentUser.bio || '';
+
+            document.getElementById('edit-sheet-overlay').classList.add('active');
+            document.getElementById('edit-sheet').classList.add('active');
+        }
+        function closeEditSheet() {
+            document.getElementById('edit-sheet-overlay').classList.remove('active');
+            document.getElementById('edit-sheet').classList.remove('active');
+        }
+
+        // ── GAS REQUEST HELPER (with 8s timeout) ──
+        async function gasRequest(data) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            try {
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(data),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response.json();
+            } catch (err) {
+                clearTimeout(timeoutId);
+                if (err.name === 'AbortError') {
+                    console.warn('GAS request timed out (8s)');
+                    throw new Error('Request timeout');
+                }
+                throw err;
+            }
+        }
+
+        // ── BOOT ──
+        window.addEventListener('load', initApp);
+        window.addEventListener('resize', () => { resizePreviewCard(); resizeCardSheet(); });
+    </script>
+</body>
+</html>
