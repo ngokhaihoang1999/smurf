@@ -151,6 +151,7 @@ body.dotted-bg {
 
 .custom-scroll {
     padding-top: 6px !important;
+    margin-top: -6px !important;
 }
 
 .custom-scroll::-webkit-scrollbar {
