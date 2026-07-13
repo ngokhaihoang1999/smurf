@@ -149,6 +149,10 @@ body.dotted-bg {
     z-index: 2;
 }
 
+.custom-scroll {
+    padding-top: 6px !important;
+}
+
 .custom-scroll::-webkit-scrollbar {
     height: 4px;
 }
