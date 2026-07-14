@@ -1626,6 +1626,11 @@
                 card3d.style.willChange = '';
             }, 450);
 
+            const cardBack = container.querySelector('.card-back');
+            const cardFront = container.querySelector('.card-front');
+            if (cardBack) cardBack.style.visibility = 'visible';
+            if (cardFront) cardFront.style.visibility = 'hidden';
+
             resizeModalCard();
             adjustControlsLayout();
         }
@@ -1637,6 +1642,11 @@
             const container = document.getElementById('modalCardContainer');
             if (!card3d || !container) return;
             
+            const cardBack = container.querySelector('.card-back');
+            const cardFront = container.querySelector('.card-front');
+            if (cardBack) cardBack.style.visibility = 'visible';
+            if (cardFront) cardFront.style.visibility = 'visible';
+
             container.style.willChange = 'transform';
             card3d.style.willChange = 'transform';
             
@@ -1674,6 +1684,13 @@
             setTimeout(() => {
                 container.style.willChange = '';
                 card3d.style.willChange = '';
+                
+                // Hide the inactive face completely after flip lands to avoid rendering leaks
+                if (modalFlipped) {
+                    if (cardBack) cardBack.style.visibility = 'hidden';
+                } else {
+                    if (cardFront) cardFront.style.visibility = 'hidden';
+                }
             }, 450);
             
             resizeModalCard();
