@@ -647,7 +647,7 @@
         // ── GAS REQUEST POST ──
         async function gasRequest(data) {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
             try {
                 const response = await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
@@ -661,7 +661,7 @@
             } catch (err) {
                 clearTimeout(timeoutId);
                 if (err.name === 'AbortError') {
-                    console.warn('GAS request timed out (8s)');
+                    console.warn('GAS request timed out (30s)');
                     throw new Error('Request timeout');
                 }
                 throw err;
