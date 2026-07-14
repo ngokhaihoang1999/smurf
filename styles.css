@@ -403,11 +403,14 @@ button,
         bottom: 0 !important;
     }
     
-    /* Disable active scale-down on mobile to prevent layout shifts from cancelling touch events */
+    /* Disable active scale-down and translation shifts on mobile to prevent layout shifts from cancelling touch events */
     .active\:scale-95:active,
     .active\:scale-90:active,
-    [class*="active:scale-"]:active {
-        transform: scale(1) !important;
+    .mushroom-btn:active,
+    [class*="active:scale-"]:active,
+    [class*="active:translate-"]:active {
+        transform: none !important;
+        border-bottom-width: 5px !important;
         opacity: 0.75 !important;
     }
 }
