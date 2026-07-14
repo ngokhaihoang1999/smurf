@@ -107,10 +107,7 @@
             border-radius: 28px;
             overflow: hidden;
             border: 2px solid #eaeef6;
-            box-shadow: 0px 8px 24px rgba(0, 98, 157, 0.12);
             background-color: #ffffff;
-            transform: translate3d(0, 0, 0);
-            will-change: transform;
         }
         
         /* Mặt sau (Thẻ Dọc - Trạng thái mặc định) */
@@ -192,6 +189,7 @@
         .modal-card-container {
             perspective: 2000px;
             overflow: visible;
+            contain: layout style;
         }
         
         .modal-card-3d {
@@ -200,7 +198,6 @@
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            will-change: transform;
         }
         
         .modal-card-3d.flipped {
@@ -298,9 +295,9 @@
         <div id="modal-backdrop" onclick="closeModal()" class="absolute inset-0 bg-slate-950/70 opacity-0 transition-opacity duration-300"></div>
         
         <!-- Morphing Card container (positioned absolutely/fixed for transition) -->
-        <div class="modal-card-container shadow-[0_20px_50px_rgba(0,0,0,0.35)] rounded-[28px]" id="modalCardContainer" style="position: fixed; z-index: 101; display: none; will-change: transform;">
-            <div id="modalCardAnimator" class="h-full w-full" style="will-change: transform;">
-                <div class="modal-card-3d h-full w-full" id="modalCard3d" style="will-change: transform;">
+        <div class="modal-card-container shadow-[0_8px_30px_rgba(0,0,0,0.25)] rounded-[28px]" id="modalCardContainer" style="position: fixed; z-index: 101; display: none;">
+            <div id="modalCardAnimator" class="h-full w-full">
+                <div class="modal-card-3d h-full w-full" id="modalCard3d">
                 
                 <!-- Mặt sau: Thẻ Dọc 3:4 (Thẻ Thống kê) -->
                 <div class="card-face card-back flex flex-col justify-between p-0 overflow-hidden" style="background: #ffffff; border-radius: 28px;">
@@ -309,7 +306,7 @@
                         <!-- Group Badge Overlay -->
                         <span class="absolute top-4 right-4 bg-smurf-blue text-white px-3 py-1 rounded-full text-xs font-bold shadow-md uppercase" id="m-card-group">Nhóm</span>
                         <!-- Decorative icon -->
-                        <span class="absolute top-4 left-4 bg-white/80 backdrop-blur-sm text-smurf-blue p-1.5 rounded-full text-sm font-bold shadow-md material-symbols-outlined">park</span>
+                        <span class="absolute top-4 left-4 bg-white/90 text-smurf-blue p-1.5 rounded-full text-sm font-bold shadow-md material-symbols-outlined">park</span>
                     </div>
                     
                     <!-- Compact info below avatar in modal vertical card -->
@@ -330,7 +327,7 @@
                 <!-- Mặt trước: Thẻ Ngang 1.5:1 (Thiết kế phôi thẻ cư dân đầy đủ) -->
                 <div class="card-face card-front relative overflow-hidden" id="modal-card-front-parent" style="background: #ffffff; border-radius: 28px;">
                     <!-- Scaled container wrapper -->
-                    <div id="modalCardScaleWrapper" style="width: 1516px; height: 1038px; transform-origin: top center; position: absolute; left: 50%; transform: translateX(-50%) scale(0.5); border-radius: 40px; overflow: hidden; background: #000; will-change: transform;">
+                    <div id="modalCardScaleWrapper" style="width: 1516px; height: 1038px; transform-origin: top center; position: absolute; left: 50%; transform: translateX(-50%) scale(0.5); border-radius: 40px; overflow: hidden; background: #000;">
                         
                         <!-- Background Frame (phôi card) -->
                         <img id="m-preview-card-bg" src="card_bg.png" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='card_bg.png'">
@@ -826,6 +823,10 @@
             modal.classList.remove('pointer-events-none');
             document.body.style.overflow = 'hidden';
             
+            // Promote to GPU layer just before animation
+            container.style.willChange = 'transform';
+            card3d.style.willChange = 'transform';
+            
             // Force browser reflow to apply initial inverted transform and unhide modal
             void container.offsetWidth;
             
@@ -840,12 +841,18 @@
             navRow.classList.add('opacity-100');
             updatePageIndicator();
 
-            // Play: transition transform to scale(1) translate3d(0,0,0) (optimized 0.4s)
+            // Play: transition transform to scale(1) translate3d(0,0,0)
             container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
             
             // Flip the card Y-rotation simultaneously in the same frame
             card3d.classList.add('flipped');
+
+            // Clean up will-change after animation completes to free GPU memory
+            setTimeout(() => {
+                container.style.willChange = '';
+                card3d.style.willChange = '';
+            }, 450);
 
             resizeModalCard();
             adjustControlsLayout();
@@ -857,6 +864,10 @@
             const card3d = document.getElementById('modalCard3d');
             const container = document.getElementById('modalCardContainer');
             if (!card3d || !container) return;
+            
+            // Promote to GPU layer just before animation
+            container.style.willChange = 'transform';
+            card3d.style.willChange = 'transform';
             
             // 1. Get current size/position of the modal container
             const prevDims = getModalTargetDimensions(modalFlipped);
@@ -895,6 +906,12 @@
             container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
             
+            // Clean up will-change after animation completes to free GPU memory
+            setTimeout(() => {
+                container.style.willChange = '';
+                card3d.style.willChange = '';
+            }, 450);
+            
             resizeModalCard();
             adjustControlsLayout();
         }
@@ -929,6 +946,10 @@
                 updateCardFrontDimensions();
                 updateRotateButtonState();
 
+                // Promote to GPU layer just before animation
+                container.style.willChange = 'transform';
+                card3d.style.willChange = 'transform';
+
                 // Calculate the final transform to zoom back into the clicked grid item coordinates (lastClickedRect)
                 const scaleX = lastClickedRect.width / dims.width;
                 const scaleY = lastClickedRect.height / dims.height;
@@ -943,6 +964,8 @@
                 lastClickedElement.style.opacity = '1';
 
                 closeTimeoutId = setTimeout(() => {
+                    container.style.willChange = '';
+                    card3d.style.willChange = '';
                     container.style.display = 'none';
                     container.style.transform = '';
                     container.style.top = '';
