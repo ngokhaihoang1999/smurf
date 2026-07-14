@@ -2242,15 +2242,17 @@
         let selectedChatMood = 'normal';
         let lastChatCount = 0;
         let chatBgLoopId = null;
+        let effectTimeoutId = null;
 
         function spawnChatBubble() {
             const container = document.getElementById('chat-background-effects');
             if (!container || selectedChatMood !== 'floating') return;
+            if (container.children.length > 25) return;
             const bubble = document.createElement('div');
             bubble.className = 'chat-bubble-element';
             const size = Math.random() * 20 + 8; // 8px to 28px
             const left = Math.random() * 90 + 5; // 5% to 95%
-            const duration = Math.random() * 2.5 + 2.5; // 2.5s to 5.0s
+            const duration = Math.random() * 2.0 + 2.0; // 2.0s to 4.0s
             
             bubble.style.width = size + 'px';
             bubble.style.height = size + 'px';
@@ -2263,16 +2265,17 @@
             }, duration * 1000);
         }
 
-        function spawnChatEmoji() {
+        function spawnChatBerry() {
             const container = document.getElementById('chat-background-effects');
             if (!container || selectedChatMood !== 'smurfed') return;
-            const emojis = ['🍄', '🍃', '🌸', '✨', '💧', '💙'];
-            const emojiChar = emojis[Math.floor(Math.random() * emojis.length)];
+            if (container.children.length > 25) return;
+            const berries = ['🫐', '🍒', '🍓', '✨', '🔵', '🔴'];
+            const berryChar = berries[Math.floor(Math.random() * berries.length)];
             const el = document.createElement('div');
-            el.className = 'chat-emoji-element';
-            el.textContent = emojiChar;
+            el.className = 'chat-berry-element';
+            el.textContent = berryChar;
             const left = Math.random() * 90 + 5;
-            const duration = Math.random() * 2.5 + 3.0; // 3s to 5.5s
+            const duration = Math.random() * 2.0 + 1.8; // 1.8s to 3.8s
             
             el.style.left = left + '%';
             el.style.animationDuration = duration + 's';
@@ -2289,9 +2292,9 @@
                 if (selectedChatMood === 'floating') {
                     spawnChatBubble();
                 } else if (selectedChatMood === 'smurfed') {
-                    spawnChatEmoji();
+                    spawnChatBerry();
                 }
-            }, 300);
+            }, 150); // Fast spawning for intensive visuals
         }
 
         function setupChatKeyboardHandling() {
@@ -2299,24 +2302,38 @@
             const sheet = document.getElementById('village-chat-sheet');
             if (!input || !sheet) return;
             
+            const handleResize = () => {
+                if (window.innerWidth < 768 && document.activeElement === input) {
+                    const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                    sheet.style.height = height + 'px';
+                    sheet.style.maxHeight = height + 'px';
+                    
+                    const feed = document.getElementById('chat-messages-feed');
+                    if (feed) feed.scrollTop = feed.scrollHeight;
+                }
+            };
+
             input.addEventListener('focus', () => {
                 if (window.innerWidth < 768) {
-                    sheet.style.height = '48vh';
-                    sheet.style.maxHeight = '48vh';
+                    // Instantly set height to avoid delay, then refine once keyboard finishes sliding up
+                    handleResize();
                     setTimeout(() => {
-                        const feed = document.getElementById('chat-messages-feed');
-                        if (feed) feed.scrollTop = feed.scrollHeight;
+                        handleResize();
                         input.scrollIntoView({ block: 'nearest' });
-                    }, 120);
+                    }, 150);
                 }
             });
             
             input.addEventListener('blur', () => {
                 if (window.innerWidth < 768) {
-                    sheet.style.height = '80vh';
-                    sheet.style.maxHeight = '80vh';
+                    sheet.style.height = '100%';
+                    sheet.style.maxHeight = '100%';
                 }
             });
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', handleResize);
+            }
         }
 
         function openVillageChat() {
@@ -2377,7 +2394,59 @@
             if (container) container.innerHTML = '';
         }
 
+        function triggerIncomingChatEffect(mood) {
+            selectedChatMood = mood;
+            
+            const container = document.getElementById('chat-background-effects');
+            const feed = document.getElementById('chat-messages-feed');
+            const sheet = document.getElementById('village-chat-sheet');
+            if (container && feed && sheet) {
+                container.innerHTML = '';
+                container.className = 'absolute inset-0 pointer-events-none overflow-hidden z-0';
+                feed.className = 'w-full h-full overflow-y-auto p-3 flex flex-col gap-2.5 text-xs relative z-10 bg-transparent';
+                sheet.className = 'bottom-sheet z-[111] flex flex-col active';
+                
+                if (mood === 'earthquake') {
+                    sheet.classList.add('chat-bg-shake');
+                } else if (mood === 'lightning') {
+                    container.classList.add('chat-bg-lightning');
+                }
+            }
+            
+            if (tg?.HapticFeedback) {
+                if (mood === 'earthquake') {
+                    tg.HapticFeedback.notificationOccurred('error');
+                } else if (mood === 'lightning') {
+                    tg.HapticFeedback.notificationOccurred('warning');
+                } else {
+                    tg.HapticFeedback.impactOccurred('medium');
+                }
+            }
+            
+            // Reset to normal after exactly 5 seconds
+            if (effectTimeoutId) clearTimeout(effectTimeoutId);
+            effectTimeoutId = setTimeout(() => {
+                selectChatMood('normal');
+            }, 5000);
+        }
+
         function selectChatMood(mood) {
+            if (mood !== 'normal') {
+                const lastTrigger = parseInt(localStorage.getItem('smurf_last_effect_time') || '0');
+                const now = Date.now();
+                const elapsed = (now - lastTrigger) / 1000;
+                if (elapsed < 30) {
+                    const remaining = Math.ceil(30 - elapsed);
+                    showToast(`Hiệu ứng đang hồi chiêu! Vui lòng đợi ${remaining} giây nữa.`, 'warning');
+                    
+                    // Reset selected button to normal
+                    document.querySelectorAll('#chat-mood-selector button').forEach(btn => btn.classList.remove('active'));
+                    const normBtn = document.getElementById('mood-btn-normal');
+                    if (normBtn) normBtn.classList.add('active');
+                    return;
+                }
+            }
+            
             selectedChatMood = mood;
             document.querySelectorAll('#chat-mood-selector button').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById('mood-btn-' + mood);
@@ -2385,16 +2454,26 @@
             
             const container = document.getElementById('chat-background-effects');
             const feed = document.getElementById('chat-messages-feed');
-            if (container && feed) {
+            const sheet = document.getElementById('village-chat-sheet');
+            if (container && feed && sheet) {
                 container.innerHTML = '';
                 container.className = 'absolute inset-0 pointer-events-none overflow-hidden z-0';
                 feed.className = 'w-full h-full overflow-y-auto p-3 flex flex-col gap-2.5 text-xs relative z-10 bg-transparent';
+                sheet.className = 'bottom-sheet z-[111] flex flex-col active';
                 
                 if (mood === 'earthquake') {
-                    feed.classList.add('chat-bg-shake');
+                    sheet.classList.add('chat-bg-shake');
                 } else if (mood === 'lightning') {
                     container.classList.add('chat-bg-lightning');
                 }
+            }
+            
+            // Preview effect for exactly 5 seconds, then reset to normal
+            if (effectTimeoutId) clearTimeout(effectTimeoutId);
+            if (mood !== 'normal') {
+                effectTimeoutId = setTimeout(() => {
+                    selectChatMood('normal');
+                }, 5000);
             }
         }
 
@@ -2404,6 +2483,20 @@
             const message = (input.value || '').trim();
             if (!message) return;
             
+            let activeMood = selectedChatMood;
+            const now = Date.now();
+            if (activeMood !== 'normal') {
+                const lastTrigger = parseInt(localStorage.getItem('smurf_last_effect_time') || '0');
+                const elapsed = (now - lastTrigger) / 1000;
+                if (elapsed < 30) {
+                    const remaining = Math.ceil(30 - elapsed);
+                    showToast(`Hiệu ứng đang hồi chiêu! Tin nhắn được gửi ở chế độ thường.`, 'warning');
+                    activeMood = 'normal';
+                } else {
+                    localStorage.setItem('smurf_last_effect_time', now.toString());
+                }
+            }
+            
             const telegramId = currentUser ? currentUser.telegramId : '';
             const smurfName = currentUser ? currentUser.smurfName : 'Khách Ghé Chơi';
             
@@ -2412,11 +2505,16 @@
                 time: 'Vừa xong',
                 smurfName: smurfName,
                 message: message,
-                mood: selectedChatMood,
+                mood: activeMood,
                 telegramId: telegramId
             });
             
             input.value = '';
+            
+            // Trigger visual effect locally for 5s
+            if (activeMood !== 'normal') {
+                triggerIncomingChatEffect(activeMood);
+            }
             
             // JSONP or Direct GET submit to Google Sheets API
             const callbackName = 'chatSendCallback_' + Math.floor(Math.random() * 100000);
@@ -2429,7 +2527,7 @@
             
             const script = document.createElement('script');
             script.id = callbackName;
-            script.src = `${GAS_WEBAPP_URL}?action=sendChat&telegramId=${encodeURIComponent(telegramId)}&smurfName=${encodeURIComponent(smurfName)}&message=${encodeURIComponent(message)}&mood=${encodeURIComponent(selectedChatMood)}&callback=${callbackName}`;
+            script.src = `${GAS_WEBAPP_URL}?action=sendChat&telegramId=${encodeURIComponent(telegramId)}&smurfName=${encodeURIComponent(smurfName)}&message=${encodeURIComponent(message)}&mood=${encodeURIComponent(activeMood)}&callback=${callbackName}`;
             document.body.appendChild(script);
             
             if (tg?.HapticFeedback) {
@@ -2504,6 +2602,14 @@
                             const badge = document.getElementById('chat-badge');
                             if (badge) badge.style.display = 'block';
                         }
+                        
+                        // Trigger effect if latest message has one and it is not first load
+                        if (!isFirstLoad && resp.messages.length > 0) {
+                            const latestMsg = resp.messages[resp.messages.length - 1];
+                            if (latestMsg.mood && latestMsg.mood !== 'normal') {
+                                triggerIncomingChatEffect(latestMsg.mood);
+                            }
+                        }
                     }
                 }
             };
@@ -2539,8 +2645,58 @@
             }, 100);
         });
 
+        function setupTouchResponsiveObserver() {
+            const bindElement = (el) => {
+                const target = el.closest('button, .nav-item, .chat-mood-badge, .card-scene');
+                if (!target || target.dataset.touchBound) return;
+                target.dataset.touchBound = 'true';
+                
+                let touchStartX = 0;
+                let touchStartY = 0;
+                let touchTime = 0;
+
+                target.addEventListener('touchstart', (e) => {
+                    const touch = e.touches[0];
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    touchTime = Date.now();
+                }, { passive: true });
+
+                target.addEventListener('touchend', (e) => {
+                    const touch = e.changedTouches[0];
+                    const dx = Math.abs(touch.clientX - touchStartX);
+                    const dy = Math.abs(touch.clientY - touchStartY);
+                    const dt = Date.now() - touchTime;
+
+                    if (dx < 10 && dy < 10 && dt < 250) {
+                        e.preventDefault();
+                        target.click();
+                    }
+                });
+            };
+
+            // Bind current items
+            document.querySelectorAll('button, .nav-item, .chat-mood-badge, .card-scene').forEach(bindElement);
+
+            // MutationObserver to automatically bind dynamically added elements
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach(mutation => {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType !== Node.ELEMENT_NODE) return;
+                        if (node.matches('button, .nav-item, .chat-mood-badge, .card-scene')) {
+                            bindElement(node);
+                        }
+                        node.querySelectorAll('button, .nav-item, .chat-mood-badge, .card-scene').forEach(bindElement);
+                    });
+                });
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+
         // Initialize drag and drop/scroll helpers
         setupDragToScroll();
         setupMapDragScroll();
         setupPopupDragToMove();
         setupChatKeyboardHandling();
+        setupTouchResponsiveObserver();

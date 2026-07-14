@@ -16,6 +16,7 @@ function build() {
             '{{PROFILE_VIEW}}': 'src/components/ProfileView.html',
             '{{VILLAGE_VIEW}}': 'src/components/VillageView.html',
             '{{BOTTOM_NAV}}': 'src/components/BottomNav.html',
+            '{{VILLAGE_CHAT}}': 'src/components/VillageChat.html',
             '{{EDIT_SHEET}}': 'src/components/EditSheet.html',
             '{{DETAIL_MODAL}}': 'src/components/DetailModal.html',
             '{{CORE_JS}}': 'src/core/app.js'

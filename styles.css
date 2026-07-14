@@ -392,3 +392,28 @@ button,
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+@media (max-width: 767px) {
+    /* Style Chat sheet to open full screen on mobile */
+    #village-chat-sheet {
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        bottom: 0 !important;
+    }
+}
+
+/* Force inner contents of buttons to pass clicks to their parent button */
+button * {
+    pointer-events: none !important;
+}
+
+/* Disable selection highlighting on touch interactions */
+button, 
+.nav-item, 
+.chat-mood-badge, 
+.card-scene {
+    -webkit-tap-highlight-color: transparent !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
