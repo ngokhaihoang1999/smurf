@@ -318,6 +318,12 @@ function doPost(e) {
       case "listAll":
         result = handleListAll();
         break;
+      case "sendChat":
+        result = handleSendChat(data);
+        break;
+      case "getChat":
+        result = handleGetChat();
+        break;
       default:
         result = { status: "error", message: "Unknown action: " + action };
     }
@@ -343,6 +349,17 @@ function doGet(e) {
       case "listAll":
         result = handleListAll();
         break;
+      case "getChat":
+        result = handleGetChat();
+        break;
+      case "sendChat":
+        result = handleSendChat({
+          telegramId: e.parameter.telegramId || "",
+          smurfName: e.parameter.smurfName || "",
+          message: e.parameter.message || "",
+          mood: e.parameter.mood || ""
+        });
+        break;
       default:
         result = { status: "ok", message: "API Làng Xì Trum V2.2 — Use ?action=lookup&telegramId=xxx or ?action=listAll" };
     }
@@ -363,6 +380,65 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+// ═══════════════════════════════════════
+// CHAT FUNCTIONALITY
+// ═══════════════════════════════════════
+function getChatSheet() {
+  var ss;
+  try {
+    ss = SpreadsheetApp.openById(SHEET_ID);
+  } catch (err) {
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  }
+  var sheet = ss.getSheetByName("Chat");
+  if (!sheet) {
+    sheet = ss.insertSheet("Chat");
+    sheet.appendRow(["Timestamp", "Telegram ID", "Tên Xì Trum", "Tin Nhắn", "Cảm Xúc (Mood)"]);
+  }
+  return sheet;
+}
+
+function handleSendChat(data) {
+  var sheet = getChatSheet();
+  var cleanMsg = sanitizeInput(data.message || "");
+  var cleanMood = sanitizeInput(data.mood || "normal");
+  
+  if (cleanMsg.length > 50) cleanMsg = cleanMsg.substring(0, 50); // limit to 50 chars
+  
+  sheet.appendRow([
+    new Date(),
+    sanitizeInput(data.telegramId || ""),
+    sanitizeInput(data.smurfName || "Khách Ẩn Danh"),
+    cleanMsg,
+    cleanMood
+  ]);
+  
+  var lastRow = sheet.getLastRow();
+  if (lastRow > 31) { // Keep last 30 messages
+    sheet.deleteRows(2, lastRow - 31);
+  }
+  
+  return { status: "success" };
+}
+
+function handleGetChat() {
+  var sheet = getChatSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return { status: "success", messages: [] };
+  
+  var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+  var messages = data.map(function(row) {
+    return {
+      time: Utilities.formatDate(row[0], "GMT+7", "HH:mm"),
+      telegramId: String(row[1]),
+      smurfName: String(row[2]),
+      message: String(row[3]),
+      mood: String(row[4])
+    };
+  });
+  return { status: "success", messages: messages };
 }
 
 // Hàm test permission (chạy 1 lần trên GAS web UI để kích hoạt cấp quyền)

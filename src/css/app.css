@@ -100,7 +100,9 @@
         
         /* Mặt trước (Thẻ Ngang - Thẻ Cư Dân đầy đủ) */
         .card-front {
-            background: #ffffff;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
             transform: rotateY(180deg);
         }
         
@@ -134,22 +136,52 @@
             transform: rotateY(180deg);
         }
 
-        /* Auto-rotate horizontal card face on mobile portrait */
-        @media (max-width: 640px) and (orientation: portrait) {
-            .card-front {
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) rotate(90deg) rotateY(180deg) !important;
-                position: absolute !important;
-                transform-origin: center center !important;
-            }
-            .card-front.non-rotated-landscape {
-                transform: translate(-50%, -50%) rotateY(180deg) !important;
-            }
-            #modalCardScaleWrapper {
-                transform-origin: center center !important;
-                top: 50% !important;
-                left: 50% !important;
-            }
+        /* ═══════════════════════════════════════ */
+        /* CHAT BUBBLE MOOD ANIMATIONS             */
+        /* ═══════════════════════════════════════ */
+        @keyframes chatShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px); }
+            40%, 80% { transform: translateX(4px); }
+        }
+        .chat-effect-earthquake {
+            animation: chatShake 0.4s ease-in-out infinite;
+            border: 2px solid #ef4444 !important;
+            background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
+        }
+
+        @keyframes chatFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .chat-effect-floating {
+            animation: chatFloat 2.5s ease-in-out infinite;
+            border: 2px solid #3b82f6 !important;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
+        }
+
+        @keyframes chatPulse {
+            0%, 100% { box-shadow: 0 0 4px #eab308; }
+            50% { box-shadow: 0 0 12px #eab308; }
+        }
+        .chat-effect-lightning {
+            animation: chatPulse 1.2s infinite;
+            border: 2px solid #eab308 !important;
+            background: linear-gradient(135deg, #fef9c3, #fef08a) !important;
+        }
+
+        .chat-effect-smurfed {
+            border: 2px solid #1d4ed8 !important;
+            background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
+            color: #ffffff !important;
+        }
+        .chat-effect-smurfed span {
+            color: #93c5fd !important;
+        }
+
+        .chat-mood-badge.active {
+            background-color: #1e90ff !important;
+            color: white !important;
+            border-color: #1e90ff !important;
         }
 

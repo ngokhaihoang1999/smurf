@@ -991,10 +991,8 @@
                                       item.realName.toLowerCase().includes(searchQuery.toLowerCase());
                 
                 let matchesGroup = true;
-                if (activeFilter === 'N1') {
-                    matchesGroup = item.group.startsWith('N1');
-                } else if (activeFilter === 'N2') {
-                    matchesGroup = item.group.startsWith('N2');
+                if (activeFilter !== 'ALL') {
+                    matchesGroup = (item.group || '').toUpperCase().trim() === activeFilter.toUpperCase().trim();
                 }
                 
                 return matchesSearch && matchesGroup;
@@ -1033,8 +1031,6 @@
 
         function setFilter(filter) {
             activeFilter = filter;
-            document.querySelectorAll('#filter-container button').forEach(btn => btn.classList.remove('active'));
-            event.currentTarget.classList.add('active');
             renderGrid();
         }
 
@@ -1202,9 +1198,8 @@
             
             const rect = container.getBoundingClientRect();
             const viewportH = window.innerHeight;
-            
             const spaceBelow = viewportH - rect.bottom;
-            
+
             if (spaceBelow < 90) {
                 controls.style.bottom = '12px';
             } else {
@@ -1289,9 +1284,27 @@
             const controls = document.getElementById('modal-controls');
             controls.classList.add('opacity-100');
             
+            // Hide navigation row if own card
+            const isOwnCard = currentUser && (item.smurfName === currentUser.smurfName);
             const navRow = document.getElementById('modal-nav-row');
-            navRow.classList.add('opacity-100');
-            updatePageIndicator();
+            const desktopPrev = document.querySelector('button[onclick="navigateModal(\'prev\')"]');
+            const desktopNext = document.querySelector('button[onclick="navigateModal(\'next\')"]');
+            if (isOwnCard) {
+                if (navRow) navRow.style.display = 'none';
+                if (desktopPrev) desktopPrev.style.display = 'none';
+                if (desktopNext) desktopNext.style.display = 'none';
+            } else {
+                if (navRow) navRow.style.display = 'flex';
+                if (desktopPrev) desktopPrev.style.display = 'flex';
+                if (desktopNext) desktopNext.style.display = 'flex';
+                if (navRow) navRow.classList.add('opacity-100');
+                updatePageIndicator();
+            }
+
+            // Show inline reaction bar
+            const reactionBar = document.getElementById('modal-reaction-bar');
+            if (reactionBar) reactionBar.classList.add('opacity-100');
+            loadSocialData();
 
             container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
@@ -1367,9 +1380,16 @@
 
             backdrop.classList.remove('opacity-100');
             controls.classList.remove('opacity-100');
+            
+            const reactionBar = document.getElementById('modal-reaction-bar');
+            if (reactionBar) reactionBar.classList.remove('opacity-100');
+
             const navRow = document.getElementById('modal-nav-row');
-            navRow.classList.remove('opacity-100');
+            if (navRow) navRow.classList.remove('opacity-100');
             modal.classList.add('pointer-events-none');
+
+            const desktopPrev = document.querySelector('button[onclick="navigateModal(\'prev\')"]');
+            const desktopNext = document.querySelector('button[onclick="navigateModal(\'next\')"]');
 
             if (lastClickedRect && lastClickedElement) {
                 const card3d = document.getElementById('modalCard3d');
@@ -1409,6 +1429,11 @@
                     modal.classList.add('hidden');
                     closeTimeoutId = null;
                     adjustControlsLayout();
+                    
+                    // Reset nav controls display styles
+                    if (navRow) navRow.style.display = '';
+                    if (desktopPrev) desktopPrev.style.display = '';
+                    if (desktopNext) desktopNext.style.display = '';
                 }, 400);
             } else {
                 container.style.display = 'none';
@@ -1418,7 +1443,10 @@
                 container.style.width = '';
                 container.style.height = '';
                 modal.classList.add('hidden');
-                adjustControlsLayout();
+                
+                if (navRow) navRow.style.display = '';
+                if (desktopPrev) desktopPrev.style.display = '';
+                if (desktopNext) desktopNext.style.display = '';
             }
         }
 
@@ -1668,34 +1696,6 @@
             }
         }
 
-        // ── SOCIAL SHEET & COMMENTS ──
-        function openModalSocialSheet() {
-            const overlay = document.getElementById('modal-social-overlay');
-            const sheet = document.getElementById('modal-social-sheet');
-            if (overlay && sheet) {
-                overlay.style.display = 'block';
-                sheet.style.display = 'block';
-                setTimeout(() => {
-                    overlay.classList.add('active');
-                    sheet.classList.add('active');
-                }, 10);
-            }
-            loadSocialData();
-        }
-
-        function closeModalSocialSheet() {
-            const overlay = document.getElementById('modal-social-overlay');
-            const sheet = document.getElementById('modal-social-sheet');
-            if (overlay && sheet) {
-                overlay.classList.remove('active');
-                sheet.classList.remove('active');
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    sheet.style.display = 'none';
-                }, 300);
-            }
-        }
-
         function getSocialData(tid) {
             let db = {};
             try {
@@ -1724,49 +1724,71 @@
             
             const data = getSocialData(targetId);
             
-            document.getElementById('react-count-like').textContent = data.likes || 0;
-            document.getElementById('react-count-funny').textContent = data.funnys || 0;
-            document.getElementById('react-count-star').textContent = data.stars || 0;
-            document.getElementById('react-count-cool').textContent = data.cools || 0;
+            const countLike = document.getElementById('react-count-like');
+            const countFunny = document.getElementById('react-count-funny');
+            const countStar = document.getElementById('react-count-star');
+            const countCool = document.getElementById('react-count-cool');
             
-            const feed = document.getElementById('modal-comments-feed');
-            const emptyState = document.getElementById('comments-empty-state');
-            const countSpan = document.getElementById('modal-comments-count');
+            if (countLike) countLike.textContent = data.likes || 0;
+            if (countFunny) countFunny.textContent = data.funnys || 0;
+            if (countStar) countStar.textContent = data.stars || 0;
+            if (countCool) countCool.textContent = data.cools || 0;
             
-            const oldRows = feed.querySelectorAll('.comment-row');
-            oldRows.forEach(r => r.parentNode.removeChild(r));
-            
-            countSpan.textContent = (data.comments || []).length;
-            if (!data.comments || data.comments.length === 0) {
-                if (emptyState) emptyState.style.display = 'block';
-            } else {
-                if (emptyState) emptyState.style.display = 'none';
-                data.comments.forEach(c => {
-                    const row = document.createElement('div');
-                    row.className = 'comment-row bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-0.5 text-left';
-                    row.innerHTML = `
-                        <div class="flex justify-between items-center text-[9px] font-bold text-slate-400">
-                            <span class="text-smurf-blue">${c.author}</span>
-                            <span>${c.time}</span>
-                        </div>
-                        <p class="text-slate-700 font-medium text-xs mt-0.5">${c.text}</p>
-                    `;
-                    feed.appendChild(row);
-                });
-                feed.scrollTop = feed.scrollHeight;
+            // Highlight active button states locally
+            let myReactions = {};
+            try {
+                myReactions = JSON.parse(localStorage.getItem('smurf_my_reactions')) || {};
+            } catch (err) {
+                myReactions = {};
             }
+            
+            const types = ['like', 'funny', 'star', 'cool'];
+            types.forEach(t => {
+                const btn = document.getElementById('react-btn-' + t);
+                if (btn) {
+                    const reactionKey = targetId + "_" + t;
+                    if (myReactions[reactionKey]) {
+                        btn.style.background = '#e0f2fe'; // light sky blue background
+                        btn.style.borderColor = '#0ea5e9';
+                        btn.style.borderWidth = '2px';
+                    } else {
+                        btn.style.background = '';
+                        btn.style.borderColor = '';
+                        btn.style.borderWidth = '';
+                    }
+                }
+            });
         }
 
         function reactToResident(type) {
             const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
-            const data = getSocialData(targetId);
-            if (type === 'like') data.likes = (data.likes || 0) + 1;
-            if (type === 'funny') data.funnys = (data.funnys || 0) + 1;
-            if (type === 'star') data.stars = (data.stars || 0) + 1;
-            if (type === 'cool') data.cools = (data.cools || 0) + 1;
+            let myReactions = {};
+            try {
+                myReactions = JSON.parse(localStorage.getItem('smurf_my_reactions')) || {};
+            } catch (err) {
+                myReactions = {};
+            }
             
+            const reactionKey = targetId + "_" + type;
+            const data = getSocialData(targetId);
+            const isAlreadyReacted = !!myReactions[reactionKey];
+            
+            let prop = 'likes';
+            if (type === 'funny') prop = 'funnys';
+            else if (type === 'star') prop = 'stars';
+            else if (type === 'cool') prop = 'cools';
+            
+            if (isAlreadyReacted) {
+                data[prop] = Math.max(0, (data[prop] || 0) - 1);
+                myReactions[reactionKey] = false;
+            } else {
+                data[prop] = (data[prop] || 0) + 1;
+                myReactions[reactionKey] = true;
+            }
+            
+            localStorage.setItem('smurf_my_reactions', JSON.stringify(myReactions));
             saveSocialData(targetId, data);
             loadSocialData();
             
@@ -1775,67 +1797,278 @@
             }
         }
 
-        function submitGreetingMessage(e) {
-            e.preventDefault();
-            const targetId = activeModalItem?.telegramId;
-            if (!targetId) return;
+        // Open your own card modal inside profile tab
+        function openOwnCardModal() {
+            if (!currentUser) {
+                alert("⚠️ Vui lòng đăng ký cư dân trước khi xem thẻ cá nhân!");
+                return;
+            }
+            const dummy = document.createElement('div');
+            dummy.style.position = 'absolute';
+            dummy.style.top = '50%';
+            dummy.style.left = '50%';
+            dummy.style.width = '100px';
+            dummy.style.height = '100px';
+            dummy.style.opacity = '0';
+            document.body.appendChild(dummy);
             
-            const input = document.getElementById('modal-comment-input');
-            const text = (input.value || '').trim();
-            if (!text) return;
+            openModal(currentUser.smurfName, dummy);
             
-            const authorName = currentUser ? currentUser.smurfName : 'Khách Ẩn Danh';
-            const data = getSocialData(targetId);
+            setTimeout(() => {
+                if (dummy.parentNode) document.body.removeChild(dummy);
+            }, 600);
+        }
+
+        // Trum Vibe (Matchmaking) Result Handlers
+        function triggerTrumVibe() {
+            if (!currentUser) {
+                alert("⚠️ Bạn cần đăng ký cư dân để đo Trum Vibe!");
+                return;
+            }
             
-            if (!data.comments) data.comments = [];
-            data.comments.push({
-                author: authorName,
-                text: text,
-                time: 'Vừa xong'
-            });
+            // Calculate scores for all other residents
+            const matches = RESIDENTS_DATA.filter(r => String(r.telegramId) !== String(currentUser.telegramId))
+                .map(target => {
+                    let score = 50;
+                    if (target.group === currentUser.group) score += 20;
+                    
+                    const myHobbies = (currentUser.hobbies || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+                    const targetHobbies = (target.hobbies || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+                    const commonHobbies = myHobbies.filter(h => h && targetHobbies.includes(h));
+                    score += commonHobbies.length * 15;
+                    
+                    const myTraits = (currentUser.personality || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+                    const targetTraits = (target.personality || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+                    const commonTraits = myTraits.filter(t => t && targetTraits.includes(t));
+                    score += commonTraits.length * 15;
+                    
+                    score = Math.min(score, 99);
+                    return {
+                        smurfName: target.smurfName,
+                        avatar: target.avatar,
+                        score: score
+                    };
+                });
+                
+            // Sort by score desc and take top 3
+            matches.sort((a, b) => b.score - a.score);
+            const top3 = matches.slice(0, 3);
             
-            saveSocialData(targetId, data);
-            input.value = '';
-            loadSocialData();
+            const listContainer = document.getElementById('trum-vibe-results-list');
+            if (listContainer) {
+                listContainer.innerHTML = '';
+                if (top3.length === 0) {
+                    listContainer.innerHTML = '<p class="text-slate-400 text-center italic py-4">Chưa có cư dân nào khác để đo...</p>';
+                } else {
+                    top3.forEach(match => {
+                        const row = document.createElement('div');
+                        row.className = "flex items-center justify-between bg-purple-50/60 border border-purple-100 p-2.5 rounded-2xl hover:bg-purple-50 transition-colors text-left";
+                        row.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <img src="${match.avatar}" class="w-10 h-10 rounded-full border border-purple-200 object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                <div class="flex flex-col">
+                                    <span class="font-fredoka text-xs text-slate-700">${match.smurfName}</span>
+                                    <span class="text-[9px] font-bold text-slate-400">Hợp cạ: ${match.score}%</span>
+                                </div>
+                            </div>
+                            <span class="text-[9px] bg-purple-600 text-white px-2 py-0.5 rounded-full font-bold uppercase">${match.score > 80 ? 'Tri Kỷ' : 'Rất Hợp'}</span>
+                        `;
+                        listContainer.appendChild(row);
+                    });
+                }
+            }
+            
+            // Show Trum Vibe Modal
+            const vibeModal = document.getElementById('trum-vibe-modal');
+            if (vibeModal) {
+                vibeModal.classList.remove('hidden');
+                vibeModal.classList.add('flex');
+            }
             
             if (tg?.HapticFeedback) {
                 tg.HapticFeedback.notificationOccurred('success');
             }
         }
 
-        function triggerMatchmaking() {
-            const targetId = activeModalItem?.telegramId;
-            if (!targetId || !currentUser) {
-                alert("⚠️ Bạn cần đăng ký cư dân để sử dụng tính năng ghép đôi!");
-                return;
+        function closeTrumVibeModal() {
+            const vibeModal = document.getElementById('trum-vibe-modal');
+            if (vibeModal) {
+                vibeModal.classList.add('hidden');
+                vibeModal.classList.remove('flex');
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // CHAT CLIENT IMPLEMENTATION
+        // ═══════════════════════════════════════
+        let chatPollingIntervalId = null;
+        let selectedChatMood = 'normal';
+        let lastChatCount = 0;
+
+        function openVillageChat() {
+            const overlay = document.getElementById('village-chat-overlay');
+            const sheet = document.getElementById('village-chat-sheet');
+            if (overlay && sheet) {
+                overlay.style.display = 'block';
+                sheet.style.display = 'block';
+                setTimeout(() => {
+                    overlay.classList.add('active');
+                    sheet.classList.add('active');
+                }, 10);
             }
             
-            const target = activeModalItem;
-            if (String(target.telegramId) === String(currentUser.telegramId)) {
-                alert("🔮 Gương thần bảo rằng: Bạn tương thích 100% với chính mình!");
-                return;
+            // Hide badge when chat is opened
+            const badge = document.getElementById('chat-badge');
+            if (badge) badge.style.display = 'none';
+            
+            fetchChatMessages();
+            
+            // Start background polling loop (every 8 seconds)
+            if (!chatPollingIntervalId) {
+                chatPollingIntervalId = setInterval(fetchChatMessages, 8000);
+            }
+        }
+
+        function closeVillageChat() {
+            const overlay = document.getElementById('village-chat-overlay');
+            const sheet = document.getElementById('village-chat-sheet');
+            if (overlay && sheet) {
+                overlay.classList.remove('active');
+                sheet.classList.remove('active');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    sheet.style.display = 'none';
+                }, 300);
             }
             
-            let score = 50;
-            if (target.group === currentUser.group) score += 20;
+            // Stop polling
+            if (chatPollingIntervalId) {
+                clearInterval(chatPollingIntervalId);
+                chatPollingIntervalId = null;
+            }
+        }
+
+        function selectChatMood(mood) {
+            selectedChatMood = mood;
+            document.querySelectorAll('#chat-mood-selector button').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('mood-btn-' + mood);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        function submitChatMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-msg-input');
+            const message = (input.value || '').trim();
+            if (!message) return;
             
-            const myHobbies = (currentUser.hobbies || '').split(/[,·]/).map(s => s.trim().toLowerCase());
-            const targetHobbies = (target.hobbies || '').split(/[,·]/).map(s => s.trim().toLowerCase());
-            const commonHobbies = myHobbies.filter(h => h && targetHobbies.includes(h));
-            score += commonHobbies.length * 15;
+            const telegramId = currentUser ? currentUser.telegramId : '';
+            const smurfName = currentUser ? currentUser.smurfName : 'Khách Ghé Chơi';
             
-            const myTraits = (currentUser.personality || '').split(/[,·]/).map(s => s.trim().toLowerCase());
-            const targetTraits = (target.personality || '').split(/[,·]/).map(s => s.trim().toLowerCase());
-            const commonTraits = myTraits.filter(t => t && targetTraits.includes(t));
-            score += commonTraits.length * 15;
+            // optimistic local append
+            appendLocalChatMessage({
+                time: 'Vừa xong',
+                smurfName: smurfName,
+                message: message,
+                mood: selectedChatMood,
+                telegramId: telegramId
+            });
             
-            score = Math.min(score, 99);
+            input.value = '';
             
-            alert(`💞 Độ Tương Thích Giữa Bạn và ${target.smurfName}:\n👉 Kết quả: ${score}%\n${
-                score > 80 ? "✨ Hai bạn là tri kỷ định mệnh của Làng Xì Trum!" :
-                score > 60 ? "🌟 Rất hợp cạ, hãy cùng nhau đi dạo thung lũng nấm nhé!" :
-                "👋 Hãy chủ động nhắn tin trò chuyện để tăng độ thân thiết nha!"
-            }`);
+            // JSONP or Direct GET submit to Google Sheets API
+            const callbackName = 'chatSendCallback_' + Math.floor(Math.random() * 100000);
+            window[callbackName] = function(resp) {
+                delete window[callbackName];
+                const scriptNode = document.getElementById(callbackName);
+                if (scriptNode) scriptNode.parentNode.removeChild(scriptNode);
+                fetchChatMessages(); // refresh from server
+            };
+            
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${GAS_WEBAPP_URL}?action=sendChat&telegramId=${encodeURIComponent(telegramId)}&smurfName=${encodeURIComponent(smurfName)}&message=${encodeURIComponent(message)}&mood=${encodeURIComponent(selectedChatMood)}&callback=${callbackName}`;
+            document.body.appendChild(script);
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+
+        function appendLocalChatMessage(msg) {
+            const feed = document.getElementById('chat-messages-feed');
+            const emptyState = document.getElementById('chat-empty-state');
+            if (emptyState) emptyState.style.display = 'none';
+            
+            const isOwn = currentUser && (String(msg.telegramId) === String(currentUser.telegramId));
+            
+            // Map mood styles
+            let effectClass = '';
+            if (msg.mood === 'earthquake') effectClass = 'chat-effect-earthquake';
+            else if (msg.mood === 'floating') effectClass = 'chat-effect-floating';
+            else if (msg.mood === 'lightning') effectClass = 'chat-effect-lightning';
+            else if (msg.mood === 'smurfed') effectClass = 'chat-effect-smurfed';
+            
+            const row = document.createElement('div');
+            row.className = `flex flex-col gap-0.5 max-w-[85%] ${isOwn ? 'self-end items-end text-right' : 'self-start items-start text-left'}`;
+            row.innerHTML = `
+                <div class="flex items-center gap-1 text-[8px] font-bold text-slate-400 px-1">
+                    <span class="${isOwn ? 'text-smurf-blue' : 'text-slate-500'}">${msg.smurfName}</span>
+                    <span>•</span>
+                    <span>${msg.time}</span>
+                </div>
+                <div class="px-3.5 py-2.5 rounded-2xl border font-bold text-xs leading-relaxed shadow-sm ${effectClass} ${
+                    isOwn && msg.mood !== 'smurfed' ? 'bg-smurf-blue border-smurf-blue/20 text-white shadow-smurf-blue/5' : 
+                    msg.mood === 'smurfed' ? '' : 'bg-white border-slate-200/60 text-slate-700'
+                }">
+                    ${msg.message}
+                </div>
+            `;
+            feed.appendChild(row);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function fetchChatMessages() {
+            const callbackName = 'chatGetCallback_' + Math.floor(Math.random() * 100000);
+            window[callbackName] = function(resp) {
+                delete window[callbackName];
+                const scriptNode = document.getElementById(callbackName);
+                if (scriptNode) scriptNode.parentNode.removeChild(scriptNode);
+                
+                if (resp && resp.status === 'success' && resp.messages) {
+                    const feed = document.getElementById('chat-messages-feed');
+                    const emptyState = document.getElementById('chat-empty-state');
+                    if (!feed) return;
+                    
+                    // Only update feed if new messages arrived
+                    if (resp.messages.length !== lastChatCount) {
+                        const isFirstLoad = (lastChatCount === 0);
+                        lastChatCount = resp.messages.length;
+                        
+                        feed.innerHTML = '';
+                        if (resp.messages.length === 0) {
+                            if (emptyState) emptyState.style.display = 'block';
+                            feed.appendChild(emptyState);
+                        } else {
+                            if (emptyState) emptyState.style.display = 'none';
+                            resp.messages.forEach(msg => {
+                                appendLocalChatMessage(msg);
+                            });
+                        }
+                        
+                        // Toggle new badge if chat sheet is closed and new messages came
+                        const sheet = document.getElementById('village-chat-sheet');
+                        if (!isFirstLoad && (!sheet || sheet.style.display === 'none')) {
+                            const badge = document.getElementById('chat-badge');
+                            if (badge) badge.style.display = 'block';
+                        }
+                    }
+                }
+            };
+            
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${GAS_WEBAPP_URL}?action=getChat&callback=${callbackName}`;
+            document.body.appendChild(script);
         }
 
         // ── BOOT ──
