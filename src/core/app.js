@@ -1,4 +1,4 @@
-        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzvH1zgIVFQUXaSz_JhScriUOUByapUN5zXavJ9AowcTsqy-Q1EuWoXLALD082zPOyTow/exec";
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzwcqWPzX3QIiXqLwygf0ygIe9rObPaeHE9vhf8fKj9joz-twqqZmzVhMKuw7Znl7R2mQ/exec";
 
         // ── STATE ──
         let currentUser = null;
