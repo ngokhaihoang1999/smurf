@@ -2009,8 +2009,56 @@
         }
 
         function downloadResidentCard() {
-            const cardEl = document.getElementById('cardSheetScaleWrapper');
-            if (!cardEl) return;
+            if (!currentUser) return;
+
+            const cardEl = document.getElementById('modalCardScaleWrapper');
+            if (!cardEl) {
+                alert('⚠️ Không tìm thấy khung ảnh thẻ.');
+                return;
+            }
+
+            // Populate the modal with the current user's details first
+            const item = currentUser;
+            const avatarUrl = item.avatar || `avatars/avatar_${item.telegramId}.png`;
+            
+            // Set image sources and text contents
+            const avatarImgModal = document.getElementById('m-card-avatar');
+            const avatarImgPreview = document.getElementById('m-preview-smurf-avatar');
+            if (avatarImgModal) avatarImgModal.src = avatarUrl;
+            if (avatarImgPreview) avatarImgPreview.src = avatarUrl;
+            
+            const groupModal = document.getElementById('m-card-group');
+            const groupPreview = document.getElementById('m-preview-group');
+            if (groupModal) groupModal.textContent = item.group || '';
+            if (groupPreview) groupPreview.textContent = item.group || '';
+            
+            const realNameModal = document.getElementById('m-card-real-name');
+            const realNamePreview = document.getElementById('m-preview-real-name');
+            if (realNameModal) realNameModal.textContent = item.realName || '';
+            if (realNamePreview) realNamePreview.textContent = item.realName || '';
+            
+            const smurfNameModal = document.getElementById('m-card-name');
+            if (smurfNameModal) smurfNameModal.textContent = item.smurfName || '';
+            
+            const hobbyModal = document.getElementById('m-card-hobby');
+            if (hobbyModal) hobbyModal.textContent = '🏸 ' + (item.soThich || 'Cư dân');
+            
+            const personalityModal = document.getElementById('m-card-personality');
+            if (personalityModal) personalityModal.textContent = '🧠 ' + (item.tinhCach || 'Vui vẻ');
+            
+            const previewTinhCach = document.getElementById('m-preview-tinh-cach');
+            const previewSoThich = document.getElementById('m-preview-so-thich');
+            const previewDiemManh = document.getElementById('m-preview-diem-manh');
+            const previewDiemYeu = document.getElementById('m-preview-diem-yeu');
+            const previewBio = document.getElementById('m-preview-bio');
+            
+            if (previewTinhCach) previewTinhCach.textContent = item.tinhCach || '';
+            if (previewSoThich) previewSoThich.textContent = item.soThich || '';
+            if (previewDiemManh) previewDiemManh.textContent = item.diemManh || '';
+            if (previewDiemYeu) previewDiemYeu.textContent = item.diemYeu || '';
+            if (previewBio) previewBio.textContent = item.bio || '';
+            
+            adjustAllCardFonts('m-preview-');
             
             if (tg) {
                 tg.showPopup({
@@ -2020,31 +2068,59 @@
                 });
             }
             
-            const clone = cardEl.cloneNode(true);
-            clone.style.transform = 'none';
-            clone.style.position = 'fixed';
-            clone.style.left = '-9999px';
-            clone.style.top = '-9999px';
-            clone.style.width = '1516px';
-            clone.style.height = '1038px';
-            document.body.appendChild(clone);
+            // Get original parent and sibling to restore later
+            const originalParent = cardEl.parentNode;
+            const originalSibling = cardEl.nextSibling;
+            
+            // Temporarily move to body and reset positioning/transforms for layout resolution
+            document.body.appendChild(cardEl);
+            const originalStyle = cardEl.getAttribute('style') || '';
+            
+            cardEl.style.position = 'fixed';
+            cardEl.style.top = '0';
+            cardEl.style.left = '0';
+            cardEl.style.transform = 'none';
+            cardEl.style.zIndex = '999999';
             
             setTimeout(() => {
-                html2canvas(clone, {
+                html2canvas(cardEl, {
+                    scale: 2,
                     useCORS: true,
                     allowTaint: true,
                     backgroundColor: null,
-                    scale: 2
+                    width: 1516,
+                    height: 1038,
+                    onclone: (clonedDoc) => {
+                        if (document.fonts) {
+                            document.fonts.forEach(font => {
+                                clonedDoc.fonts.add(font);
+                            });
+                        }
+                    }
                 }).then(canvas => {
-                    document.body.removeChild(clone);
+                    // Restore original placement
+                    cardEl.setAttribute('style', originalStyle);
+                    if (originalSibling) {
+                        originalParent.insertBefore(cardEl, originalSibling);
+                    } else {
+                        originalParent.appendChild(cardEl);
+                    }
+                    
                     const dataUrl = canvas.toDataURL('image/png');
                     showImageForDownload(dataUrl, `the_cu_dan_${currentUser.smurfName || 'smurf'}.png`);
                 }).catch(err => {
                     console.error('Error generating card image:', err);
-                    alert('⚠️ Lỗi khi xuất ảnh thẻ.');
-                    if (clone.parentNode) document.body.removeChild(clone);
+                    alert('⚠️ Lỗi khi xuất ảnh thẻ: ' + err.message);
+                    
+                    // Restore original placement on error
+                    cardEl.setAttribute('style', originalStyle);
+                    if (originalSibling) {
+                        originalParent.insertBefore(cardEl, originalSibling);
+                    } else {
+                        originalParent.appendChild(cardEl);
+                    }
                 });
-            }, 350);
+            }, 100);
         }
 
         function handleSignpostClick() {

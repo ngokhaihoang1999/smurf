@@ -415,8 +415,11 @@ button,
     }
 }
 
-/* Force inner contents of buttons to pass clicks to their parent button */
-button * {
+/* Force inner contents of buttons and custom clickable divs to pass clicks directly to parent */
+button *,
+.nav-item *,
+.chat-mood-badge *,
+.card-scene * {
     pointer-events: none !important;
 }
 
