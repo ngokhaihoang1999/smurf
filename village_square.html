@@ -480,26 +480,29 @@
                 return;
             }
 
+            const fragment = document.createDocumentFragment();
             filtered.forEach(item => {
-                const cardHtml = `
-                    <div class="card-scene smurf-card flex flex-col overflow-hidden" onclick="openModal('${item.smurfName.replace(/'/g, "\\'")}', this)">
-                        <div class="w-full relative overflow-hidden" style="aspect-ratio: 3/4;">
-                            <img src="${item.avatar}" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
-                            <span class="absolute top-3 left-3 bg-white/80 backdrop-blur-sm text-smurf-blue p-1 rounded-full text-[11px] font-bold shadow-md material-symbols-outlined">park</span>
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card-scene smurf-card flex flex-col overflow-hidden';
+                cardEl.onclick = function() { openModal(item.smurfName, this); };
+                cardEl.innerHTML = `
+                    <div class="w-full relative overflow-hidden" style="aspect-ratio: 3/4;">
+                        <img src="${item.avatar}" alt="Avatar" class="w-full h-full object-cover" loading="lazy" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                        <span class="absolute top-3 left-3 bg-white/90 text-smurf-blue p-1 rounded-full text-[11px] font-bold shadow-md material-symbols-outlined">park</span>
+                    </div>
+                    <div class="w-full py-2.5 px-3.5 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 58px;">
+                        <div class="flex justify-between items-center w-full">
+                            <span class="font-bold text-[13px] text-slate-700 truncate mr-2" style="max-width: 140px;">${item.realName}</span>
+                            <span class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase">${item.group}</span>
                         </div>
-                        <div class="w-full py-2.5 px-3.5 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 58px;">
-                            <div class="flex justify-between items-center w-full">
-                                <span class="font-bold text-[13px] text-slate-700 truncate mr-2" style="max-width: 140px;">${item.realName}</span>
-                                <span class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase">${item.group}</span>
-                            </div>
-                            <div class="text-[10px] text-slate-400 font-bold mt-1 truncate">
-                                ${(item.soThich || '').split(',')[0] || '—'} • ${(item.tinhCach || '').split(',')[0] || '—'}
-                            </div>
+                        <div class="text-[10px] text-slate-400 font-bold mt-1 truncate">
+                            ${(item.soThich || '').split(',')[0] || '—'} • ${(item.tinhCach || '').split(',')[0] || '—'}
                         </div>
                     </div>
                 `;
-                grid.insertAdjacentHTML('beforeend', cardHtml);
+                fragment.appendChild(cardEl);
             });
+            grid.appendChild(fragment);
             filteredResidentsList = filtered;
         }
 
