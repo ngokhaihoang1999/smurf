@@ -51,7 +51,7 @@
                     if (tab === 'village') {
                         showVillageTab();
                     } else {
-                        showProfileView();
+                        showHomeTab();
                     }
                 } catch(e) {
                     console.warn('Failed to parse cached user');
@@ -108,28 +108,29 @@
                             currentUser = foundUser;
                             localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                             
-                            // If they were stuck on loading screen or register screen, transition them to profile
+                            // If they were stuck on loading screen or register screen, transition them to home
                             const activeView = getActiveView();
                             if (activeView === 'loading' || activeView === 'register') {
                                 const tab = urlParams.get('tab');
                                 if (tab === 'village') {
                                     showVillageTab();
                                 } else {
-                                    showProfileView();
+                                    showHomeTab();
                                 }
                             } else if (activeView === 'profile') {
-                                // Silently refresh values
                                 showProfileView();
+                            } else if (activeView === 'home') {
+                                showHomeTab();
                             }
                         } else {
-                            // User not registered -> redirect to register form
-                            showView('register');
-                            setupRegistrationForm();
+                            // User not registered -> show Home as guest
+                            currentUser = null;
+                            showHomeTab();
                         }
                     } else {
-                        // Outside Telegram & no query param -> let them register
-                        showView('register');
-                        setupRegistrationForm();
+                        // Outside Telegram & no query param -> show Home as guest
+                        currentUser = null;
+                        showHomeTab();
                     }
 
                     // Render grid silently in background if on village tab
@@ -239,47 +240,71 @@
         // ── PROFILE VIEW ──
         function showProfileView() {
             showView('profile');
-            updateNavActive('nav-item-home');
+            updateNavActive('nav-item-profile');
             updateHeaderBadge();
             const d = currentUser;
+            if (!d) return;
             const avatarUrl = `avatars/avatar_${d.telegramId || telegramId}.png`;
             
-            document.getElementById('profile-avatar').src = avatarUrl;
-            document.getElementById('profile-avatar').onerror = function() {
-                this.src = 'avatars/smurf_basic_placeholder.png';
-                document.getElementById('avatar-pending-badge').style.display = 'block';
-            };
+            // Re-render elements for the vertical card face (back)
+            const profileAvatar = document.getElementById('profile-avatar');
+            if (profileAvatar) {
+                profileAvatar.src = avatarUrl;
+                profileAvatar.onerror = function() {
+                    this.src = 'avatars/smurf_basic_placeholder.png';
+                    const badge = document.getElementById('profile-avatar-pending-badge');
+                    if (badge) badge.style.display = 'block';
+                };
+            }
             
-            // Check if avatar exists (hide pending badge if yes)
+            // Check if custom avatar exists to hide pending badge
             const testImg = new Image();
-            testImg.onload = () => { document.getElementById('avatar-pending-badge').style.display = 'none'; };
-            testImg.onerror = () => { document.getElementById('avatar-pending-badge').style.display = 'block'; };
+            testImg.onload = () => { 
+                const badge = document.getElementById('profile-avatar-pending-badge');
+                if (badge) badge.style.display = 'none'; 
+            };
+            testImg.onerror = () => { 
+                const badge = document.getElementById('profile-avatar-pending-badge');
+                if (badge) badge.style.display = 'block'; 
+            };
             testImg.src = avatarUrl;
             
-            document.getElementById('profile-smurf-name').textContent = d.smurfName || 'Cư dân';
-            document.getElementById('profile-real-name').textContent = d.realName || '';
-            document.getElementById('profile-group').textContent = d.group || '';
-            document.getElementById('profile-bio').textContent = d.bio ? `"${d.bio}"` : '';
-            
-            // Populate card sheet
-            document.getElementById('card-sheet-avatar').src = avatarUrl;
-            document.getElementById('card-sheet-avatar').onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
-            document.getElementById('cs-real-name').textContent = d.realName || '';
-            document.getElementById('cs-group').textContent = d.group || '';
-            document.getElementById('cs-tinh-cach').textContent = d.personality || '';
-            document.getElementById('cs-so-thich').textContent = d.hobbies || '';
-            document.getElementById('cs-diem-manh').textContent = d.strength || '';
-            document.getElementById('cs-diem-yeu').textContent = d.weakness || '';
-            document.getElementById('cs-bio').textContent = d.bio || '';
-            
-            // Automatically fit font sizes
-            adjustAllCardFonts('cs-');
+            if (document.getElementById('profile-card-group-badge')) document.getElementById('profile-card-group-badge').textContent = d.group || 'Cư dân';
+            if (document.getElementById('profile-card-real-name')) document.getElementById('profile-card-real-name').textContent = d.realName || '';
+            if (document.getElementById('profile-card-smurf-name')) document.getElementById('profile-card-smurf-name').textContent = d.smurfName || '';
+            if (document.getElementById('profile-card-hobby')) document.getElementById('profile-card-hobby').textContent = d.hobbies ? '🏸 ' + d.hobbies : '🏸 Sở thích';
+            if (document.getElementById('profile-card-personality')) document.getElementById('profile-card-personality').textContent = d.personality ? '🧠 ' + d.personality : '🧠 Tính cách';
+
+            // Re-render elements for the horizontal card face (front)
+            const hAvatar = document.getElementById('profile-card-horizontal-avatar');
+            if (hAvatar) {
+                hAvatar.src = avatarUrl;
+                hAvatar.onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
+            }
+            if (document.getElementById('profile-card-horizontal-real-name')) document.getElementById('profile-card-horizontal-real-name').textContent = d.realName || '';
+            if (document.getElementById('profile-card-horizontal-group')) document.getElementById('profile-card-horizontal-group').textContent = d.group || '';
+            if (document.getElementById('profile-card-horizontal-tinh-cach')) document.getElementById('profile-card-horizontal-tinh-cach').textContent = d.personality || '';
+            if (document.getElementById('profile-card-horizontal-so-thich')) document.getElementById('profile-card-horizontal-so-thich').textContent = d.hobbies || '';
+            if (document.getElementById('profile-card-horizontal-diem-manh')) document.getElementById('profile-card-horizontal-diem-manh').textContent = d.strength || '';
+            if (document.getElementById('profile-card-horizontal-diem-yeu')) document.getElementById('profile-card-horizontal-diem-yeu').textContent = d.weakness || '';
+            if (document.getElementById('profile-card-horizontal-bio')) document.getElementById('profile-card-horizontal-bio').textContent = d.bio || '';
+
+            // Re-render details text block
+            if (document.getElementById('profile-smurf-name')) document.getElementById('profile-smurf-name').textContent = d.smurfName || 'Cư dân';
+            if (document.getElementById('profile-subtitle')) document.getElementById('profile-subtitle').textContent = `${d.realName || ''} · ${d.group || ''}`;
+            if (document.getElementById('profile-detail-hobbies')) document.getElementById('profile-detail-hobbies').textContent = d.hobbies || '-';
+            if (document.getElementById('profile-detail-personality')) document.getElementById('profile-detail-personality').textContent = d.personality || '-';
+            if (document.getElementById('profile-detail-strength')) document.getElementById('profile-detail-strength').textContent = d.strength || '-';
+            if (document.getElementById('profile-detail-weakness')) document.getElementById('profile-detail-weakness').textContent = d.weakness || '-';
+            if (document.getElementById('profile-detail-bio')) document.getElementById('profile-detail-bio').textContent = d.bio ? `"${d.bio}"` : '"-"';
+
+            // Auto-scale horizontal card in Profile View
+            setTimeout(resizeProfileCard, 50);
 
             // Handle editSheet query parameter if present
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('edit') === '1') {
                 openEditSheet();
-                // Clean the URL param so it doesn't reopen next time
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -591,18 +616,33 @@
 
         // ── SPA NAV HANDLERS ──
         function showHomeTab() {
-            closeCardSheet();
             closeEditSheet();
             const detailModal = document.getElementById('detail-modal');
             if (detailModal && !detailModal.classList.contains('hidden')) {
                 closeModal();
             }
-            if (currentUser) {
-                showProfileView();
-            } else {
-                showView('register');
-                updateNavActive('nav-item-home');
+            
+            showView('home');
+            updateNavActive('nav-item-home');
+            
+            // Render welcome name and stats
+            const welcomeSpan = document.getElementById('home-welcome-name');
+            if (welcomeSpan) {
+                welcomeSpan.textContent = currentUser ? currentUser.smurfName : 'Khách Ghé Chơi';
             }
+            const countSpan = document.getElementById('home-village-count');
+            if (countSpan) {
+                countSpan.textContent = RESIDENTS_DATA.length;
+            }
+            
+            // Auto center the map scroll position
+            setTimeout(() => {
+                const container = document.getElementById('map-scroll-container');
+                if (container) {
+                    container.scrollLeft = (1024 - container.clientWidth) / 2;
+                    container.scrollTop = (1024 - container.clientHeight) / 2;
+                }
+            }, 50);
         }
 
         function showProfileTab() {
@@ -610,16 +650,15 @@
                 alert("⚠️ Bạn cần đăng ký cư dân trước!");
                 return;
             }
-            closeCardSheet();
-            openEditSheet();
+            closeEditSheet();
+            showProfileView();
         }
 
         function showVillageTab() {
-            closeCardSheet();
             closeEditSheet();
             showView('village');
             updateNavActive('nav-item-village');
-            renderGrid(); // Render instantly from local cache
+            renderGrid();
         }
 
         function updateNavActive(activeId) {
@@ -632,26 +671,32 @@
             }
         }
 
-        // ── BOTTOM SHEET METHODS ──
-        function openCardSheet() {
-            document.getElementById('card-sheet-overlay').classList.add('active');
-            document.getElementById('card-sheet').classList.add('active');
-            setTimeout(resizeCardSheet, 50);
+
+
+        let profileCardFlipped = false;
+        function toggleProfileCardFlip() {
+            const card3d = document.getElementById('profile-card-3d');
+            if (!card3d) return;
+            profileCardFlipped = !profileCardFlipped;
+            if (profileCardFlipped) {
+                card3d.style.transform = 'rotateY(180deg)';
+            } else {
+                card3d.style.transform = 'rotateY(0deg)';
+            }
         }
 
-        function closeCardSheet() {
-            document.getElementById('card-sheet-overlay').classList.remove('active');
-            document.getElementById('card-sheet').classList.remove('active');
+        function toggleProfileCardFlipEvent(e) {
+            e.stopPropagation();
+            toggleProfileCardFlip();
         }
 
-        function resizeCardSheet() {
-            const parent = document.getElementById('card-sheet-parent');
-            const scaleWrapper = document.getElementById('cardSheetScaleWrapper');
-            if (!parent || !scaleWrapper) return;
-            const parentWidth = parent.clientWidth;
+        function resizeProfileCard() {
+            const wrapper = document.getElementById('cardSheetScaleWrapper');
+            if (!wrapper) return;
+            const parentWidth = 270;
             const scale = parentWidth / 1516;
-            scaleWrapper.style.transform = `translateX(-50%) scale(${scale})`;
-            parent.style.height = (1038 * scale) + 'px';
+            wrapper.style.transform = `translateX(-50%) scale(${scale})`;
+            adjustAllCardFonts('profile-card-horizontal-');
         }
 
         function openEditSheet() {
@@ -1386,12 +1431,364 @@
             }, 300);
         }
 
+        // ── MAGIC MUSHROOM FORTUNE & QUEST ROLLER ──
+        const SMURF_FORTUNES = [
+            { text: "Hôm nay bạn gặp may mắn như Tí Cô Nương, mọi việc suôn sẻ!", quest: "Nhiệm vụ: Hãy cười thật tươi khi gặp mọi người nhé!" },
+            { text: "Tí Cận khuyên bạn hôm nay hãy cẩn thận khi code, đừng để dính bug lạ.", quest: "Nhiệm vụ: Xem lại code dòng gần nhất bạn viết." },
+            { text: "Tí Quạu khuyên bạn hôm nay nên từ chối khéo các lời rủ rê họp hành để tập trung.", quest: "Nhiệm vụ: Hãy tắt thông báo Telegram trong 30 phút." },
+            { text: "Tí Vua dự báo hôm nay bạn sẽ có một buổi làm việc cực kỳ năng suất!", quest: "Nhiệm vụ: Uống một cốc nước ấm trước khi bắt đầu." },
+            { text: "Tí Tham Ăn khuyên bạn hôm nay nên tự thưởng một bữa ăn thật ngon.", quest: "Nhiệm vụ: Đi mua một món bánh ngọt bạn thích." },
+            { text: "Tí Điệu chúc bạn có một ngày rực rỡ và luôn là tâm điểm của sự chú ý.", quest: "Nhiệm vụ: Hãy chỉnh sửa bộ trang phục Smurf của bạn thật đẹp nhé!" }
+        ];
+
+        function getDynamicFortune() {
+            const base = SMURF_FORTUNES[Math.floor(Math.random() * SMURF_FORTUNES.length)];
+            if (RESIDENTS_DATA.length > 1 && currentUser) {
+                const others = RESIDENTS_DATA.filter(r => String(r.telegramId) !== String(currentUser.telegramId));
+                if (others.length > 0) {
+                    const targetSmurf = others[Math.floor(Math.random() * others.length)];
+                    // 40% chance to roll a networking quest!
+                    if (Math.random() < 0.4) {
+                        return {
+                            text: "Hôm nay bạn là Tí Thân Thiện, hãy kết nối với mọi người trong Làng!",
+                            quest: `Nhiệm vụ: Hãy ghé thăm Quảng Trường, tìm thẻ của **${targetSmurf.smurfName}** và gửi cho bạn ấy một lời chúc tốt lành!`
+                        };
+                    }
+                }
+            }
+            return base;
+        }
+
+        let confettiActive = false;
+        function startConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            
+            const colors = ['#f43f5e', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'];
+            const particles = [];
+            
+            for (let i = 0; i < 60; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * -100 - 10,
+                    r: Math.random() * 6 + 4,
+                    vy: Math.random() * 3 + 2,
+                    vx: Math.random() * 2 - 1,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.random() * 10 - 5,
+                    tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+                    tiltAngle: 0
+                });
+            }
+            
+            confettiActive = true;
+            function draw() {
+                if (!confettiActive) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                let finished = true;
+                particles.forEach(p => {
+                    p.tiltAngle += p.tiltAngleIncremental;
+                    p.y += p.vy;
+                    p.x += p.vx;
+                    p.tilt = Math.sin(p.tiltAngle) * 12;
+                    
+                    if (p.y < canvas.height) {
+                        finished = false;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.lineWidth = p.r;
+                    ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                    ctx.stroke();
+                });
+                
+                if (!finished) {
+                    requestAnimationFrame(draw);
+                }
+            }
+            requestAnimationFrame(draw);
+        }
+
+        function stopConfetti() {
+            confettiActive = false;
+        }
+
+        function rollMagicMushroom() {
+            const fortune = getDynamicFortune();
+            document.getElementById('fortune-text').textContent = fortune.text;
+            document.getElementById('fortune-quest').textContent = fortune.quest;
+            
+            const modal = document.getElementById('fortune-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.transform').classList.remove('scale-95');
+            }, 10);
+            
+            startConfetti();
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+
+        function closeFortuneModal() {
+            const modal = document.getElementById('fortune-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('.transform').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                stopConfetti();
+            }, 300);
+        }
+
+        // ── DUAL DOWLOADS ──
+        function downloadPortraitAvatar() {
+            if (!currentUser) return;
+            const link = document.createElement('a');
+            link.href = `avatars/avatar_${currentUser.telegramId}.png`;
+            link.download = `avatar_${currentUser.smurfName}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadResidentCard() {
+            const cardEl = document.getElementById('cardSheetScaleWrapper');
+            if (!cardEl) return;
+            
+            if (tg) {
+                tg.showPopup({
+                    title: '📥 Đang xuất ảnh thẻ',
+                    message: 'Hệ thống đang chuẩn bị ảnh thẻ cư dân chất lượng cao, vui lòng đợi một chút...',
+                    buttons: [{ type: 'ok', text: 'Đóng' }]
+                });
+            }
+            
+            const clone = cardEl.cloneNode(true);
+            clone.style.transform = 'none';
+            clone.style.position = 'fixed';
+            clone.style.left = '-9999px';
+            clone.style.top = '-9999px';
+            clone.style.width = '1516px';
+            clone.style.height = '1038px';
+            document.body.appendChild(clone);
+            
+            setTimeout(() => {
+                html2canvas(clone, {
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null,
+                    scale: 2
+                }).then(canvas => {
+                    document.body.removeChild(clone);
+                    
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = `the_cu_dan_${currentUser.smurfName || 'smurf'}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }).catch(err => {
+                    console.error('Error generating card image:', err);
+                    alert('⚠️ Lỗi khi xuất ảnh thẻ.');
+                    if (clone.parentNode) document.body.removeChild(clone);
+                });
+            }, 350);
+        }
+
+        function handleSignpostClick() {
+            if (currentUser) {
+                alert("📢 Bảng Tin Làng: Chúc cư dân " + currentUser.smurfName + " một ngày mới ngập tràn niềm vui!");
+            } else {
+                showView('register');
+                setupRegistrationForm();
+            }
+        }
+
+        // ── SOCIAL SHEET & COMMENTS ──
+        function openModalSocialSheet() {
+            const overlay = document.getElementById('modal-social-overlay');
+            const sheet = document.getElementById('modal-social-sheet');
+            if (overlay && sheet) {
+                overlay.style.display = 'block';
+                sheet.style.display = 'block';
+                setTimeout(() => {
+                    overlay.classList.add('active');
+                    sheet.classList.add('active');
+                }, 10);
+            }
+            loadSocialData();
+        }
+
+        function closeModalSocialSheet() {
+            const overlay = document.getElementById('modal-social-overlay');
+            const sheet = document.getElementById('modal-social-sheet');
+            if (overlay && sheet) {
+                overlay.classList.remove('active');
+                sheet.classList.remove('active');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    sheet.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        function getSocialData(tid) {
+            let db = {};
+            try {
+                const cached = localStorage.getItem('smurf_social_db');
+                if (cached) db = JSON.parse(cached);
+            } catch(e) {}
+            if (!db[tid]) {
+                db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
+            }
+            return db[tid];
+        }
+
+        function saveSocialData(tid, data) {
+            let db = {};
+            try {
+                const cached = localStorage.getItem('smurf_social_db');
+                if (cached) db = JSON.parse(cached);
+            } catch(e) {}
+            db[tid] = data;
+            localStorage.setItem('smurf_social_db', JSON.stringify(db));
+        }
+
+        function loadSocialData() {
+            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            if (!targetId) return;
+            
+            const data = getSocialData(targetId);
+            
+            document.getElementById('react-count-like').textContent = data.likes || 0;
+            document.getElementById('react-count-funny').textContent = data.funnys || 0;
+            document.getElementById('react-count-star').textContent = data.stars || 0;
+            document.getElementById('react-count-cool').textContent = data.cools || 0;
+            
+            const feed = document.getElementById('modal-comments-feed');
+            const emptyState = document.getElementById('comments-empty-state');
+            const countSpan = document.getElementById('modal-comments-count');
+            
+            const oldRows = feed.querySelectorAll('.comment-row');
+            oldRows.forEach(r => r.parentNode.removeChild(r));
+            
+            countSpan.textContent = (data.comments || []).length;
+            if (!data.comments || data.comments.length === 0) {
+                if (emptyState) emptyState.style.display = 'block';
+            } else {
+                if (emptyState) emptyState.style.display = 'none';
+                data.comments.forEach(c => {
+                    const row = document.createElement('div');
+                    row.className = 'comment-row bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-0.5 text-left';
+                    row.innerHTML = `
+                        <div class="flex justify-between items-center text-[9px] font-bold text-slate-400">
+                            <span class="text-smurf-blue">${c.author}</span>
+                            <span>${c.time}</span>
+                        </div>
+                        <p class="text-slate-700 font-medium text-xs mt-0.5">${c.text}</p>
+                    `;
+                    feed.appendChild(row);
+                });
+                feed.scrollTop = feed.scrollHeight;
+            }
+        }
+
+        function reactToResident(type) {
+            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            if (!targetId) return;
+            
+            const data = getSocialData(targetId);
+            if (type === 'like') data.likes = (data.likes || 0) + 1;
+            if (type === 'funny') data.funnys = (data.funnys || 0) + 1;
+            if (type === 'star') data.stars = (data.stars || 0) + 1;
+            if (type === 'cool') data.cools = (data.cools || 0) + 1;
+            
+            saveSocialData(targetId, data);
+            loadSocialData();
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+
+        function submitGreetingMessage(e) {
+            e.preventDefault();
+            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            if (!targetId) return;
+            
+            const input = document.getElementById('modal-comment-input');
+            const text = (input.value || '').trim();
+            if (!text) return;
+            
+            const authorName = currentUser ? currentUser.smurfName : 'Khách Ẩn Danh';
+            const data = getSocialData(targetId);
+            
+            if (!data.comments) data.comments = [];
+            data.comments.push({
+                author: authorName,
+                text: text,
+                time: 'Vừa xong'
+            });
+            
+            saveSocialData(targetId, data);
+            input.value = '';
+            loadSocialData();
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+
+        function triggerMatchmaking() {
+            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            if (!targetId || !currentUser) {
+                alert("⚠️ Bạn cần đăng ký cư dân để sử dụng tính năng ghép đôi!");
+                return;
+            }
+            
+            const target = filteredResidentsList[currentModalIndex];
+            if (String(target.telegramId) === String(currentUser.telegramId)) {
+                alert("🔮 Gương thần bảo rằng: Bạn tương thích 100% với chính mình!");
+                return;
+            }
+            
+            let score = 50;
+            if (target.group === currentUser.group) score += 20;
+            
+            const myHobbies = (currentUser.hobbies || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+            const targetHobbies = (target.hobbies || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+            const commonHobbies = myHobbies.filter(h => h && targetHobbies.includes(h));
+            score += commonHobbies.length * 15;
+            
+            const myTraits = (currentUser.personality || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+            const targetTraits = (target.personality || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+            const commonTraits = myTraits.filter(t => t && targetTraits.includes(t));
+            score += commonTraits.length * 15;
+            
+            score = Math.min(score, 99);
+            
+            alert(`💞 Độ Tương Thích Giữa Bạn và ${target.smurfName}:\n👉 Kết quả: ${score}%\n${
+                score > 80 ? "✨ Hai bạn là tri kỷ định mệnh của Làng Xì Trum!" :
+                score > 60 ? "🌟 Rất hợp cạ, hãy cùng nhau đi dạo thung lũng nấm nhé!" :
+                "👋 Hãy chủ động nhắn tin trò chuyện để tăng độ thân thiết nha!"
+            }`);
+        }
+
         // ── BOOT ──
         window.addEventListener('load', initApp);
         window.addEventListener('resize', () => { 
             const activeView = getActiveView();
             if (activeView === 'register') resizePreviewCard(); 
-            if (document.getElementById('card-sheet').classList.contains('active')) resizeCardSheet(); 
+            if (activeView === 'profile') resizeProfileCard(); 
             const modal = document.getElementById('detail-modal');
             if (modal && !modal.classList.contains('hidden')) {
                 resizeModalCard();

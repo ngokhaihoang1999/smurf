@@ -11,6 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <link href="styles.css?v=5" rel="stylesheet"/>
+    <!-- html2canvas library for card export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
             theme: {
@@ -229,6 +231,123 @@
         <p class="text-xs text-slate-400 font-bold">Xác minh cư dân qua Telegram</p>
         <button onclick="showView('register'); setupRegistrationForm();" class="mt-4 text-xs text-smurf-blue underline font-bold" style="display:none" id="skip-loading-btn">Bỏ qua → Đăng ký mới</button>
     </div>
+
+        
+<!-- ═══════════════════════════════════════ -->
+<!-- VIEW: HOME (Interactive Village Map)    -->
+<!-- ═══════════════════════════════════════ -->
+<div id="view-home" class="w-full hidden">
+    <main class="w-full max-w-md mx-auto pt-16 pb-20 flex flex-col relative overflow-hidden">
+        
+        <!-- Welcome Header Banner -->
+        <div class="px-4 py-2 bg-white/80 backdrop-blur-md border-b-2 border-smurf-blueLight flex justify-between items-center z-20 absolute top-16 left-0 right-0">
+            <div>
+                <p class="text-[11px] font-bold text-slate-400">CHÀO MỪNG BẠN ĐẾN</p>
+                <h3 class="font-fredoka text-base text-smurf-blue flex items-center gap-1">
+                    🏘️ <span id="home-welcome-name">Khách Ghé Chơi</span>
+                </h3>
+            </div>
+            <!-- Quick stats bubble -->
+            <div class="bg-smurf-blueLight text-smurf-blue px-2.5 py-1 rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-sm">
+                <span class="material-symbols-outlined text-xs">groups</span>
+                <span id="home-village-count">0</span> cư dân
+            </div>
+        </div>
+
+        <!-- 2D Pannable Map Viewport -->
+        <div id="map-scroll-container" class="w-full h-[calc(100vh-216px)] overflow-auto scroll-smooth relative cursor-grab active:cursor-grabbing select-none" style="scrollbar-width: none; -ms-overflow-style: none;">
+            
+            <!-- Map Ground Layer (1024x1024) -->
+            <div class="w-[1024px] h-[1024px] relative" style="background-image: url('src/assets/smurf_village_base_map.png'); background-size: cover; background-position: center;">
+                
+                <!-- Floating Clouds -->
+                <div class="absolute top-10 left-[100px] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 25s linear infinite;">☁️</div>
+                <div class="absolute top-32 left-[500px] text-4xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 32s linear infinite 5s;">☁️</div>
+                <div class="absolute top-20 left-[800px] text-5xl opacity-15 pointer-events-none float-cloud" style="animation: floatSlow 28s linear infinite 10s;">☁️</div>
+
+                <!-- 1. LANDMARK: Papa Smurf's House (Link to Tab 2: Profile/My Card) -->
+                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 280px; left: 160px; width: 150px;" onclick="showProfileTab()">
+                    <img src="src/assets/smurf_papa_house.png" alt="Nhà Tí Vua" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
+                    <!-- Tooltip label -->
+                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-smurf-blue text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
+                        🍄 Nhà Của Bạn (Hồ Sơ)
+                    </div>
+                </div>
+
+                <!-- 2. LANDMARK: Village Plaza (Link to Tab 3: Village Square) -->
+                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 420px; left: 520px; width: 130px;" onclick="showVillageTab()">
+                    <img src="src/assets/smurf_blue_house.png" alt="Quảng Trường" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
+                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-smurf-green text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
+                        🏘️ Quảng Trường Cư Dân
+                    </div>
+                </div>
+
+                <!-- 3. LANDMARK: Signpost (Link to Registration / Guest Info) -->
+                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 600px; left: 360px; width: 95px;" onclick="handleSignpostClick()">
+                    <img src="src/assets/smurf_signpost.png" alt="Biển Chỉ Đường" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
+                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-smurf-yellow text-slate-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
+                        📋 <span id="signpost-text">Đăng Ký Cư Dân</span>
+                    </div>
+                </div>
+
+                <!-- 4. LANDMARK: Magic Mushroom (Roll Fortune) -->
+                <div class="absolute group cursor-pointer z-20 hover-bounce" style="top: 360px; left: 370px; width: 85px;" onclick="rollMagicMushroom()">
+                    <img src="src/assets/smurf_magic_mushroom.png" alt="Nấm Thần Kỳ" class="w-full h-auto drop-shadow-[0_0_15px_rgba(168,85,247,0.6)] animate-pulse">
+                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
+                        🔮 Hái Nấm May Mắn
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Confetti Canvas overlay -->
+        <canvas id="confetti-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-30"></canvas>
+
+        <!-- Fortune Modal (Popup) -->
+        <div id="fortune-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-3xl w-full max-w-xs p-6 shadow-2xl border-4 border-purple-300 flex flex-col items-center text-center transform scale-95 transition-transform duration-300 relative overflow-hidden">
+                
+                <!-- Glowing backdrop -->
+                <div class="absolute -top-20 -left-20 w-40 h-40 bg-purple-200 rounded-full filter blur-3xl opacity-55"></div>
+                <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-pink-200 rounded-full filter blur-3xl opacity-55"></div>
+                
+                <span class="text-5xl mb-2 z-10 animate-bounce">🍄</span>
+                <h3 class="font-fredoka text-xl text-purple-600 mb-1 z-10">Lộc Nấm Thần Kỳ</h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-4 z-10">Papa Smurf Gửi Lời</p>
+                
+                <!-- Fortune Result Container -->
+                <div class="bg-purple-50 border-2 border-purple-100 p-4 rounded-2xl w-full mb-5 z-10 min-h-[100px] flex flex-col justify-center items-center">
+                    <p id="fortune-text" class="text-sm font-bold text-slate-700 leading-relaxed"></p>
+                    <p id="fortune-quest" class="text-xs font-bold text-purple-600 mt-2 italic leading-relaxed"></p>
+                </div>
+                
+                <!-- Close Button -->
+                <button onclick="closeFortuneModal()" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-fredoka font-bold text-sm transition-all active:scale-95 shadow-lg shadow-purple-500/25 z-10">
+                    Nhận Lộc Làng Xì Trum
+                </button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<style>
+/* CSS Animations for vivid map */
+@keyframes floatSlow {
+    0% { transform: translateX(-150px); }
+    100% { transform: translateX(1100px); }
+}
+.hover-bounce {
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.hover-bounce:hover {
+    transform: scale(1.08);
+}
+.hover-bounce:active {
+    transform: scale(0.95);
+}
+</style>
 
         
     <!-- ═══════════════════════════════════════ -->
@@ -528,56 +647,137 @@
     </div>
 
         
-    <!-- ═══════════════════════════════════════ -->
-    <!-- VIEW: PROFILE (Avatar Hub)             -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="view-profile" class="w-full hidden">
-        <main class="w-full max-w-md mx-auto px-4 pt-16 pb-20 flex flex-col gap-4">
-            <!-- Avatar Stage -->
-            <div class="avatar-stage p-4 flex flex-col items-center justify-center relative" style="min-height: 280px;">
-                <!-- Clouds -->
-                <div class="cloud" style="top: 12%; animation-duration: 18s; animation-delay: 0s;">☁️</div>
-                <div class="cloud" style="top: 8%; animation-duration: 22s; animation-delay: 6s; font-size: 22px;">☁️</div>
-                <div class="cloud" style="top: 20%; animation-duration: 25s; animation-delay: 12s; font-size: 20px;">☁️</div>
-                <!-- Sparkles -->
-                <div class="sparkle" style="top: 15%; left: 15%; animation-delay: 0s;">✨</div>
-                <div class="sparkle" style="top: 25%; right: 12%; animation-delay: 0.7s;">✨</div>
-                <div class="sparkle" style="top: 10%; right: 30%; animation-delay: 1.4s;">✨</div>
-                <div class="sparkle" style="bottom: 25%; left: 20%; animation-delay: 2.1s;">✨</div>
-                <!-- Avatar -->
-                <div class="avatar-bob relative z-10 mt-4">
-                    <img id="profile-avatar" src="avatars/smurf_basic_placeholder.png" alt="Avatar" 
-                         style="width: 160px; height: 213px; object-fit: cover; border-radius: 16px; border: 4px solid white; box-shadow: 0 8px 30px rgba(0,0,0,0.15);"
-                         onerror="this.src='avatars/smurf_basic_placeholder.png'">
+<!-- ═══════════════════════════════════════ -->
+<!-- VIEW: PROFILE (My Resident Card)        -->
+<!-- ═══════════════════════════════════════ -->
+<div id="view-profile" class="w-full hidden">
+    <main class="w-full max-w-md mx-auto px-4 pt-16 pb-20 flex flex-col gap-4">
+        
+        <!-- Embedded 3D Card Section -->
+        <div class="flex flex-col items-center justify-center pt-4 relative" style="min-height: 380px;">
+            <!-- Clouds backdrop -->
+            <div class="cloud" style="top: 5%; animation-duration: 20s; animation-delay: 0s;">☁️</div>
+            <div class="cloud" style="top: 15%; animation-duration: 24s; animation-delay: 4s; font-size: 24px;">☁️</div>
+            <div class="sparkle" style="top: 10%; left: 10%; animation-delay: 0s;">✨</div>
+            <div class="sparkle" style="top: 20%; right: 10%; animation-delay: 1s;">✨</div>
+
+            <!-- 3D Card Scene -->
+            <div id="profile-card-scene" class="card-scene relative z-10" onclick="toggleProfileCardFlip()" style="width: 270px; height: 360px; perspective: 1200px;">
+                <div id="profile-card-3d" class="card-3d w-full h-full relative" style="transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.2);">
+                    
+                    <!-- FACE BACK: Vertical Card (3:4) -->
+                    <div class="card-face card-back absolute inset-0 w-full h-full backface-hidden rounded-3xl border-2 border-slate-200 shadow-lg flex flex-col justify-between overflow-hidden" style="background: #ffffff;">
+                        <div class="relative w-full overflow-hidden" style="aspect-ratio: 3 / 4;">
+                            <img id="profile-avatar" src="avatars/smurf_basic_placeholder.png" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                            <!-- Group Badge Overlay -->
+                            <span class="absolute top-3 right-3 bg-smurf-blue text-white px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-md uppercase" id="profile-card-group-badge">Nhóm</span>
+                            <!-- Pending Badge if avatar is basic placeholder -->
+                            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-amber-500/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap animate-pulse" id="profile-avatar-pending-badge">🎨 Avatar đang được vẽ...</div>
+                        </div>
+                        <!-- Name & Basic details -->
+                        <div class="py-2.5 px-4 bg-white border-t border-slate-100 flex flex-col justify-center min-h-[64px]">
+                            <div class="flex justify-between items-center w-full">
+                                <span class="font-bold text-[14px] text-slate-700" id="profile-card-real-name">Họ Tên</span>
+                                <span class="text-[11px] text-slate-400 font-extrabold" id="profile-card-smurf-name">Tí Smurf</span>
+                            </div>
+                            <div class="flex justify-between w-full mt-1.5 pt-1.5 border-t border-slate-100 text-[10px] text-smurf-red font-bold">
+                                <span id="profile-card-hobby">🏸 Sở thích</span>
+                                <span class="text-slate-300">•</span>
+                                <span id="profile-card-personality">🧠 Tính cách</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FACE FRONT: Horizontal Card (1.5:1) -->
+                    <div class="card-face card-front absolute inset-0 w-full h-full backface-hidden rounded-3xl border-2 border-slate-200 shadow-lg overflow-hidden" style="transform: rotateY(180deg); background: #000;">
+                        <!-- Scaled card container (rendered exactly like phôi card) -->
+                        <div id="cardSheetScaleWrapper" style="width: 1516px; height: 1038px; transform-origin: top center; position: absolute; left: 50%; transform: translateX(-50%) scale(0.178); border-radius: 40px; overflow: hidden; background: #000;">
+                            <img src="card_bg.png" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='card_bg.png'">
+                            <!-- Avatar container inside horizontal card -->
+                            <div style="position: absolute; left: 80px; top: 138px; width: 589px; height: 823px; z-index: 1;">
+                                <div style="width: 100%; height: 100%; overflow: hidden; background: #e8f4f8; border-radius: 12px;">
+                                    <img id="profile-card-horizontal-avatar" src="avatars/smurf_basic_placeholder.png" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                </div>
+                            </div>
+                            <img src="card_bg_cutout.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; object-fit: fill;" onerror="this.style.display='none'">
+                            <div style="position: absolute; left: 812px; top: 147px; width: 552px; height: 112px; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 0 40px;">
+                                <div id="profile-card-horizontal-real-name" style="font-family: 'Baloo 2', cursive; font-size: 50px; font-weight: 800; color: #ffffff; text-shadow: 0 3px 6px rgba(0,0,0,0.15); text-align: center; white-space: nowrap; overflow: hidden; width: 100%;">Họ Tên</div>
+                            </div>
+                            <div id="profile-card-horizontal-group" style="position: absolute; left: 1130px; top: 274px; width: 194px; height: 47px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', cursive; font-size: 36px; font-weight: 800; color: #0b4375;">Nhóm</div>
+                            <div id="profile-card-horizontal-tinh-cach" style="position: absolute; left: 879px; top: 400px; width: 188px; height: 121px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 40px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Tính cách</div>
+                            <div id="profile-card-horizontal-so-thich" style="position: absolute; left: 1236px; top: 401px; width: 185px; height: 122px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 40px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Sở thích</div>
+                            <div id="profile-card-horizontal-diem-manh" style="position: absolute; left: 880px; top: 609px; width: 185px; height: 124px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 40px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Điểm mạnh</div>
+                            <div id="profile-card-horizontal-diem-yeu" style="position: absolute; left: 1225px; top: 612px; width: 200px; height: 125px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 40px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Điểm yếu</div>
+                            <div style="position: absolute; left: 738px; top: 768px; width: 696px; height: 194px; z-index: 20; display: flex; align-items: center; justify-content: center; padding-left: 65px; padding-right: 40px;">
+                                <div id="profile-card-horizontal-bio" style="font-family: 'Quicksand'; font-size: 60px; font-style: italic; font-weight: 600; color: #2b78bf; text-align: center; line-height: 1.45; width: 100%; overflow-wrap: break-word;">Bio</div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                <div class="avatar-shadow mt-1"></div>
-                <!-- Pending badge (shown when no custom avatar) -->
-                <div class="avatar-pending" id="avatar-pending-badge">🎨 Avatar đang được vẽ...</div>
-                <!-- Ground decorations -->
-                <div class="absolute bottom-3 left-6 text-2xl pointer-events-none">🍄</div>
-                <div class="absolute bottom-3 right-6 text-2xl pointer-events-none">🍄</div>
-                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 text-xl pointer-events-none">🌿</div>
             </div>
+            
+            <button onclick="toggleProfileCardFlipEvent(event)" class="absolute bottom-2 right-6 bg-white/95 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1 active:scale-95 transition-all z-20">
+                <span class="material-symbols-outlined text-sm">flip</span>
+                Lật Thẻ
+            </button>
+        </div>
 
-            <!-- Name Plate -->
-            <div class="name-plate px-6 py-3 text-center">
-                <h2 class="font-fredoka text-xl text-smurf-blue pl-3" id="profile-smurf-name">Tí Coding</h2>
-                <p class="text-sm font-bold text-slate-500 pl-3" id="profile-subtitle">
-                     <span id="profile-real-name">Nguyễn Văn An</span> · <span id="profile-group">N1T2</span>
-                </p>
-                <p class="text-xs text-slate-400 italic mt-1 pl-3" id="profile-bio">"Code và cà phê là nguồn sống!"</p>
+        <!-- Details Text Block -->
+        <div class="bg-white rounded-3xl p-5 border-2 border-slate-100 shadow-sm flex flex-col gap-3">
+            <div class="text-center pb-3 border-b border-slate-100">
+                <h3 class="font-fredoka text-lg text-smurf-blue pl-2" id="profile-smurf-name">Tí Coding</h3>
+                <p class="text-xs text-slate-400 font-bold" id="profile-subtitle">Real Name · Group</p>
             </div>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100/50">
+                    <span class="font-bold text-slate-400 block mb-0.5">SỞ THÍCH</span>
+                    <span class="font-bold text-slate-700" id="profile-detail-hobbies">-</span>
+                </div>
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100/50">
+                    <span class="font-bold text-slate-400 block mb-0.5">TÍNH CÁCH</span>
+                    <span class="font-bold text-slate-700" id="profile-detail-personality">-</span>
+                </div>
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100/50">
+                    <span class="font-bold text-slate-400 block mb-0.5">ĐIỂM MẠNH</span>
+                    <span class="font-bold text-slate-700" id="profile-detail-strength">-</span>
+                </div>
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100/50">
+                    <span class="font-bold text-slate-400 block mb-0.5">ĐIỂM YẾU</span>
+                    <span class="font-bold text-slate-700" id="profile-detail-weakness">-</span>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100/50 text-xs">
+                <span class="font-bold text-slate-400 block mb-1">GIỚI THIỆU BẢN THÂN</span>
+                <p class="text-slate-600 leading-relaxed italic" id="profile-detail-bio">"-"</p>
+            </div>
+        </div>
 
-            <!-- Action Buttons -->
-            <div class="flex">
-                <button onclick="openCardSheet()" class="w-full mushroom-btn py-3.5 rounded-2xl font-fredoka text-base flex items-center justify-center gap-2 relative overflow-hidden">
+        <!-- Action Buttons Row -->
+        <div class="flex flex-col gap-2.5">
+            <div class="flex gap-2">
+                <!-- Download Card Button -->
+                <button onclick="downloadResidentCard()" class="flex-1 mushroom-btn py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 relative overflow-hidden">
                     <div class="absolute inset-x-0 top-0 h-1/2 bg-white opacity-15 rounded-t-2xl"></div>
-                    <span class="material-symbols-outlined text-lg relative z-10">badge</span>
-                    <span class="relative z-10">Xem Thẻ Cư Dân</span>
+                    <span class="material-symbols-outlined text-base">download</span>
+                    <span>Tải Thẻ Ngang</span>
+                </button>
+                <!-- Download Avatar Button -->
+                <button onclick="downloadPortraitAvatar()" class="flex-1 bg-white border-2 border-slate-200 text-slate-700 py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm">
+                    <span class="material-symbols-outlined text-base">download</span>
+                    <span>Tải Avatar</span>
                 </button>
             </div>
-        </main>
-    </div>
+            
+            <!-- Edit Button -->
+            <button onclick="openEditSheet()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all">
+                <span class="material-symbols-outlined text-base">edit</span>
+                <span>Chỉnh Sửa Thông Tin</span>
+            </button>
+        </div>
+        
+    </main>
+</div>
 
         
     <!-- ═══════════════════════════════════════ -->
@@ -628,43 +828,6 @@
             <span>Làng</span>
         </div>
     </nav>
-
-
-    <!-- ═══════════════════════════════════════ -->
-    <!-- BOTTOM SHEET: Xem Thẻ Cư Dân           -->
-    <!-- ═══════════════════════════════════════ -->
-    <div class="bottom-sheet-overlay" id="card-sheet-overlay" onclick="closeCardSheet()"></div>
-    <div class="bottom-sheet" id="card-sheet" style="max-height: 80vh;">
-        <div class="bottom-sheet-handle"></div>
-        <div class="px-4 pb-6 pt-2">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="font-fredoka text-lg text-smurf-blue">🪪 Thẻ Cư Dân</h3>
-                <button onclick="closeCardSheet()" class="text-slate-400 hover:text-slate-600 p-1"><span class="material-symbols-outlined">close</span></button>
-            </div>
-            <div style="width: 100%; overflow: hidden; border-radius: 20px; background: #000; position: relative;" id="card-sheet-parent">
-                <div id="cardSheetScaleWrapper" style="width: 1516px; height: 1038px; transform-origin: top center; position: absolute; left: 50%; transform: translateX(-50%) scale(0.23); border-radius: 40px; overflow: hidden; background: #000;">
-                    <img src="card_bg.png" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='card_bg.png'">
-                    <div style="position: absolute; left: 80px; top: 138px; width: 589px; height: 823px; z-index: 1;">
-                        <div style="width: 100%; height: 100%; overflow: hidden; background: #e8f4f8; border-radius: 12px;">
-                            <img id="card-sheet-avatar" src="avatars/smurf_basic_placeholder.png" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;">
-                        </div>
-                    </div>
-                    <img src="card_bg_cutout.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; object-fit: fill;" onerror="this.style.display='none'">
-                    <div style="position: absolute; left: 812px; top: 147px; width: 552px; height: 112px; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 0 40px;">
-                        <div id="cs-real-name" style="font-family: 'Baloo 2', cursive; font-size: 50px; font-weight: 800; color: #ffffff; text-shadow: 0 3px 6px rgba(0,0,0,0.15); text-align: center; white-space: nowrap; overflow: hidden; width: 100%;">Tên</div>
-                    </div>
-                    <div id="cs-group" style="position: absolute; left: 1130px; top: 274px; width: 194px; height: 47px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', cursive; font-size: 36px; font-weight: 800; color: #0b4375;">Nhóm</div>
-                    <div id="cs-tinh-cach" style="position: absolute; left: 879px; top: 400px; width: 188px; height: 121px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 40px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Tính cách</div>
-                    <div id="cs-so-thich" style="position: absolute; left: 1236px; top: 401px; width: 185px; height: 122px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 40px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Sở thích</div>
-                    <div id="cs-diem-manh" style="position: absolute; left: 880px; top: 609px; width: 185px; height: 124px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 40px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Điểm mạnh</div>
-                    <div id="cs-diem-yeu" style="position: absolute; left: 1225px; top: 612px; width: 200px; height: 125px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand'; font-size: 40px; font-weight: 700; color: #111; text-align: center; line-height: 1.35; overflow-wrap: break-word;">Điểm yếu</div>
-                    <div style="position: absolute; left: 738px; top: 768px; width: 696px; height: 194px; z-index: 20; display: flex; align-items: center; justify-content: center; padding-left: 65px; padding-right: 40px;">
-                        <div id="cs-bio" style="font-family: 'Quicksand'; font-size: 60px; font-style: italic; font-weight: 600; color: #2b78bf; text-align: center; line-height: 1.45; width: 100%; overflow-wrap: break-word;">Bio</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
 
     <!-- ═══════════════════════════════════════ -->
@@ -825,13 +988,78 @@
         <!-- Rotate button (shown only on mobile portrait + horizontal card) -->
         <button id="mobile-rotate-btn" onclick="toggleCardRotation()" class="flex-1 py-3 px-2 sm:px-4 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm whitespace-nowrap min-w-0" style="display: none;">
             <span class="material-symbols-outlined text-lg">screen_rotation</span>
-            Xoay Thẻ
+            Xoay
+        </button>
+
+        <button onclick="openModalSocialSheet()" class="flex-1 py-3 px-2 bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1 text-xs whitespace-nowrap min-w-0">
+            <span class="material-symbols-outlined text-base">chat</span>
+            Tương tác
         </button>
 
         <button onclick="closeModal()" class="flex-1 py-3 px-2 sm:px-4 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm whitespace-nowrap min-w-0">
             <span class="material-symbols-outlined text-lg">close</span>
             Đóng
         </button>
+    </div>
+
+    <!-- Modal Social Slide-up Sheet -->
+    <div class="bottom-sheet-overlay z-[110]" id="modal-social-overlay" onclick="closeModalSocialSheet()" style="display: none; pointer-events: auto;"></div>
+    <div class="bottom-sheet z-[111]" id="modal-social-sheet" style="max-height: 80vh; display: none; pointer-events: auto;">
+        <div class="bottom-sheet-handle"></div>
+        <div class="px-4 pb-6 pt-2 flex flex-col h-full">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-2">
+                <h3 class="font-fredoka text-base text-slate-800 flex items-center gap-1">
+                    💬 Lời Nhắn & Tương Tác
+                </h3>
+                <button onclick="closeModalSocialSheet()" class="text-slate-400 hover:text-slate-600 p-1"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            
+            <!-- Matchmaking Button -->
+            <button onclick="triggerMatchmaking()" class="w-full py-3 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-2xl font-fredoka font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md mb-4">
+                <span class="material-symbols-outlined text-sm">favorite</span>
+                <span>Tìm Smurf Tương Thích (Matchmaking)</span>
+            </button>
+
+            <!-- Emoji Reaction Counter & Trigger Bar -->
+            <div class="flex flex-col gap-1.5 mb-4">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Thả cảm xúc cho Thẻ</label>
+                <div class="flex justify-around bg-slate-50 p-2.5 rounded-2xl border border-slate-100">
+                    <button onclick="reactToResident('like')" class="flex flex-col items-center gap-1 active:scale-90 transition-transform">
+                        <span class="text-2xl">❤️</span>
+                        <span id="react-count-like" class="text-[10px] font-extrabold text-slate-500">0</span>
+                    </button>
+                    <button onclick="reactToResident('funny')" class="flex flex-col items-center gap-1 active:scale-90 transition-transform">
+                        <span class="text-2xl">🍄</span>
+                        <span id="react-count-funny" class="text-[10px] font-extrabold text-slate-500">0</span>
+                    </button>
+                    <button onclick="reactToResident('star')" class="flex flex-col items-center gap-1 active:scale-90 transition-transform">
+                        <span class="text-2xl">🌟</span>
+                        <span id="react-count-star" class="text-[10px] font-extrabold text-slate-500">0</span>
+                    </button>
+                    <button onclick="reactToResident('cool')" class="flex flex-col items-center gap-1 active:scale-90 transition-transform">
+                        <span class="text-2xl">🕶️</span>
+                        <span id="react-count-cool" class="text-[10px] font-extrabold text-slate-500">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Comments List -->
+            <div class="flex flex-col flex-1 gap-1">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lời nhắn từ cư dân (<span id="modal-comments-count">0</span>)</label>
+                <div id="modal-comments-feed" class="flex-1 min-h-[120px] max-h-[220px] overflow-y-auto bg-slate-50 rounded-2xl p-3 border border-slate-100 flex flex-col gap-2.5 text-xs">
+                    <!-- Comment rows will be appended here dynamically -->
+                    <p class="text-slate-400 text-center py-4 italic" id="comments-empty-state">Chưa có lời nhắn nào. Hãy là người đầu tiên nhắn gửi!</p>
+                </div>
+            </div>
+            
+            <!-- Comment Input Form -->
+            <form onsubmit="submitGreetingMessage(event)" class="flex gap-2 mt-3 pt-2 border-t border-slate-100">
+                <input id="modal-comment-input" type="text" placeholder="Viết lời nhắn gửi đến Tí..." required max-length="100" class="flex-1 bg-slate-50 border-2 border-slate-200 px-3 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:border-smurf-blue">
+                <button type="submit" class="bg-smurf-blue text-white w-10 h-10 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-md shadow-smurf-blue/20">
+                    <span class="material-symbols-outlined text-base">send</span>
+                </button>
+            </form>
+        </div>
     </div>
     
     <!-- Page Indicator & Navigation Row (mobile-only) -->
@@ -911,7 +1139,7 @@
                     if (tab === 'village') {
                         showVillageTab();
                     } else {
-                        showProfileView();
+                        showHomeTab();
                     }
                 } catch(e) {
                     console.warn('Failed to parse cached user');
@@ -968,28 +1196,29 @@
                             currentUser = foundUser;
                             localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                             
-                            // If they were stuck on loading screen or register screen, transition them to profile
+                            // If they were stuck on loading screen or register screen, transition them to home
                             const activeView = getActiveView();
                             if (activeView === 'loading' || activeView === 'register') {
                                 const tab = urlParams.get('tab');
                                 if (tab === 'village') {
                                     showVillageTab();
                                 } else {
-                                    showProfileView();
+                                    showHomeTab();
                                 }
                             } else if (activeView === 'profile') {
-                                // Silently refresh values
                                 showProfileView();
+                            } else if (activeView === 'home') {
+                                showHomeTab();
                             }
                         } else {
-                            // User not registered -> redirect to register form
-                            showView('register');
-                            setupRegistrationForm();
+                            // User not registered -> show Home as guest
+                            currentUser = null;
+                            showHomeTab();
                         }
                     } else {
-                        // Outside Telegram & no query param -> let them register
-                        showView('register');
-                        setupRegistrationForm();
+                        // Outside Telegram & no query param -> show Home as guest
+                        currentUser = null;
+                        showHomeTab();
                     }
 
                     // Render grid silently in background if on village tab
@@ -1099,47 +1328,71 @@
         // ── PROFILE VIEW ──
         function showProfileView() {
             showView('profile');
-            updateNavActive('nav-item-home');
+            updateNavActive('nav-item-profile');
             updateHeaderBadge();
             const d = currentUser;
+            if (!d) return;
             const avatarUrl = `avatars/avatar_${d.telegramId || telegramId}.png`;
             
-            document.getElementById('profile-avatar').src = avatarUrl;
-            document.getElementById('profile-avatar').onerror = function() {
-                this.src = 'avatars/smurf_basic_placeholder.png';
-                document.getElementById('avatar-pending-badge').style.display = 'block';
-            };
+            // Re-render elements for the vertical card face (back)
+            const profileAvatar = document.getElementById('profile-avatar');
+            if (profileAvatar) {
+                profileAvatar.src = avatarUrl;
+                profileAvatar.onerror = function() {
+                    this.src = 'avatars/smurf_basic_placeholder.png';
+                    const badge = document.getElementById('profile-avatar-pending-badge');
+                    if (badge) badge.style.display = 'block';
+                };
+            }
             
-            // Check if avatar exists (hide pending badge if yes)
+            // Check if custom avatar exists to hide pending badge
             const testImg = new Image();
-            testImg.onload = () => { document.getElementById('avatar-pending-badge').style.display = 'none'; };
-            testImg.onerror = () => { document.getElementById('avatar-pending-badge').style.display = 'block'; };
+            testImg.onload = () => { 
+                const badge = document.getElementById('profile-avatar-pending-badge');
+                if (badge) badge.style.display = 'none'; 
+            };
+            testImg.onerror = () => { 
+                const badge = document.getElementById('profile-avatar-pending-badge');
+                if (badge) badge.style.display = 'block'; 
+            };
             testImg.src = avatarUrl;
             
-            document.getElementById('profile-smurf-name').textContent = d.smurfName || 'Cư dân';
-            document.getElementById('profile-real-name').textContent = d.realName || '';
-            document.getElementById('profile-group').textContent = d.group || '';
-            document.getElementById('profile-bio').textContent = d.bio ? `"${d.bio}"` : '';
-            
-            // Populate card sheet
-            document.getElementById('card-sheet-avatar').src = avatarUrl;
-            document.getElementById('card-sheet-avatar').onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
-            document.getElementById('cs-real-name').textContent = d.realName || '';
-            document.getElementById('cs-group').textContent = d.group || '';
-            document.getElementById('cs-tinh-cach').textContent = d.personality || '';
-            document.getElementById('cs-so-thich').textContent = d.hobbies || '';
-            document.getElementById('cs-diem-manh').textContent = d.strength || '';
-            document.getElementById('cs-diem-yeu').textContent = d.weakness || '';
-            document.getElementById('cs-bio').textContent = d.bio || '';
-            
-            // Automatically fit font sizes
-            adjustAllCardFonts('cs-');
+            if (document.getElementById('profile-card-group-badge')) document.getElementById('profile-card-group-badge').textContent = d.group || 'Cư dân';
+            if (document.getElementById('profile-card-real-name')) document.getElementById('profile-card-real-name').textContent = d.realName || '';
+            if (document.getElementById('profile-card-smurf-name')) document.getElementById('profile-card-smurf-name').textContent = d.smurfName || '';
+            if (document.getElementById('profile-card-hobby')) document.getElementById('profile-card-hobby').textContent = d.hobbies ? '🏸 ' + d.hobbies : '🏸 Sở thích';
+            if (document.getElementById('profile-card-personality')) document.getElementById('profile-card-personality').textContent = d.personality ? '🧠 ' + d.personality : '🧠 Tính cách';
+
+            // Re-render elements for the horizontal card face (front)
+            const hAvatar = document.getElementById('profile-card-horizontal-avatar');
+            if (hAvatar) {
+                hAvatar.src = avatarUrl;
+                hAvatar.onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
+            }
+            if (document.getElementById('profile-card-horizontal-real-name')) document.getElementById('profile-card-horizontal-real-name').textContent = d.realName || '';
+            if (document.getElementById('profile-card-horizontal-group')) document.getElementById('profile-card-horizontal-group').textContent = d.group || '';
+            if (document.getElementById('profile-card-horizontal-tinh-cach')) document.getElementById('profile-card-horizontal-tinh-cach').textContent = d.personality || '';
+            if (document.getElementById('profile-card-horizontal-so-thich')) document.getElementById('profile-card-horizontal-so-thich').textContent = d.hobbies || '';
+            if (document.getElementById('profile-card-horizontal-diem-manh')) document.getElementById('profile-card-horizontal-diem-manh').textContent = d.strength || '';
+            if (document.getElementById('profile-card-horizontal-diem-yeu')) document.getElementById('profile-card-horizontal-diem-yeu').textContent = d.weakness || '';
+            if (document.getElementById('profile-card-horizontal-bio')) document.getElementById('profile-card-horizontal-bio').textContent = d.bio || '';
+
+            // Re-render details text block
+            if (document.getElementById('profile-smurf-name')) document.getElementById('profile-smurf-name').textContent = d.smurfName || 'Cư dân';
+            if (document.getElementById('profile-subtitle')) document.getElementById('profile-subtitle').textContent = `${d.realName || ''} · ${d.group || ''}`;
+            if (document.getElementById('profile-detail-hobbies')) document.getElementById('profile-detail-hobbies').textContent = d.hobbies || '-';
+            if (document.getElementById('profile-detail-personality')) document.getElementById('profile-detail-personality').textContent = d.personality || '-';
+            if (document.getElementById('profile-detail-strength')) document.getElementById('profile-detail-strength').textContent = d.strength || '-';
+            if (document.getElementById('profile-detail-weakness')) document.getElementById('profile-detail-weakness').textContent = d.weakness || '-';
+            if (document.getElementById('profile-detail-bio')) document.getElementById('profile-detail-bio').textContent = d.bio ? `"${d.bio}"` : '"-"';
+
+            // Auto-scale horizontal card in Profile View
+            setTimeout(resizeProfileCard, 50);
 
             // Handle editSheet query parameter if present
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('edit') === '1') {
                 openEditSheet();
-                // Clean the URL param so it doesn't reopen next time
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -1451,18 +1704,33 @@
 
         // ── SPA NAV HANDLERS ──
         function showHomeTab() {
-            closeCardSheet();
             closeEditSheet();
             const detailModal = document.getElementById('detail-modal');
             if (detailModal && !detailModal.classList.contains('hidden')) {
                 closeModal();
             }
-            if (currentUser) {
-                showProfileView();
-            } else {
-                showView('register');
-                updateNavActive('nav-item-home');
+            
+            showView('home');
+            updateNavActive('nav-item-home');
+            
+            // Render welcome name and stats
+            const welcomeSpan = document.getElementById('home-welcome-name');
+            if (welcomeSpan) {
+                welcomeSpan.textContent = currentUser ? currentUser.smurfName : 'Khách Ghé Chơi';
             }
+            const countSpan = document.getElementById('home-village-count');
+            if (countSpan) {
+                countSpan.textContent = RESIDENTS_DATA.length;
+            }
+            
+            // Auto center the map scroll position
+            setTimeout(() => {
+                const container = document.getElementById('map-scroll-container');
+                if (container) {
+                    container.scrollLeft = (1024 - container.clientWidth) / 2;
+                    container.scrollTop = (1024 - container.clientHeight) / 2;
+                }
+            }, 50);
         }
 
         function showProfileTab() {
@@ -1470,16 +1738,15 @@
                 alert("⚠️ Bạn cần đăng ký cư dân trước!");
                 return;
             }
-            closeCardSheet();
-            openEditSheet();
+            closeEditSheet();
+            showProfileView();
         }
 
         function showVillageTab() {
-            closeCardSheet();
             closeEditSheet();
             showView('village');
             updateNavActive('nav-item-village');
-            renderGrid(); // Render instantly from local cache
+            renderGrid();
         }
 
         function updateNavActive(activeId) {
@@ -1492,26 +1759,32 @@
             }
         }
 
-        // ── BOTTOM SHEET METHODS ──
-        function openCardSheet() {
-            document.getElementById('card-sheet-overlay').classList.add('active');
-            document.getElementById('card-sheet').classList.add('active');
-            setTimeout(resizeCardSheet, 50);
+
+
+        let profileCardFlipped = false;
+        function toggleProfileCardFlip() {
+            const card3d = document.getElementById('profile-card-3d');
+            if (!card3d) return;
+            profileCardFlipped = !profileCardFlipped;
+            if (profileCardFlipped) {
+                card3d.style.transform = 'rotateY(180deg)';
+            } else {
+                card3d.style.transform = 'rotateY(0deg)';
+            }
         }
 
-        function closeCardSheet() {
-            document.getElementById('card-sheet-overlay').classList.remove('active');
-            document.getElementById('card-sheet').classList.remove('active');
+        function toggleProfileCardFlipEvent(e) {
+            e.stopPropagation();
+            toggleProfileCardFlip();
         }
 
-        function resizeCardSheet() {
-            const parent = document.getElementById('card-sheet-parent');
-            const scaleWrapper = document.getElementById('cardSheetScaleWrapper');
-            if (!parent || !scaleWrapper) return;
-            const parentWidth = parent.clientWidth;
+        function resizeProfileCard() {
+            const wrapper = document.getElementById('cardSheetScaleWrapper');
+            if (!wrapper) return;
+            const parentWidth = 270;
             const scale = parentWidth / 1516;
-            scaleWrapper.style.transform = `translateX(-50%) scale(${scale})`;
-            parent.style.height = (1038 * scale) + 'px';
+            wrapper.style.transform = `translateX(-50%) scale(${scale})`;
+            adjustAllCardFonts('profile-card-horizontal-');
         }
 
         function openEditSheet() {
@@ -2246,12 +2519,364 @@
             }, 300);
         }
 
+        // ── MAGIC MUSHROOM FORTUNE & QUEST ROLLER ──
+        const SMURF_FORTUNES = [
+            { text: "Hôm nay bạn gặp may mắn như Tí Cô Nương, mọi việc suôn sẻ!", quest: "Nhiệm vụ: Hãy cười thật tươi khi gặp mọi người nhé!" },
+            { text: "Tí Cận khuyên bạn hôm nay hãy cẩn thận khi code, đừng để dính bug lạ.", quest: "Nhiệm vụ: Xem lại code dòng gần nhất bạn viết." },
+            { text: "Tí Quạu khuyên bạn hôm nay nên từ chối khéo các lời rủ rê họp hành để tập trung.", quest: "Nhiệm vụ: Hãy tắt thông báo Telegram trong 30 phút." },
+            { text: "Tí Vua dự báo hôm nay bạn sẽ có một buổi làm việc cực kỳ năng suất!", quest: "Nhiệm vụ: Uống một cốc nước ấm trước khi bắt đầu." },
+            { text: "Tí Tham Ăn khuyên bạn hôm nay nên tự thưởng một bữa ăn thật ngon.", quest: "Nhiệm vụ: Đi mua một món bánh ngọt bạn thích." },
+            { text: "Tí Điệu chúc bạn có một ngày rực rỡ và luôn là tâm điểm của sự chú ý.", quest: "Nhiệm vụ: Hãy chỉnh sửa bộ trang phục Smurf của bạn thật đẹp nhé!" }
+        ];
+
+        function getDynamicFortune() {
+            const base = SMURF_FORTUNES[Math.floor(Math.random() * SMURF_FORTUNES.length)];
+            if (RESIDENTS_DATA.length > 1 && currentUser) {
+                const others = RESIDENTS_DATA.filter(r => String(r.telegramId) !== String(currentUser.telegramId));
+                if (others.length > 0) {
+                    const targetSmurf = others[Math.floor(Math.random() * others.length)];
+                    // 40% chance to roll a networking quest!
+                    if (Math.random() < 0.4) {
+                        return {
+                            text: "Hôm nay bạn là Tí Thân Thiện, hãy kết nối với mọi người trong Làng!",
+                            quest: `Nhiệm vụ: Hãy ghé thăm Quảng Trường, tìm thẻ của **${targetSmurf.smurfName}** và gửi cho bạn ấy một lời chúc tốt lành!`
+                        };
+                    }
+                }
+            }
+            return base;
+        }
+
+        let confettiActive = false;
+        function startConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            
+            const colors = ['#f43f5e', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'];
+            const particles = [];
+            
+            for (let i = 0; i < 60; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * -100 - 10,
+                    r: Math.random() * 6 + 4,
+                    vy: Math.random() * 3 + 2,
+                    vx: Math.random() * 2 - 1,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.random() * 10 - 5,
+                    tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+                    tiltAngle: 0
+                });
+            }
+            
+            confettiActive = true;
+            function draw() {
+                if (!confettiActive) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                let finished = true;
+                particles.forEach(p => {
+                    p.tiltAngle += p.tiltAngleIncremental;
+                    p.y += p.vy;
+                    p.x += p.vx;
+                    p.tilt = Math.sin(p.tiltAngle) * 12;
+                    
+                    if (p.y < canvas.height) {
+                        finished = false;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.lineWidth = p.r;
+                    ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                    ctx.stroke();
+                });
+                
+                if (!finished) {
+                    requestAnimationFrame(draw);
+                }
+            }
+            requestAnimationFrame(draw);
+        }
+
+        function stopConfetti() {
+            confettiActive = false;
+        }
+
+        function rollMagicMushroom() {
+            const fortune = getDynamicFortune();
+            document.getElementById('fortune-text').textContent = fortune.text;
+            document.getElementById('fortune-quest').textContent = fortune.quest;
+            
+            const modal = document.getElementById('fortune-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.transform').classList.remove('scale-95');
+            }, 10);
+            
+            startConfetti();
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+
+        function closeFortuneModal() {
+            const modal = document.getElementById('fortune-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('.transform').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                stopConfetti();
+            }, 300);
+        }
+
+        // ── DUAL DOWLOADS ──
+        function downloadPortraitAvatar() {
+            if (!currentUser) return;
+            const link = document.createElement('a');
+            link.href = `avatars/avatar_${currentUser.telegramId}.png`;
+            link.download = `avatar_${currentUser.smurfName}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadResidentCard() {
+            const cardEl = document.getElementById('cardSheetScaleWrapper');
+            if (!cardEl) return;
+            
+            if (tg) {
+                tg.showPopup({
+                    title: '📥 Đang xuất ảnh thẻ',
+                    message: 'Hệ thống đang chuẩn bị ảnh thẻ cư dân chất lượng cao, vui lòng đợi một chút...',
+                    buttons: [{ type: 'ok', text: 'Đóng' }]
+                });
+            }
+            
+            const clone = cardEl.cloneNode(true);
+            clone.style.transform = 'none';
+            clone.style.position = 'fixed';
+            clone.style.left = '-9999px';
+            clone.style.top = '-9999px';
+            clone.style.width = '1516px';
+            clone.style.height = '1038px';
+            document.body.appendChild(clone);
+            
+            setTimeout(() => {
+                html2canvas(clone, {
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null,
+                    scale: 2
+                }).then(canvas => {
+                    document.body.removeChild(clone);
+                    
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = `the_cu_dan_${currentUser.smurfName || 'smurf'}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }).catch(err => {
+                    console.error('Error generating card image:', err);
+                    alert('⚠️ Lỗi khi xuất ảnh thẻ.');
+                    if (clone.parentNode) document.body.removeChild(clone);
+                });
+            }, 350);
+        }
+
+        function handleSignpostClick() {
+            if (currentUser) {
+                alert("📢 Bảng Tin Làng: Chúc cư dân " + currentUser.smurfName + " một ngày mới ngập tràn niềm vui!");
+            } else {
+                showView('register');
+                setupRegistrationForm();
+            }
+        }
+
+        // ── SOCIAL SHEET & COMMENTS ──
+        function openModalSocialSheet() {
+            const overlay = document.getElementById('modal-social-overlay');
+            const sheet = document.getElementById('modal-social-sheet');
+            if (overlay && sheet) {
+                overlay.style.display = 'block';
+                sheet.style.display = 'block';
+                setTimeout(() => {
+                    overlay.classList.add('active');
+                    sheet.classList.add('active');
+                }, 10);
+            }
+            loadSocialData();
+        }
+
+        function closeModalSocialSheet() {
+            const overlay = document.getElementById('modal-social-overlay');
+            const sheet = document.getElementById('modal-social-sheet');
+            if (overlay && sheet) {
+                overlay.classList.remove('active');
+                sheet.classList.remove('active');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    sheet.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        function getSocialData(tid) {
+            let db = {};
+            try {
+                const cached = localStorage.getItem('smurf_social_db');
+                if (cached) db = JSON.parse(cached);
+            } catch(e) {}
+            if (!db[tid]) {
+                db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
+            }
+            return db[tid];
+        }
+
+        function saveSocialData(tid, data) {
+            let db = {};
+            try {
+                const cached = localStorage.getItem('smurf_social_db');
+                if (cached) db = JSON.parse(cached);
+            } catch(e) {}
+            db[tid] = data;
+            localStorage.setItem('smurf_social_db', JSON.stringify(db));
+        }
+
+        function loadSocialData() {
+            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            if (!targetId) return;
+            
+            const data = getSocialData(targetId);
+            
+            document.getElementById('react-count-like').textContent = data.likes || 0;
+            document.getElementById('react-count-funny').textContent = data.funnys || 0;
+            document.getElementById('react-count-star').textContent = data.stars || 0;
+            document.getElementById('react-count-cool').textContent = data.cools || 0;
+            
+            const feed = document.getElementById('modal-comments-feed');
+            const emptyState = document.getElementById('comments-empty-state');
+            const countSpan = document.getElementById('modal-comments-count');
+            
+            const oldRows = feed.querySelectorAll('.comment-row');
+            oldRows.forEach(r => r.parentNode.removeChild(r));
+            
+            countSpan.textContent = (data.comments || []).length;
+            if (!data.comments || data.comments.length === 0) {
+                if (emptyState) emptyState.style.display = 'block';
+            } else {
+                if (emptyState) emptyState.style.display = 'none';
+                data.comments.forEach(c => {
+                    const row = document.createElement('div');
+                    row.className = 'comment-row bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-0.5 text-left';
+                    row.innerHTML = `
+                        <div class="flex justify-between items-center text-[9px] font-bold text-slate-400">
+                            <span class="text-smurf-blue">${c.author}</span>
+                            <span>${c.time}</span>
+                        </div>
+                        <p class="text-slate-700 font-medium text-xs mt-0.5">${c.text}</p>
+                    `;
+                    feed.appendChild(row);
+                });
+                feed.scrollTop = feed.scrollHeight;
+            }
+        }
+
+        function reactToResident(type) {
+            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            if (!targetId) return;
+            
+            const data = getSocialData(targetId);
+            if (type === 'like') data.likes = (data.likes || 0) + 1;
+            if (type === 'funny') data.funnys = (data.funnys || 0) + 1;
+            if (type === 'star') data.stars = (data.stars || 0) + 1;
+            if (type === 'cool') data.cools = (data.cools || 0) + 1;
+            
+            saveSocialData(targetId, data);
+            loadSocialData();
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+
+        function submitGreetingMessage(e) {
+            e.preventDefault();
+            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            if (!targetId) return;
+            
+            const input = document.getElementById('modal-comment-input');
+            const text = (input.value || '').trim();
+            if (!text) return;
+            
+            const authorName = currentUser ? currentUser.smurfName : 'Khách Ẩn Danh';
+            const data = getSocialData(targetId);
+            
+            if (!data.comments) data.comments = [];
+            data.comments.push({
+                author: authorName,
+                text: text,
+                time: 'Vừa xong'
+            });
+            
+            saveSocialData(targetId, data);
+            input.value = '';
+            loadSocialData();
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+
+        function triggerMatchmaking() {
+            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            if (!targetId || !currentUser) {
+                alert("⚠️ Bạn cần đăng ký cư dân để sử dụng tính năng ghép đôi!");
+                return;
+            }
+            
+            const target = filteredResidentsList[currentModalIndex];
+            if (String(target.telegramId) === String(currentUser.telegramId)) {
+                alert("🔮 Gương thần bảo rằng: Bạn tương thích 100% với chính mình!");
+                return;
+            }
+            
+            let score = 50;
+            if (target.group === currentUser.group) score += 20;
+            
+            const myHobbies = (currentUser.hobbies || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+            const targetHobbies = (target.hobbies || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+            const commonHobbies = myHobbies.filter(h => h && targetHobbies.includes(h));
+            score += commonHobbies.length * 15;
+            
+            const myTraits = (currentUser.personality || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+            const targetTraits = (target.personality || '').split(/[,·]/).map(s => s.trim().toLowerCase());
+            const commonTraits = myTraits.filter(t => t && targetTraits.includes(t));
+            score += commonTraits.length * 15;
+            
+            score = Math.min(score, 99);
+            
+            alert(`💞 Độ Tương Thích Giữa Bạn và ${target.smurfName}:\n👉 Kết quả: ${score}%\n${
+                score > 80 ? "✨ Hai bạn là tri kỷ định mệnh của Làng Xì Trum!" :
+                score > 60 ? "🌟 Rất hợp cạ, hãy cùng nhau đi dạo thung lũng nấm nhé!" :
+                "👋 Hãy chủ động nhắn tin trò chuyện để tăng độ thân thiết nha!"
+            }`);
+        }
+
         // ── BOOT ──
         window.addEventListener('load', initApp);
         window.addEventListener('resize', () => { 
             const activeView = getActiveView();
             if (activeView === 'register') resizePreviewCard(); 
-            if (document.getElementById('card-sheet').classList.contains('active')) resizeCardSheet(); 
+            if (activeView === 'profile') resizeProfileCard(); 
             const modal = document.getElementById('detail-modal');
             if (modal && !modal.classList.contains('hidden')) {
                 resizeModalCard();

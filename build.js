@@ -11,11 +11,11 @@ function build() {
             '{{CSS}}': 'src/css/app.css',
             '{{HEADER}}': 'src/components/Header.html',
             '{{LOADING_VIEW}}': 'src/components/LoadingView.html',
+            '{{HOME_VIEW}}': 'src/components/HomeView.html',
             '{{REGISTER_VIEW}}': 'src/components/RegisterView.html',
             '{{PROFILE_VIEW}}': 'src/components/ProfileView.html',
             '{{VILLAGE_VIEW}}': 'src/components/VillageView.html',
             '{{BOTTOM_NAV}}': 'src/components/BottomNav.html',
-            '{{CARD_SHEET}}': 'src/components/CardSheet.html',
             '{{EDIT_SHEET}}': 'src/components/EditSheet.html',
             '{{DETAIL_MODAL}}': 'src/components/DetailModal.html',
             '{{CORE_JS}}': 'src/core/app.js'
