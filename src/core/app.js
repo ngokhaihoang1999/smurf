@@ -147,10 +147,9 @@
         }
 
         function handleFetchError() {
-            // Fallback: If network is offline but we have cache, keep using cache. Otherwise show register.
+            // Fallback: If network is offline/CORS error, show Home view as guest instead of locking them out on register screen
             if (!currentUser) {
-                showView('register');
-                setupRegistrationForm();
+                showHomeTab();
             }
         }
 
