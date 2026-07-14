@@ -1204,15 +1204,46 @@
                 });
             }
 
-            // Image Base64 File Uploader
+            // Image Base64 File Uploader with client-side resizing/compression
             const fileInput = document.getElementById('input-ref-file');
             if (fileInput) {
                 fileInput.addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
+                    
                     const reader = new FileReader();
                     reader.onload = function(evt) {
-                        document.getElementById('reference-image-base64').value = evt.target.result;
+                        const img = new Image();
+                        img.onload = function() {
+                            // Canvas resizing logic (max 800px width/height)
+                            const max_width = 800;
+                            const max_height = 800;
+                            let width = img.width;
+                            let height = img.height;
+                            
+                            if (width > height) {
+                                if (width > max_width) {
+                                    height = Math.round((height * max_width) / width);
+                                    width = max_width;
+                                }
+                            } else {
+                                if (height > max_height) {
+                                    width = Math.round((width * max_height) / height);
+                                    height = max_height;
+                                }
+                            }
+                            
+                            const canvas = document.createElement('canvas');
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            // Compress as JPEG (quality 0.7) for very small file size
+                            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                            document.getElementById('reference-image-base64').value = compressedBase64;
+                        };
+                        img.src = evt.target.result;
                     };
                     reader.readAsDataURL(file);
                 });

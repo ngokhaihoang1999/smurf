@@ -189,10 +189,21 @@ function handleRegister(data) {
       try {
         folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
       } catch (folderErr) {
-        folder = DriveApp.getRootFolder();
+        try {
+          folder = DriveApp.getRootFolder();
+        } catch (rootErr) {
+          throw new Error("Cannot access Drive Folder or Root Folder: " + rootErr.toString());
+        }
       }
+      
       var file = folder.createFile(blob);
-      file.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
+      
+      try {
+        file.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
+      } catch (sharingErr) {
+        // Ignore domain policy sharing restrictions
+      }
+      
       fileUrl = '=IMAGE("https://drive.google.com/uc?export=view&id=' + file.getId() + '")';
     } catch (fileErr) {
       fileUrl = "Error upload: " + fileErr.toString();
