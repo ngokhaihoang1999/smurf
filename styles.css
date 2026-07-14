@@ -195,11 +195,13 @@ body.dotted-bg {
 }
 
 .nav-item {
+    position: relative; /* For the ::after hit area expansion */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 6px 12px;
+    width: 100px;
+    height: 44px;
     border-radius: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -207,6 +209,17 @@ body.dotted-bg {
     font-size: 10px;
     font-weight: 700;
     gap: 2px;
+}
+
+/* Expand tap hitbox of tabs to meet each other and cover the bottom bar */
+.nav-item::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    left: -16px;
+    right: -16px;
+    z-index: 2;
 }
 
 .nav-item:hover {
@@ -224,6 +237,20 @@ body.dotted-bg {
 
 .nav-item * {
     pointer-events: none;
+}
+
+/* ── TAP TARGET EXPANSION FOR FAB BUTTONS ── */
+.fab-click-expand {
+    position: relative;
+}
+.fab-click-expand::after {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: -12px;
+    right: -12px;
+    bottom: -12px;
+    z-index: 10;
 }
 
 /* ── BOTTOM SHEET ── */
