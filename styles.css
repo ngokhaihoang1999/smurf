@@ -222,6 +222,10 @@ body.dotted-bg {
     font-size: 22px;
 }
 
+.nav-item * {
+    pointer-events: none;
+}
+
 /* ── BOTTOM SHEET ── */
 .bottom-sheet-overlay {
     position: fixed;
@@ -253,10 +257,12 @@ body.dotted-bg {
     max-height: 85vh;
     overflow-y: auto;
     overscroll-behavior: contain;
+    pointer-events: none;
 }
 
 .bottom-sheet.active {
     transform: translateY(0);
+    pointer-events: auto;
 }
 
 .bottom-sheet-handle {
