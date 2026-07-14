@@ -55,11 +55,12 @@
                     }
                 } catch(e) {
                     console.warn('Failed to parse cached user');
-                    showView('loading');
+                    showHomeTab();
                 }
             } else {
-                // No cache -> show loading spinner on first-time open
-                showView('loading');
+                // If there's no cached user, still load the home view immediately as guest
+                // instead of showing a blocking loading screen
+                showHomeTab();
             }
 
             // Update user badge if info is available
@@ -636,11 +637,11 @@
                 countSpan.textContent = RESIDENTS_DATA.length;
             }
             
-            // Auto center the map scroll position
+            // Auto center the map scroll position (512x1024 vertical layout)
             setTimeout(() => {
                 const container = document.getElementById('map-scroll-container');
                 if (container) {
-                    container.scrollLeft = (1024 - container.clientWidth) / 2;
+                    container.scrollLeft = (512 - container.clientWidth) / 2;
                     container.scrollTop = (1024 - container.clientHeight) / 2;
                 }
             }, 50);
@@ -1083,20 +1084,30 @@
             const viewportW = window.innerWidth;
             const viewportH = window.innerHeight;
             
-            const isLandscapeMode = !isMobilePortrait() || manualRotateLandscape;
+            // Flipped state (true) shows the horizontal face (1516x1038)
+            // Unflipped state (false) shows the vertical face (1038x1516)
+            let cardW, cardH;
+            if (isFlippedState) {
+                if (isMobilePortrait() && manualRotateLandscape) {
+                    cardW = 1038;
+                    cardH = 1516;
+                } else {
+                    cardW = 1516;
+                    cardH = 1038;
+                }
+            } else {
+                cardW = 1038;
+                cardH = 1516;
+            }
             
-            const cardW = isLandscapeMode ? 1516 : 1038;
-            const cardH = isLandscapeMode ? 1038 : 1516;
+            let maxW = viewportW * 0.92;
+            let maxH = viewportH * 0.75;
             
-            let maxW = viewportW * 0.90;
-            let maxH = viewportH * 0.70;
-            
-            if (isLandscapeMode) {
+            if (cardW > cardH) {
                 maxH = viewportH * 0.65;
             } else {
-                // Portrait mode: make it smaller to prevent overlap with bottom navigation row at bottom-24
-                maxW = viewportW * 0.85;
-                maxH = viewportH * 0.58;
+                maxW = viewportW * 0.88;
+                maxH = viewportH * 0.62;
             }
             
             if (viewportW >= 1024) {
@@ -1236,7 +1247,7 @@
             lastClickedRect = rect;
             lastClickedElement = clickedElement;
             
-            modalFlipped = true;
+            modalFlipped = false;
             manualRotateLandscape = false;
             updateRotateButtonState();
             
@@ -1285,8 +1296,6 @@
             container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
             
-            card3d.classList.add('flipped');
-
             setTimeout(() => {
                 container.style.willChange = '';
                 card3d.style.willChange = '';
@@ -1710,7 +1719,7 @@
         }
 
         function loadSocialData() {
-            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
             const data = getSocialData(targetId);
@@ -1749,7 +1758,7 @@
         }
 
         function reactToResident(type) {
-            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
             const data = getSocialData(targetId);
@@ -1768,7 +1777,7 @@
 
         function submitGreetingMessage(e) {
             e.preventDefault();
-            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
             const input = document.getElementById('modal-comment-input');
@@ -1795,13 +1804,13 @@
         }
 
         function triggerMatchmaking() {
-            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            const targetId = activeModalItem?.telegramId;
             if (!targetId || !currentUser) {
                 alert("⚠️ Bạn cần đăng ký cư dân để sử dụng tính năng ghép đôi!");
                 return;
             }
             
-            const target = filteredResidentsList[currentModalIndex];
+            const target = activeModalItem;
             if (String(target.telegramId) === String(currentUser.telegramId)) {
                 alert("🔮 Gương thần bảo rằng: Bạn tương thích 100% với chính mình!");
                 return;

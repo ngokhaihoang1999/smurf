@@ -3,6 +3,9 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
     <title>Làng Xì Trum - Avatar Hub</title>
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -257,16 +260,16 @@
         <!-- 2D Pannable Map Viewport -->
         <div id="map-scroll-container" class="w-full h-[calc(100vh-216px)] overflow-auto scroll-smooth relative cursor-grab active:cursor-grabbing select-none" style="scrollbar-width: none; -ms-overflow-style: none;">
             
-            <!-- Map Ground Layer (1024x1024, fixed dimension wrapper) -->
-            <div style="width: 1024px; height: 1024px; min-width: 1024px; min-height: 1024px; position: relative; background-image: url('src/assets/smurf_village_base_map.png'); background-size: 1024px 1024px; background-repeat: no-repeat; overflow: hidden;">
+            <!-- Map Ground Layer (512x1024 center crop of 1024x1024 vertical map) -->
+            <div style="width: 512px; height: 1024px; min-width: 512px; min-height: 1024px; position: relative; background-image: url('src/assets/smurf_village_base_map_vertical.png'); background-size: 1024px 1024px; background-position: -256px 0px; background-repeat: no-repeat; overflow: hidden;">
                 
                 <!-- Floating Clouds -->
-                <div class="absolute top-10 left-[100px] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 25s linear infinite;">☁️</div>
-                <div class="absolute top-32 left-[500px] text-4xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 32s linear infinite 5s;">☁️</div>
-                <div class="absolute top-20 left-[800px] text-5xl opacity-15 pointer-events-none float-cloud" style="animation: floatSlow 28s linear infinite 10s;">☁️</div>
+                <div class="absolute top-10 left-[50px] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
+                <div class="absolute top-32 left-[250px] text-4xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 28s linear infinite 5s;">☁️</div>
+                <div class="absolute top-20 left-[400px] text-5xl opacity-15 pointer-events-none float-cloud" style="animation: floatSlow 24s linear infinite 10s;">☁️</div>
 
                 <!-- 1. LANDMARK: Papa Smurf's House (Link to Tab 2: Profile/My Card) -->
-                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 180px; left: 420px; width: 160px;" onclick="showProfileTab()">
+                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 220px; left: 80px; width: 140px;" onclick="showProfileTab()">
                     <img src="src/assets/smurf_papa_house.png" alt="Nhà Tí Vua" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
                     <!-- Tooltip label -->
                     <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-smurf-blue text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
@@ -275,7 +278,7 @@
                 </div>
 
                 <!-- 2. LANDMARK: Village Plaza (Link to Tab 3: Village Square) -->
-                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 350px; left: 180px; width: 140px;" onclick="showVillageTab()">
+                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 450px; left: 280px; width: 125px;" onclick="showVillageTab()">
                     <img src="src/assets/smurf_blue_house.png" alt="Quảng Trường" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
                     <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-smurf-green text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
                         🏘️ Quảng Trường Cư Dân
@@ -283,7 +286,7 @@
                 </div>
 
                 <!-- 3. LANDMARK: Signpost (Link to Registration / Guest Info) -->
-                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 650px; left: 380px; width: 90px;" onclick="handleSignpostClick()">
+                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 680px; left: 90px; width: 85px;" onclick="handleSignpostClick()">
                     <img src="src/assets/smurf_signpost.png" alt="Biển Chỉ Đường" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
                     <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-smurf-yellow text-slate-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
                         📋 <span id="signpost-text">Đăng Ký Cư Dân</span>
@@ -291,7 +294,7 @@
                 </div>
 
                 <!-- 4. LANDMARK: Magic Mushroom (Roll Fortune) -->
-                <div class="absolute group cursor-pointer z-20 hover-bounce" style="top: 480px; left: 680px; width: 90px;" onclick="rollMagicMushroom()">
+                <div class="absolute group cursor-pointer z-20 hover-bounce" style="top: 580px; left: 300px; width: 80px;" onclick="rollMagicMushroom()">
                     <img src="src/assets/smurf_magic_mushroom.png" alt="Nấm Thần Kỳ" class="w-full h-auto drop-shadow-[0_0_15px_rgba(168,85,247,0.6)] animate-pulse">
                     <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
                         🔮 Hái Nấm May Mắn
@@ -1143,11 +1146,12 @@
                     }
                 } catch(e) {
                     console.warn('Failed to parse cached user');
-                    showView('loading');
+                    showHomeTab();
                 }
             } else {
-                // No cache -> show loading spinner on first-time open
-                showView('loading');
+                // If there's no cached user, still load the home view immediately as guest
+                // instead of showing a blocking loading screen
+                showHomeTab();
             }
 
             // Update user badge if info is available
@@ -1724,11 +1728,11 @@
                 countSpan.textContent = RESIDENTS_DATA.length;
             }
             
-            // Auto center the map scroll position
+            // Auto center the map scroll position (512x1024 vertical layout)
             setTimeout(() => {
                 const container = document.getElementById('map-scroll-container');
                 if (container) {
-                    container.scrollLeft = (1024 - container.clientWidth) / 2;
+                    container.scrollLeft = (512 - container.clientWidth) / 2;
                     container.scrollTop = (1024 - container.clientHeight) / 2;
                 }
             }, 50);
@@ -2171,20 +2175,30 @@
             const viewportW = window.innerWidth;
             const viewportH = window.innerHeight;
             
-            const isLandscapeMode = !isMobilePortrait() || manualRotateLandscape;
+            // Flipped state (true) shows the horizontal face (1516x1038)
+            // Unflipped state (false) shows the vertical face (1038x1516)
+            let cardW, cardH;
+            if (isFlippedState) {
+                if (isMobilePortrait() && manualRotateLandscape) {
+                    cardW = 1038;
+                    cardH = 1516;
+                } else {
+                    cardW = 1516;
+                    cardH = 1038;
+                }
+            } else {
+                cardW = 1038;
+                cardH = 1516;
+            }
             
-            const cardW = isLandscapeMode ? 1516 : 1038;
-            const cardH = isLandscapeMode ? 1038 : 1516;
+            let maxW = viewportW * 0.92;
+            let maxH = viewportH * 0.75;
             
-            let maxW = viewportW * 0.90;
-            let maxH = viewportH * 0.70;
-            
-            if (isLandscapeMode) {
+            if (cardW > cardH) {
                 maxH = viewportH * 0.65;
             } else {
-                // Portrait mode: make it smaller to prevent overlap with bottom navigation row at bottom-24
-                maxW = viewportW * 0.85;
-                maxH = viewportH * 0.58;
+                maxW = viewportW * 0.88;
+                maxH = viewportH * 0.62;
             }
             
             if (viewportW >= 1024) {
@@ -2324,7 +2338,7 @@
             lastClickedRect = rect;
             lastClickedElement = clickedElement;
             
-            modalFlipped = true;
+            modalFlipped = false;
             manualRotateLandscape = false;
             updateRotateButtonState();
             
@@ -2373,8 +2387,6 @@
             container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
             
-            card3d.classList.add('flipped');
-
             setTimeout(() => {
                 container.style.willChange = '';
                 card3d.style.willChange = '';
@@ -2798,7 +2810,7 @@
         }
 
         function loadSocialData() {
-            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
             const data = getSocialData(targetId);
@@ -2837,7 +2849,7 @@
         }
 
         function reactToResident(type) {
-            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
             const data = getSocialData(targetId);
@@ -2856,7 +2868,7 @@
 
         function submitGreetingMessage(e) {
             e.preventDefault();
-            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
             const input = document.getElementById('modal-comment-input');
@@ -2883,13 +2895,13 @@
         }
 
         function triggerMatchmaking() {
-            const targetId = filteredResidentsList[currentModalIndex]?.telegramId;
+            const targetId = activeModalItem?.telegramId;
             if (!targetId || !currentUser) {
                 alert("⚠️ Bạn cần đăng ký cư dân để sử dụng tính năng ghép đôi!");
                 return;
             }
             
-            const target = filteredResidentsList[currentModalIndex];
+            const target = activeModalItem;
             if (String(target.telegramId) === String(currentUser.telegramId)) {
                 alert("🔮 Gương thần bảo rằng: Bạn tương thích 100% với chính mình!");
                 return;
