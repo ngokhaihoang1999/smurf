@@ -840,14 +840,12 @@
             navRow.classList.add('opacity-100');
             updatePageIndicator();
 
-            // Play: transition transform to scale(1) translate3d(0,0,0) (snappy 0.35s)
-            container.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+            // Play: transition transform to scale(1) translate3d(0,0,0) (optimized 0.4s)
+            container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
             
-            // Flip the card Y-rotation after zoom is underway (staggered by 250ms)
-            setTimeout(() => {
-                card3d.classList.add('flipped');
-            }, 250);
+            // Flip the card Y-rotation simultaneously in the same frame
+            card3d.classList.add('flipped');
 
             resizeModalCard();
             adjustControlsLayout();
@@ -860,34 +858,45 @@
             const container = document.getElementById('modalCardContainer');
             if (!card3d || !container) return;
             
-            // 1. Toggle state
-            modalFlipped = !modalFlipped;
+            // 1. Get current size/position of the modal container
+            const prevDims = getModalTargetDimensions(modalFlipped);
             
-            // 2. Start the flip rotation transition on card3d (400ms duration)
+            // 2. Toggle state
+            modalFlipped = !modalFlipped;
+            updateCardFrontDimensions();
+            updateRotateButtonState();
+            
+            // 3. Get new target size/position
+            const dims = getModalTargetDimensions(modalFlipped);
+            
+            // 4. Invert: Set static dimensions of container to new dims, but transform to prevDims
+            const scaleX = prevDims.width / dims.width;
+            const scaleY = prevDims.height / dims.height;
+            const translateX = prevDims.left - dims.left;
+            const translateY = prevDims.top - dims.top;
+            
+            container.style.transition = 'none';
+            container.style.top = dims.top + 'px';
+            container.style.left = dims.left + 'px';
+            container.style.width = dims.width + 'px';
+            container.style.height = dims.height + 'px';
+            container.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
+            container.style.transformOrigin = 'top left';
+            
+            // 5. Start the flip rotation transition on card3d (runs simultaneously with container transform)
             if (modalFlipped) {
                 card3d.classList.add('flipped');
             } else {
                 card3d.classList.remove('flipped');
             }
             
-            // 3. Midpoint swap at 200ms: swap layout dimensions when card is perpendicular (invisible)
-            setTimeout(() => {
-                updateCardFrontDimensions();
-                updateRotateButtonState();
-                
-                const dims = getModalTargetDimensions(modalFlipped);
-                
-                // Instantly update container layout (no transition)
-                container.style.transition = 'none';
-                container.style.top = dims.top + 'px';
-                container.style.left = dims.left + 'px';
-                container.style.width = dims.width + 'px';
-                container.style.height = dims.height + 'px';
-                container.style.transform = ''; // Clear container transform to avoid double transforms
-                
-                resizeModalCard();
-                adjustControlsLayout();
-            }, 200);
+            // 6. Play: transition transform to scale(1) translate3d(0,0,0) (exact 0.4s match)
+            void container.offsetWidth;
+            container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+            container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
+            
+            resizeModalCard();
+            adjustControlsLayout();
         }
 
         function closeModal() {
@@ -920,34 +929,31 @@
                 updateCardFrontDimensions();
                 updateRotateButtonState();
 
-                // Stagger: wait for flip back to begin (200ms), then trigger container transition back to grid
+                // Calculate the final transform to zoom back into the clicked grid item coordinates (lastClickedRect)
+                const scaleX = lastClickedRect.width / dims.width;
+                const scaleY = lastClickedRect.height / dims.height;
+                const translateX = lastClickedRect.left - dims.left;
+                const translateY = lastClickedRect.top - dims.top;
+                
+                container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+                container.style.transformOrigin = 'top left';
+                container.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
+
+                // Performance fix: Restore grid card opacity immediately so there is zero delay!
+                lastClickedElement.style.opacity = '1';
+
                 closeTimeoutId = setTimeout(() => {
-                    // Calculate the final transform to zoom back into the clicked grid item coordinates (lastClickedRect)
-                    const scaleX = lastClickedRect.width / dims.width;
-                    const scaleY = lastClickedRect.height / dims.height;
-                    const translateX = lastClickedRect.left - dims.left;
-                    const translateY = lastClickedRect.top - dims.top;
-                    
-                    container.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
-                    container.style.transformOrigin = 'top left';
-                    container.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
-
-                    // Performance fix: Restore grid card opacity immediately so there is zero delay!
-                    lastClickedElement.style.opacity = '1';
-
-                    closeTimeoutId = setTimeout(() => {
-                        container.style.display = 'none';
-                        container.style.transform = '';
-                        container.style.top = '';
-                        container.style.left = '';
-                        container.style.width = '';
-                        container.style.height = '';
-                        modal.classList.add('hidden');
-                        document.body.style.overflow = '';
-                        closeTimeoutId = null;
-                        adjustControlsLayout();
-                    }, 350); // Wait for zoom animation to finish
-                }, 200); // Wait for flip back to be half done
+                    container.style.display = 'none';
+                    container.style.transform = '';
+                    container.style.top = '';
+                    container.style.left = '';
+                    container.style.width = '';
+                    container.style.height = '';
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                    closeTimeoutId = null;
+                    adjustControlsLayout();
+                }, 400); // Wait for transition animation to finish (400ms)
             } else {
                 container.style.display = 'none';
                 container.style.transform = '';
