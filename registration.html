@@ -1213,14 +1213,22 @@
             <span class="font-fredoka text-sm text-blue-400 flex items-center gap-1">🛠️ Căn Chỉnh Popup</span>
             <button onclick="togglePopupDevtools()" class="text-slate-400 hover:text-slate-200"><span class="material-symbols-outlined text-base">close</span></button>
         </div>
+
+        <!-- Mode Indicator Badge -->
+        <div class="flex justify-between items-center bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-700/30">
+            <span class="font-bold text-[10px] text-slate-400">ĐANG CĂN CHỈNH</span>
+            <span id="dev-active-mode-badge" class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-400 border border-blue-500/30">THẺ DỌC</span>
+        </div>
+
+        <p class="text-[9px] text-slate-500 italic">💡 Bạn có thể kéo thả trực tiếp chiếc thẻ để dịch chuyển lên xuống!</p>
         
         <!-- Y-Offset offset -->
         <div class="flex flex-col gap-1">
             <div class="flex justify-between font-bold text-[10px] text-slate-400">
-                <span>Vị trí theo chiều dọc (Y)</span>
+                <span>Vị trí Y (Dịch dọc)</span>
                 <span id="dev-val-y" class="text-blue-400">0px</span>
             </div>
-            <input type="range" id="dev-slider-y" min="-150" max="150" value="0" oninput="applyDevtoolsOffset()" class="w-full">
+            <input type="range" id="dev-slider-y" min="-180" max="180" value="0" oninput="applyDevtoolsOffset()" class="w-full">
         </div>
 
         <!-- Scaling scale -->
@@ -1229,21 +1237,28 @@
                 <span>Kích thước Thẻ (Scale)</span>
                 <span id="dev-val-scale" class="text-blue-400">100%</span>
             </div>
-            <input type="range" id="dev-slider-scale" min="50" max="150" value="100" oninput="applyDevtoolsOffset()" class="w-full">
+            <input type="range" id="dev-slider-scale" min="40" max="140" value="100" oninput="applyDevtoolsOffset()" class="w-full">
         </div>
 
         <!-- Controls panel offset Y -->
         <div class="flex flex-col gap-1">
             <div class="flex justify-between font-bold text-[10px] text-slate-400">
-                <span>Vị trí Nút bấm / Emojis (Bottom Offset)</span>
+                <span>Vị trí Emojis & Nút (Bottom Offset)</span>
                 <span id="dev-val-controls" class="text-blue-400">0px</span>
             </div>
-            <input type="range" id="dev-slider-controls" min="-50" max="100" value="0" oninput="applyDevtoolsOffset()" class="w-full">
+            <input type="range" id="dev-slider-controls" min="-80" max="120" value="0" oninput="applyDevtoolsOffset()" class="w-full">
         </div>
 
-        <button onclick="resetDevtoolsOffset()" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[10px] active:scale-95 transition-all">
-            Reset Mặc Định
-        </button>
+        <div class="grid grid-cols-2 gap-2 mt-1">
+            <button onclick="copyDevPopupConfig()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-[10px] active:scale-95 transition-all flex items-center justify-center gap-1 shadow-md shadow-blue-900/20">
+                <span class="material-symbols-outlined text-xs">content_copy</span>
+                Copy Config
+            </button>
+            <button onclick="resetDevtoolsOffset()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-bold text-[10px] active:scale-95 transition-all flex items-center justify-center gap-1 border border-slate-700">
+                <span class="material-symbols-outlined text-xs">restart_alt</span>
+                Reset
+            </button>
+        </div>
     </div>
 
 
@@ -2329,15 +2344,86 @@
             adjustControlsLayout();
         }
 
-        // Devtools adjustment panel state offsets
-        let devPopupOffset = { y: 0, scale: 1.0, controlsOffset: 0 };
+        // Devtools adjustment panel state configuration (separate for vertical and horizontal states)
+        let devPopupConfig = {
+            verticalY: 0,
+            verticalScale: 1.0,
+            verticalControlsBottom: 0,
+            horizontalY: 0,
+            horizontalScale: 1.0,
+            horizontalControlsBottom: 0
+        };
+
         try {
-            const savedOffsets = localStorage.getItem('smurf_popup_offsets');
-            if (savedOffsets) {
-                devPopupOffset = JSON.parse(savedOffsets);
+            const savedConfig = localStorage.getItem('smurf_popup_config');
+            if (savedConfig) {
+                devPopupConfig = JSON.parse(savedConfig);
             }
         } catch (e) {
-            console.warn('Failed to load saved offsets', e);
+            console.warn('Failed to load saved popup configuration', e);
+        }
+
+        let isDraggingCard = false;
+        let dragStartY = 0;
+        let dragStartOffset = 0;
+
+        function setupPopupDragToMove() {
+            const container = document.getElementById('modalCardContainer');
+            if (!container) return;
+
+            container.addEventListener('pointerdown', (e) => {
+                const panel = document.getElementById('popup-devtools-panel');
+                if (!panel || panel.classList.contains('hidden')) return;
+
+                // Don't drag if clicking buttons, links or inputs
+                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a') || e.target.closest('#popup-devtools-panel')) return;
+
+                isDraggingCard = true;
+                dragStartY = e.clientY;
+                dragStartOffset = modalFlipped ? devPopupConfig.horizontalY : devPopupConfig.verticalY;
+                container.setPointerCapture(e.pointerId);
+                
+                // Add grabbing cursor
+                container.style.cursor = 'grabbing';
+            });
+
+            container.addEventListener('pointermove', (e) => {
+                if (!isDraggingCard) return;
+                const deltaY = e.clientY - dragStartY;
+                const activeMode = modalFlipped;
+                const totalOffset = dragStartOffset + deltaY;
+                
+                if (activeMode) {
+                    devPopupConfig.horizontalY = totalOffset;
+                } else {
+                    devPopupConfig.verticalY = totalOffset;
+                }
+
+                // Update Y slider input in real-time
+                const ySlider = document.getElementById('dev-slider-y');
+                if (ySlider) {
+                    ySlider.value = totalOffset;
+                }
+                const valY = document.getElementById('dev-val-y');
+                if (valY) {
+                    valY.textContent = totalOffset + 'px';
+                }
+
+                resizeModalCard();
+                adjustControlsLayout();
+            });
+
+            container.addEventListener('pointerup', (e) => {
+                if (isDraggingCard) {
+                    isDraggingCard = false;
+                    container.releasePointerCapture(e.pointerId);
+                    container.style.cursor = 'pointer';
+
+                    try {
+                        localStorage.setItem('smurf_popup_config', JSON.stringify(devPopupConfig));
+                    } catch (err) {}
+                }
+            });
         }
 
         function togglePopupDevtools() {
@@ -2351,50 +2437,71 @@
         }
 
         function initDevtoolsSliders() {
+            const activeMode = modalFlipped; // true = horizontal (ngang), false = vertical (dọc)
+            const badge = document.getElementById('dev-active-mode-badge');
+            if (badge) {
+                badge.textContent = activeMode ? 'THẺ NGANG' : 'THẺ DỌC';
+                badge.className = activeMode 
+                    ? 'px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                    : 'px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-400 border border-blue-500/30';
+            }
+
             const ySlider = document.getElementById('dev-slider-y');
             const scaleSlider = document.getElementById('dev-slider-scale');
             const ctrlSlider = document.getElementById('dev-slider-controls');
 
+            const currentY = activeMode ? devPopupConfig.horizontalY : devPopupConfig.verticalY;
+            const currentScale = activeMode ? devPopupConfig.horizontalScale : devPopupConfig.verticalScale;
+            const currentCtrl = activeMode ? devPopupConfig.horizontalControlsBottom : devPopupConfig.verticalControlsBottom;
+
             if (ySlider) {
-                ySlider.value = devPopupOffset.y;
+                ySlider.value = currentY;
                 const valY = document.getElementById('dev-val-y');
-                if (valY) valY.textContent = devPopupOffset.y + 'px';
+                if (valY) valY.textContent = currentY + 'px';
             }
             if (scaleSlider) {
-                scaleSlider.value = Math.round(devPopupOffset.scale * 100);
+                scaleSlider.value = Math.round(currentScale * 100);
                 const valScale = document.getElementById('dev-val-scale');
-                if (valScale) valScale.textContent = Math.round(devPopupOffset.scale * 100) + '%';
+                if (valScale) valScale.textContent = Math.round(currentScale * 100) + '%';
             }
             if (ctrlSlider) {
-                ctrlSlider.value = devPopupOffset.controlsOffset;
+                ctrlSlider.value = currentCtrl;
                 const valCtrl = document.getElementById('dev-val-controls');
-                if (valCtrl) valCtrl.textContent = devPopupOffset.controlsOffset + 'px';
+                if (valCtrl) valCtrl.textContent = currentCtrl + 'px';
             }
         }
 
         function applyDevtoolsOffset() {
+            const activeMode = modalFlipped; // true = horizontal, false = vertical
+            
             const ySlider = document.getElementById('dev-slider-y');
             const scaleSlider = document.getElementById('dev-slider-scale');
             const ctrlSlider = document.getElementById('dev-slider-controls');
 
             if (ySlider) {
-                devPopupOffset.y = parseInt(ySlider.value);
+                const val = parseInt(ySlider.value);
+                if (activeMode) devPopupConfig.horizontalY = val;
+                else devPopupConfig.verticalY = val;
                 const valY = document.getElementById('dev-val-y');
-                if (valY) valY.textContent = devPopupOffset.y + 'px';
+                if (valY) valY.textContent = val + 'px';
             }
             if (scaleSlider) {
-                devPopupOffset.scale = parseInt(scaleSlider.value) / 100;
+                const val = parseInt(scaleSlider.value) / 100;
+                if (activeMode) devPopupConfig.horizontalScale = val;
+                else devPopupConfig.verticalScale = val;
                 const valScale = document.getElementById('dev-val-scale');
-                if (valScale) valScale.textContent = Math.round(devPopupOffset.scale * 100) + '%';
+                if (valScale) valScale.textContent = Math.round(val * 100) + '%';
             }
             if (ctrlSlider) {
-                devPopupOffset.controlsOffset = parseInt(ctrlSlider.value);
+                const val = parseInt(ctrlSlider.value);
+                if (activeMode) devPopupConfig.horizontalControlsBottom = val;
+                else devPopupConfig.verticalControlsBottom = val;
                 const valCtrl = document.getElementById('dev-val-controls');
-                if (valCtrl) valCtrl.textContent = devPopupOffset.controlsOffset + 'px';
+                if (valCtrl) valCtrl.textContent = val + 'px';
             }
 
             try {
-                localStorage.setItem('smurf_popup_offsets', JSON.stringify(devPopupOffset));
+                localStorage.setItem('smurf_popup_config', JSON.stringify(devPopupConfig));
             } catch (e) {}
 
             resizeModalCard();
@@ -2402,29 +2509,35 @@
         }
 
         function resetDevtoolsOffset() {
-            const ySlider = document.getElementById('dev-slider-y');
-            const scaleSlider = document.getElementById('dev-slider-scale');
-            const ctrlSlider = document.getElementById('dev-slider-controls');
-
-            if (ySlider) ySlider.value = 0;
-            if (scaleSlider) scaleSlider.value = 100;
-            if (ctrlSlider) ctrlSlider.value = 0;
-
-            devPopupOffset = { y: 0, scale: 1.0, controlsOffset: 0 };
-            
-            const valY = document.getElementById('dev-val-y');
-            if (valY) valY.textContent = '0px';
-            const valScale = document.getElementById('dev-val-scale');
-            if (valScale) valScale.textContent = '100%';
-            const valCtrl = document.getElementById('dev-val-controls');
-            if (valCtrl) valCtrl.textContent = '0px';
+            const activeMode = modalFlipped;
+            if (activeMode) {
+                devPopupConfig.horizontalY = 0;
+                devPopupConfig.horizontalScale = 1.0;
+                devPopupConfig.horizontalControlsBottom = 0;
+            } else {
+                devPopupConfig.verticalY = 0;
+                devPopupConfig.verticalScale = 1.0;
+                devPopupConfig.verticalControlsBottom = 0;
+            }
 
             try {
-                localStorage.removeItem('smurf_popup_offsets');
+                localStorage.setItem('smurf_popup_config', JSON.stringify(devPopupConfig));
             } catch (e) {}
 
+            initDevtoolsSliders();
             resizeModalCard();
             adjustControlsLayout();
+        }
+
+        function copyDevPopupConfig() {
+            const configStr = JSON.stringify(devPopupConfig, null, 2);
+            navigator.clipboard.writeText(configStr)
+                .then(() => {
+                    alert("📋 Đã sao chép cấu hình JSON vào clipboard!");
+                })
+                .catch(err => {
+                    prompt("Không thể copy tự động. Hãy copy dòng này:", configStr);
+                });
         }
 
         function getModalTargetDimensions(isFlippedState) {
@@ -2470,13 +2583,16 @@
                 targetW = targetH * (cardW / cardH);
             }
             
-            // Apply scale slider adjustment
-            targetW *= devPopupOffset.scale;
-            targetH *= devPopupOffset.scale;
+            // Apply scale based on active state (vertical or horizontal)
+            const activeScale = isFlippedState ? devPopupConfig.horizontalScale : devPopupConfig.verticalScale;
+            targetW *= activeScale;
+            targetH *= activeScale;
 
             const baseTop = (viewportH - targetH) / 2 - (isMobilePortrait() ? 40 : 10);
-            // Apply Y-offset slider adjustment
-            const top = baseTop + devPopupOffset.y;
+            
+            // Apply Y-offset based on active state
+            const activeY = isFlippedState ? devPopupConfig.horizontalY : devPopupConfig.verticalY;
+            const top = baseTop + activeY;
             const left = (viewportW - targetW) / 2;
             
             return {
@@ -2567,10 +2683,12 @@
                 baseReactionBottom = 74;
             }
 
-            // Apply devtools adjustments dynamically
-            controls.style.bottom = (baseControlsBottom + devPopupOffset.controlsOffset) + 'px';
+            // Apply devtools adjustments based on mode
+            const activeControlsBottom = modalFlipped ? devPopupConfig.horizontalControlsBottom : devPopupConfig.verticalControlsBottom;
+
+            controls.style.bottom = (baseControlsBottom + activeControlsBottom) + 'px';
             if (reactionBar) {
-                reactionBar.style.bottom = (baseReactionBottom + devPopupOffset.controlsOffset) + 'px';
+                reactionBar.style.bottom = (baseReactionBottom + activeControlsBottom) + 'px';
             }
         }
 
@@ -2743,6 +2861,11 @@
             
             resizeModalCard();
             adjustControlsLayout();
+
+            const panel = document.getElementById('popup-devtools-panel');
+            if (panel && !panel.classList.contains('hidden')) {
+                initDevtoolsSliders();
+            }
         }
 
         function closeModal() {
@@ -3476,6 +3599,7 @@
         // Initialize drag and drop/scroll helpers
         setupDragToScroll();
         setupMapDragScroll();
+        setupPopupDragToMove();
 
     </script>
 </body>
