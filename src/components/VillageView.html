@@ -1,0 +1,29 @@
+    <!-- ═══════════════════════════════════════ -->
+    <!-- VIEW: VILLAGE (Quảng Trường Cư Dân)    -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="view-village" class="w-full hidden">
+        <main class="w-full max-w-md mx-auto px-4 pt-16 pb-24 flex flex-col gap-4">
+            <!-- Search and Filters -->
+            <div class="flex flex-col gap-3 text-center items-center mt-2">
+                <p class="text-[11px] font-bold text-slate-400 max-w-xs">Nhấp vào thẻ dọc của thành viên để lật 3D xem mặt trước (ngang) chứa thông tin đầy đủ.</p>
+                
+                <!-- Search Bar -->
+                <div class="w-full relative">
+                    <span class="material-symbols-outlined absolute left-4 top-2 text-slate-400 text-lg">search</span>
+                    <input type="text" id="search-input" oninput="filterResidents()" placeholder="Tìm tên Xì Trum hoặc tên thật..." class="w-full pl-10 pr-4 py-2 bg-white border-2 border-slate-200 text-slate-800 rounded-full text-xs font-bold focus:border-smurf-blue focus:ring-0 transition-all shadow-sm"/>
+                </div>
+                
+                <!-- Filter Badges -->
+                <div class="flex flex-wrap gap-2 justify-center" id="filter-container">
+                    <button onclick="setFilter('ALL')" class="filter-badge active px-3.5 py-1 rounded-full text-[10px]">Tất Cả</button>
+                    <button onclick="setFilter('N1')" class="filter-badge px-3.5 py-1 rounded-full text-[10px]">Nhánh N1</button>
+                    <button onclick="setFilter('N2')" class="filter-badge px-3.5 py-1 rounded-full text-[10px]">Nhánh N2</button>
+                </div>
+            </div>
+
+            <!-- Grid of Residents -->
+            <section class="grid grid-cols-2 gap-4 justify-items-center mt-2" id="residents-grid">
+                <!-- Grid items will be injected dynamically -->
+            </section>
+        </main>
+    </div>

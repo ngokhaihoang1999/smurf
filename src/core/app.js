@@ -1,0 +1,1362 @@
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzvH1zgIVFQUXaSz_JhScriUOUByapUN5zXavJ9AowcTsqy-Q1EuWoXLALD082zPOyTow/exec";
+
+        // ── STATE ──
+        let currentUser = null;
+        let telegramId = '';
+        let telegramUsername = '';
+        let telegramFirstName = '';
+        let RESIDENTS_DATA = [];
+        let activeFilter = 'ALL';
+        let searchQuery = '';
+        let filteredResidentsList = [];
+
+        // ── TELEGRAM SDK ──
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                telegramId = String(user.id || '');
+                telegramUsername = user.username || '';
+                telegramFirstName = user.first_name || '';
+            }
+        }
+
+        // ── INIT APP (Offline-First & Background Load) ──
+        async function initApp() {
+            // For testing outside Telegram: allow URL param override
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('tid')) telegramId = urlParams.get('tid');
+
+            // 1. Load from Cache immediately (0ms delay)
+            const cachedUser = localStorage.getItem('smurf_user_cache');
+            const cachedResidents = localStorage.getItem('smurf_residents_cache');
+
+            if (cachedResidents) {
+                try {
+                    RESIDENTS_DATA = JSON.parse(cachedResidents);
+                } catch(e) {
+                    console.warn('Failed to parse cached residents');
+                }
+            }
+
+            if (cachedUser) {
+                try {
+                    currentUser = JSON.parse(cachedUser);
+                    // Override cached telegram id if query param/SDK has it
+                    if (telegramId) currentUser.telegramId = telegramId;
+                    
+                    const tab = urlParams.get('tab');
+                    if (tab === 'village') {
+                        showVillageTab();
+                    } else {
+                        showProfileView();
+                    }
+                } catch(e) {
+                    console.warn('Failed to parse cached user');
+                    showView('loading');
+                }
+            } else {
+                // No cache -> show loading spinner on first-time open
+                showView('loading');
+            }
+
+            // Update user badge if info is available
+            updateHeaderBadge();
+
+            // 2. Fetch listAll asynchronously in the background
+            gasRequestJsonp({ action: 'listAll' }, (resp) => {
+                if (resp && resp.status === 'success' && resp.residents) {
+                    // Pre-process and save residents
+                    RESIDENTS_DATA = resp.residents
+                        .filter(r => {
+                            const smurf = (r.smurfName || '').toLowerCase();
+                            const real = (r.realName || '').toLowerCase();
+                            const grp = (r.group || '').toLowerCase();
+                            const tid = String(r.telegramId || '');
+                            if (smurf.includes('test') || real.includes('test') || grp.includes('nhóm a') || grp === 'a' || tid === '123456' || tid === '123') {
+                                return false;
+                            }
+                            return true;
+                        })
+                        .map(r => ({
+                            smurfName: r.smurfName || '',
+                            realName: r.realName || '',
+                            group: r.group || '',
+                            personality: r.personality || '',
+                            tinhCach: r.personality || '',
+                            hobbies: r.hobbies || '',
+                            soThich: r.hobbies || '',
+                            strength: r.strength || '',
+                            diemManh: r.strength || '',
+                            weakness: r.weakness || '',
+                            diemYeu: r.weakness || '',
+                            bio: r.bio || '',
+                            telegramId: r.telegramId || '',
+                            avatar: `avatars/avatar_${r.telegramId}.png`,
+                            cardFront: ''
+                        }));
+
+                    // Save to local cache
+                    localStorage.setItem('smurf_residents_cache', JSON.stringify(RESIDENTS_DATA));
+
+                    // Lookup current user in fresh data
+                    if (telegramId) {
+                        const foundUser = RESIDENTS_DATA.find(r => String(r.telegramId) === String(telegramId));
+                        if (foundUser) {
+                            currentUser = foundUser;
+                            localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                            
+                            // If they were stuck on loading screen or register screen, transition them to profile
+                            const activeView = getActiveView();
+                            if (activeView === 'loading' || activeView === 'register') {
+                                const tab = urlParams.get('tab');
+                                if (tab === 'village') {
+                                    showVillageTab();
+                                } else {
+                                    showProfileView();
+                                }
+                            } else if (activeView === 'profile') {
+                                // Silently refresh values
+                                showProfileView();
+                            }
+                        } else {
+                            // User not registered -> redirect to register form
+                            showView('register');
+                            setupRegistrationForm();
+                        }
+                    } else {
+                        // Outside Telegram & no query param -> let them register
+                        showView('register');
+                        setupRegistrationForm();
+                    }
+
+                    // Render grid silently in background if on village tab
+                    if (getActiveView() === 'village') {
+                        renderGrid();
+                    }
+                } else {
+                    handleFetchError();
+                }
+            }, () => {
+                handleFetchError();
+            });
+        }
+
+        function handleFetchError() {
+            // Fallback: If network is offline but we have cache, keep using cache. Otherwise show register.
+            if (!currentUser) {
+                showView('register');
+                setupRegistrationForm();
+            }
+        }
+
+        function getActiveView() {
+            const views = ['loading', 'register', 'profile', 'village'];
+            for (let v of views) {
+                const el = document.getElementById('view-' + v);
+                if (el && !el.classList.contains('hidden')) return v;
+            }
+            return '';
+        }
+
+        function updateHeaderBadge() {
+            const usernameSpan = document.getElementById('header-username');
+            if (usernameSpan) {
+                usernameSpan.textContent = telegramUsername || telegramFirstName || (currentUser ? currentUser.smurfName : 'Khách');
+            }
+        }
+
+        // ── GENERIC JSONP GET ──
+        function gasRequestJsonp(params, onSuccess, onError) {
+            const callbackName = '_gasCallback_' + Date.now() + Math.round(Math.random() * 1000);
+            const script = document.createElement('script');
+            
+            const timeout = setTimeout(() => {
+                cleanup();
+                console.warn('JSONP request timed out');
+                onError();
+            }, 10000);
+            
+            function cleanup() {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                if (script.parentNode) script.parentNode.removeChild(script);
+            }
+            
+            window[callbackName] = function(data) {
+                cleanup();
+                onSuccess(data);
+            };
+            
+            script.onerror = function() {
+                cleanup();
+                onError();
+            };
+            
+            let queryParts = [];
+            for (let key in params) {
+                queryParts.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
+            }
+            queryParts.push('callback=' + callbackName);
+            
+            script.src = GAS_WEBAPP_URL + '?' + queryParts.join('&');
+            document.head.appendChild(script);
+        }
+
+        // ── VIEW SWITCHER ──
+        function showView(name) {
+            // Hide all views
+            ['view-loading', 'view-register', 'view-profile', 'view-village'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            
+            // Show active view
+            const activeEl = document.getElementById('view-' + name);
+            if (activeEl) activeEl.classList.remove('hidden');
+
+            // Coordinate global header title
+            const titleEl = document.getElementById('header-title');
+            if (titleEl) {
+                if (name === 'register') titleEl.textContent = "Đăng Ký Cư Dân";
+                else if (name === 'profile') titleEl.textContent = "Làng Xì Trum";
+                else if (name === 'village') titleEl.textContent = "Quảng Trường Cư Dân";
+            }
+
+            // Hide/Show main bottom nav
+            const bottomNav = document.getElementById('main-bottom-nav');
+            if (bottomNav) {
+                if (name === 'profile' || name === 'village') {
+                    bottomNav.classList.remove('hidden');
+                } else {
+                    bottomNav.classList.add('hidden');
+                }
+            }
+        }
+
+        // ── PROFILE VIEW ──
+        function showProfileView() {
+            showView('profile');
+            updateNavActive('nav-item-home');
+            updateHeaderBadge();
+            const d = currentUser;
+            const avatarUrl = `avatars/avatar_${d.telegramId || telegramId}.png`;
+            
+            document.getElementById('profile-avatar').src = avatarUrl;
+            document.getElementById('profile-avatar').onerror = function() {
+                this.src = 'avatars/smurf_basic_placeholder.png';
+                document.getElementById('avatar-pending-badge').style.display = 'block';
+            };
+            
+            // Check if avatar exists (hide pending badge if yes)
+            const testImg = new Image();
+            testImg.onload = () => { document.getElementById('avatar-pending-badge').style.display = 'none'; };
+            testImg.onerror = () => { document.getElementById('avatar-pending-badge').style.display = 'block'; };
+            testImg.src = avatarUrl;
+            
+            document.getElementById('profile-smurf-name').textContent = d.smurfName || 'Cư dân';
+            document.getElementById('profile-real-name').textContent = d.realName || '';
+            document.getElementById('profile-group').textContent = d.group || '';
+            document.getElementById('profile-bio').textContent = d.bio ? `"${d.bio}"` : '';
+            
+            // Populate card sheet
+            document.getElementById('card-sheet-avatar').src = avatarUrl;
+            document.getElementById('card-sheet-avatar').onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
+            document.getElementById('cs-real-name').textContent = d.realName || '';
+            document.getElementById('cs-group').textContent = d.group || '';
+            document.getElementById('cs-tinh-cach').textContent = d.personality || '';
+            document.getElementById('cs-so-thich').textContent = d.hobbies || '';
+            document.getElementById('cs-diem-manh').textContent = d.strength || '';
+            document.getElementById('cs-diem-yeu').textContent = d.weakness || '';
+            document.getElementById('cs-bio').textContent = d.bio || '';
+            
+            // Automatically fit font sizes
+            adjustAllCardFonts('cs-');
+
+            // Handle editSheet query parameter if present
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('edit') === '1') {
+                openEditSheet();
+                // Clean the URL param so it doesn't reopen next time
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        // ── REGISTRATION LOGIC ──
+        function setupRegistrationForm() {
+            // Inject Telegram ID into form fields
+            if (document.getElementById('telegram-id')) document.getElementById('telegram-id').value = telegramId;
+            if (document.getElementById('telegram-username')) document.getElementById('telegram-username').value = telegramUsername;
+            if (document.getElementById('telegram-first-name')) document.getElementById('telegram-first-name').value = telegramFirstName;
+            
+            setupCharCounters();
+            setupDesignTabs();
+            setupAvatarPills();
+            setupDraftAutoSave();
+            loadDraft();
+        }
+
+        function setupCharCounters() {
+            const inputs = [
+                { id: 'input-smurf-name', cnt: 'cnt-smurf-name', max: 20 },
+                { id: 'input-real-name', cnt: 'cnt-real-name', max: 30 },
+                { id: 'input-hobbies', cnt: 'cnt-hobbies', max: 40 },
+                { id: 'input-personality', cnt: 'cnt-personality', max: 40 },
+                { id: 'input-strength', cnt: 'cnt-strength', max: 30 },
+                { id: 'input-weakness', cnt: 'cnt-weakness', max: 30 },
+                { id: 'input-bio', cnt: 'cnt-bio', max: 100 }
+            ];
+            
+            inputs.forEach(cfg => {
+                const el = document.getElementById(cfg.id);
+                const cnt = document.getElementById(cfg.cnt);
+                if (el && cnt) {
+                    const update = () => {
+                        cnt.textContent = `${el.value.length}/${cfg.max}`;
+                        updatePreview();
+                    };
+                    el.addEventListener('input', update);
+                    update();
+                }
+            });
+        }
+
+        function setupDesignTabs() {
+            const tabManual = document.getElementById('tab-design-manual');
+            const tabUpload = document.getElementById('tab-design-upload');
+            const manualContainer = document.getElementById('design-manual-container');
+            const uploadContainer = document.getElementById('design-upload-container');
+            
+            if (tabManual && tabUpload && manualContainer && uploadContainer) {
+                tabManual.addEventListener('click', () => {
+                    tabManual.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all bg-smurf-blue text-white shadow-sm";
+                    tabUpload.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-smurf-blue";
+                    manualContainer.classList.remove('hidden');
+                    uploadContainer.classList.add('hidden');
+                });
+                tabUpload.addEventListener('click', () => {
+                    tabUpload.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all bg-smurf-blue text-white shadow-sm";
+                    tabManual.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-smurf-blue";
+                    uploadContainer.classList.remove('hidden');
+                    manualContainer.classList.add('hidden');
+                });
+            }
+
+            // Image Base64 File Uploader
+            const fileInput = document.getElementById('input-ref-file');
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        document.getElementById('reference-image-base64').value = evt.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+
+        function toggleAvatarSection() {
+            const section = document.getElementById('avatar-design-section');
+            const chevron = document.getElementById('avatar-section-chevron');
+            if (section && chevron) {
+                const isHidden = section.classList.contains('hidden');
+                if (isHidden) {
+                    section.classList.remove('hidden');
+                    chevron.style.transform = 'rotate(180deg)';
+                } else {
+                    section.classList.add('hidden');
+                    chevron.style.transform = 'rotate(0deg)';
+                }
+            }
+        }
+
+        function setupAvatarPills() {
+            const configureGrid = (gridId, inputId, customInputId) => {
+                const grid = document.getElementById(gridId);
+                const hiddenInput = document.getElementById(inputId);
+                const customInput = document.getElementById(customInputId);
+                
+                if (grid && hiddenInput) {
+                    grid.querySelectorAll('button').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            grid.querySelectorAll('button').forEach(b => b.classList.remove('active', 'pill-btn-red'));
+                            btn.classList.add('active', 'pill-btn-red');
+                            
+                            const val = btn.getAttribute('data-val');
+                            if (val === 'custom') {
+                                if (customInput) {
+                                    customInput.classList.remove('hidden');
+                                    customInput.focus();
+                                    hiddenInput.value = customInput.value;
+                                }
+                            } else {
+                                if (customInput) customInput.classList.add('hidden');
+                                hiddenInput.value = val;
+                            }
+                            updatePreview();
+                        });
+                    });
+                }
+                
+                if (customInput && hiddenInput) {
+                    customInput.addEventListener('input', () => {
+                        hiddenInput.value = customInput.value;
+                        updatePreview();
+                    });
+                }
+            };
+            
+            configureGrid('grid-gender', 'input-gender', 'custom-gender-input');
+            configureGrid('grid-hat', 'input-hat', 'custom-hat-input');
+            configureGrid('grid-hatcolor', 'input-hatcolor', 'custom-hatcolor-input');
+            configureGrid('grid-hair', 'input-hair', 'custom-hair-input');
+            configureGrid('grid-faceacc', 'input-faceacc', 'custom-faceacc-input');
+            configureGrid('grid-outfit', 'input-outfit', 'custom-outfit-input');
+            configureGrid('grid-prop', 'input-prop', 'custom-prop-input');
+            configureGrid('grid-expression', 'input-expression', 'custom-expression-input');
+            configureGrid('grid-pose', 'input-pose', 'custom-pose-input');
+            configureGrid('grid-bg', 'input-background', 'custom-bg-input');
+        }
+
+        function updatePreview() {
+            const smurfName = document.getElementById('input-smurf-name')?.value || 'Tí Coding';
+            const realName = document.getElementById('input-real-name')?.value || 'Tên Thật';
+            const group = document.getElementById('input-group')?.value || 'Nhóm';
+            const hobbies = document.getElementById('input-hobbies')?.value || 'Sở thích';
+            const personality = document.getElementById('input-personality')?.value || 'Tính cách';
+            const strength = document.getElementById('input-strength')?.value || 'Điểm mạnh';
+            const weakness = document.getElementById('input-weakness')?.value || 'Điểm yếu';
+            const bio = document.getElementById('input-bio')?.value || 'Tự bạch mô tả bản thân...';
+            
+            const pReal = document.getElementById('preview-real-name');
+            const pGrp = document.getElementById('preview-group');
+            const pPersonality = document.getElementById('preview-tinh-cach');
+            const pHobbies = document.getElementById('preview-so-thich');
+            const pStrength = document.getElementById('preview-diem-manh');
+            const pWeakness = document.getElementById('preview-diem-yeu');
+            const pBio = document.getElementById('preview-bio');
+            
+            if (pReal) pReal.textContent = realName;
+            if (pGrp) pGrp.textContent = group;
+            if (pPersonality) pPersonality.textContent = personality;
+            if (pHobbies) pHobbies.textContent = hobbies;
+            if (pStrength) pStrength.textContent = strength;
+            if (pWeakness) pWeakness.textContent = weakness;
+            if (pBio) pBio.textContent = bio ? `"${bio}"` : "";
+            
+            adjustAllCardFonts('preview-');
+            resizePreviewCard();
+        }
+
+        function resizePreviewCard() {
+            const parent = document.getElementById('preview-parent');
+            const scaleWrapper = document.getElementById('cardScaleWrapper');
+            if (!parent || !scaleWrapper) return;
+            const parentWidth = parent.clientWidth - 20;
+            const scale = parentWidth / 1516;
+            scaleWrapper.style.transform = `translateX(-50%) scale(${scale})`;
+            parent.style.height = (1038 * scale + 20) + 'px';
+        }
+
+        // ── SUBMIT REGISTRATION ──
+        async function submitRegistration(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const btnText = document.getElementById('btn-text');
+            btn.disabled = true; btnText.textContent = "ĐANG GỬI ĐĂNG KÝ..."; btn.style.opacity = '0.7';
+
+            const form = document.getElementById('registry-form');
+            const formData = new FormData(form);
+            const data = { action: 'register' };
+            formData.forEach((value, key) => { data[key] = value; });
+
+            try {
+                const result = await gasRequest(data);
+                if (result.status === 'success') {
+                    alert("🎉 Đăng ký thành công! Chào mừng bạn vào Làng Xì Trum.");
+                    localStorage.removeItem('smurf_registration_draft');
+                    currentUser = { ...data, hobbies: data.hobbies, strength: data.strength, weakness: data.weakness, personality: data.personality };
+                    localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                    showProfileView();
+                } else if (result.status === 'duplicate') {
+                    alert("⚠️ Telegram ID này đã đăng ký rồi!");
+                    const lookup = await gasRequest({ action: 'lookup', telegramId });
+                    if (lookup.exists) { 
+                        currentUser = lookup.data; 
+                        localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                        showProfileView(); 
+                    }
+                } else {
+                    alert("⚠️ " + (result.message || "Có lỗi xảy ra."));
+                }
+            } catch (err) {
+                console.error('Submit error:', err);
+                alert("⚠️ Lỗi kết nối. Thử lại sau.");
+            } finally {
+                btn.disabled = false; btnText.textContent = "GỬI ĐĂNG KÝ VỀ LÀNG"; btn.style.opacity = '1';
+            }
+        }
+
+        // ── SUBMIT EDIT ──
+        async function submitEdit(e) {
+            e.preventDefault();
+            const saveBtn = document.getElementById('edit-save-btn');
+            saveBtn.disabled = true; saveBtn.style.opacity = '0.7';
+
+            const data = {
+                action: 'update',
+                telegramId: currentUser ? currentUser.telegramId : telegramId,
+                smurfName: document.getElementById('edit-smurf-name').value,
+                realName: document.getElementById('edit-real-name').value,
+                group: document.getElementById('edit-group').value,
+                personalGender: document.querySelector('input[name="editGender"]:checked')?.value || 'Nam',
+                hobbies: document.getElementById('edit-hobbies').value,
+                personality: document.getElementById('edit-personality').value,
+                strength: document.getElementById('edit-strength').value,
+                weakness: document.getElementById('edit-weakness').value,
+                bio: document.getElementById('edit-bio').value
+            };
+
+            try {
+                const result = await gasRequest(data);
+                if (result.status === 'success') {
+                    // Update local state and cache
+                    Object.assign(currentUser, data);
+                    localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                    
+                    // Silently sync local entry in residents data
+                    const idx = RESIDENTS_DATA.findIndex(r => String(r.telegramId) === String(currentUser.telegramId));
+                    if (idx !== -1) {
+                        Object.assign(RESIDENTS_DATA[idx], {
+                            ...data,
+                            tinhCach: data.personality,
+                            soThich: data.hobbies,
+                            diemManh: data.strength,
+                            diemYeu: data.weakness
+                        });
+                        localStorage.setItem('smurf_residents_cache', JSON.stringify(RESIDENTS_DATA));
+                    }
+                    
+                    showProfileView();
+                    closeEditSheet();
+                } else {
+                    alert("⚠️ " + (result.message || "Lưu thất bại."));
+                }
+            } catch (err) {
+                console.error('Update error:', err);
+                alert("⚠️ Lỗi kết nối.");
+            } finally {
+                saveBtn.disabled = false; saveBtn.style.opacity = '1';
+            }
+        }
+
+        // ── SPA NAV HANDLERS ──
+        function showHomeTab() {
+            closeCardSheet();
+            closeEditSheet();
+            const detailModal = document.getElementById('detail-modal');
+            if (detailModal && !detailModal.classList.contains('hidden')) {
+                closeModal();
+            }
+            if (currentUser) {
+                showProfileView();
+            } else {
+                showView('register');
+                updateNavActive('nav-item-home');
+            }
+        }
+
+        function showProfileTab() {
+            if (!currentUser) {
+                alert("⚠️ Bạn cần đăng ký cư dân trước!");
+                return;
+            }
+            closeCardSheet();
+            openEditSheet();
+        }
+
+        function showVillageTab() {
+            closeCardSheet();
+            closeEditSheet();
+            showView('village');
+            updateNavActive('nav-item-village');
+            renderGrid(); // Render instantly from local cache
+        }
+
+        function updateNavActive(activeId) {
+            const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            const activeItem = document.getElementById(activeId);
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+        }
+
+        // ── BOTTOM SHEET METHODS ──
+        function openCardSheet() {
+            document.getElementById('card-sheet-overlay').classList.add('active');
+            document.getElementById('card-sheet').classList.add('active');
+            setTimeout(resizeCardSheet, 50);
+        }
+
+        function closeCardSheet() {
+            document.getElementById('card-sheet-overlay').classList.remove('active');
+            document.getElementById('card-sheet').classList.remove('active');
+        }
+
+        function resizeCardSheet() {
+            const parent = document.getElementById('card-sheet-parent');
+            const scaleWrapper = document.getElementById('cardSheetScaleWrapper');
+            if (!parent || !scaleWrapper) return;
+            const parentWidth = parent.clientWidth;
+            const scale = parentWidth / 1516;
+            scaleWrapper.style.transform = `translateX(-50%) scale(${scale})`;
+            parent.style.height = (1038 * scale) + 'px';
+        }
+
+        function openEditSheet() {
+            if (!currentUser) return;
+            // Pre-fill edit form
+            document.getElementById('edit-smurf-name').value = currentUser.smurfName || '';
+            document.getElementById('edit-real-name').value = currentUser.realName || '';
+            document.getElementById('edit-group').value = currentUser.group || '';
+            const genderRadio = document.querySelector(`input[name="editGender"][value="${currentUser.personalGender || 'Nam'}"]`);
+            if (genderRadio) genderRadio.checked = true;
+            document.getElementById('edit-hobbies').value = currentUser.hobbies || '';
+            document.getElementById('edit-personality').value = currentUser.personality || '';
+            document.getElementById('edit-strength').value = currentUser.strength || '';
+            document.getElementById('edit-weakness').value = currentUser.weakness || '';
+            document.getElementById('edit-bio').value = currentUser.bio || '';
+
+            document.getElementById('edit-sheet-overlay').classList.add('active');
+            document.getElementById('edit-sheet').classList.add('active');
+            updateNavActive('nav-item-profile');
+        }
+
+        function closeEditSheet() {
+            document.getElementById('edit-sheet-overlay').classList.remove('active');
+            document.getElementById('edit-sheet').classList.remove('active');
+            updateNavActive('nav-item-home');
+        }
+
+        // ── GAS REQUEST POST ──
+        async function gasRequest(data) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            try {
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(data),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response.json();
+            } catch (err) {
+                clearTimeout(timeoutId);
+                if (err.name === 'AbortError') {
+                    console.warn('GAS request timed out (8s)');
+                    throw new Error('Request timeout');
+                }
+                throw err;
+            }
+        }
+
+        // ── DRAFT AUTO-SAVE & LOAD ──
+        function saveDraft() {
+            const draft = {
+                smurfName: document.getElementById('input-smurf-name')?.value || '',
+                realName: document.getElementById('input-real-name')?.value || '',
+                group: document.getElementById('input-group')?.value || '',
+                personalGender: document.querySelector('input[name="personalGender"]:checked')?.value || 'Nam',
+                hobbies: document.getElementById('input-hobbies')?.value || '',
+                personality: document.getElementById('input-personality')?.value || '',
+                strength: document.getElementById('input-strength')?.value || '',
+                weakness: document.getElementById('input-weakness')?.value || '',
+                bio: document.getElementById('input-bio')?.value || '',
+                gender: document.getElementById('input-gender')?.value || 'Nam (Smurf)',
+                hat: document.getElementById('input-hat')?.value || 'Không',
+                hatColor: document.getElementById('input-hatcolor')?.value || 'Không',
+                hairColor: document.getElementById('input-hair')?.value || 'Không',
+                faceAccessory: document.getElementById('input-faceacc')?.value || 'Không',
+                outfit: document.getElementById('input-outfit')?.value || 'Không',
+                prop: document.getElementById('input-prop')?.value || 'Không',
+                expression: document.getElementById('input-expression')?.value || 'Không',
+                pose: document.getElementById('input-pose')?.value || 'Không',
+                background: document.getElementById('input-background')?.value || 'Không',
+                additionalInfo: document.querySelector('#registry-form textarea[name="additionalInfo"]')?.value || '',
+                referenceNotes: document.querySelector('#registry-form textarea[name="referenceNotes"]')?.value || '',
+                customGender: document.getElementById('custom-gender-input')?.value || '',
+                customHat: document.getElementById('custom-hat-input')?.value || '',
+                customHatColor: document.getElementById('custom-hatcolor-input')?.value || '',
+                customHair: document.getElementById('custom-hair-input')?.value || '',
+                customFaceAcc: document.getElementById('custom-faceacc-input')?.value || '',
+                customOutfit: document.getElementById('custom-outfit-input')?.value || '',
+                customProp: document.getElementById('custom-prop-input')?.value || '',
+                customExpression: document.getElementById('custom-expression-input')?.value || '',
+                customPose: document.getElementById('custom-pose-input')?.value || '',
+                customBg: document.getElementById('custom-bg-input')?.value || ''
+            };
+            localStorage.setItem('smurf_registration_draft', JSON.stringify(draft));
+        }
+
+        function setupDraftAutoSave() {
+            const form = document.getElementById('registry-form');
+            if (!form) return;
+            form.addEventListener('input', saveDraft);
+            form.addEventListener('change', saveDraft);
+            const grids = ['grid-gender', 'grid-hat', 'grid-hatcolor', 'grid-hair', 'grid-faceacc', 'grid-outfit', 'grid-prop', 'grid-expression', 'grid-pose', 'grid-bg'];
+            grids.forEach(id => {
+                const grid = document.getElementById(id);
+                if (grid) {
+                    grid.querySelectorAll('button').forEach(btn => {
+                        btn.addEventListener('click', () => { setTimeout(saveDraft, 50); });
+                    });
+                }
+            });
+        }
+
+        function loadDraft() {
+            const raw = localStorage.getItem('smurf_registration_draft');
+            if (!raw) return;
+            try {
+                const draft = JSON.parse(raw);
+                if (!draft) return;
+                if (document.getElementById('input-smurf-name')) document.getElementById('input-smurf-name').value = draft.smurfName || '';
+                if (document.getElementById('input-real-name')) document.getElementById('input-real-name').value = draft.realName || '';
+                if (document.getElementById('input-group')) document.getElementById('input-group').value = draft.group || '';
+                const genderRadio = document.querySelector(`input[name="personalGender"][value="${draft.personalGender}"]`);
+                if (genderRadio) genderRadio.checked = true;
+                if (document.getElementById('input-hobbies')) document.getElementById('input-hobbies').value = draft.hobbies || '';
+                if (document.getElementById('input-personality')) document.getElementById('input-personality').value = draft.personality || '';
+                if (document.getElementById('input-strength')) document.getElementById('input-strength').value = draft.strength || '';
+                if (document.getElementById('input-weakness')) document.getElementById('input-weakness').value = draft.weakness || '';
+                if (document.getElementById('input-bio')) document.getElementById('input-bio').value = draft.bio || '';
+                
+                if (document.getElementById('input-gender')) document.getElementById('input-gender').value = draft.gender || 'Nam (Smurf)';
+                if (document.getElementById('input-hat')) document.getElementById('input-hat').value = draft.hat || 'Không';
+                if (document.getElementById('input-hatcolor')) document.getElementById('input-hatcolor').value = draft.hatColor || 'Không';
+                if (document.getElementById('input-hair')) document.getElementById('input-hair').value = draft.hairColor || 'Không';
+                if (document.getElementById('input-faceacc')) document.getElementById('input-faceacc').value = draft.faceAccessory || 'Không';
+                if (document.getElementById('input-outfit')) document.getElementById('input-outfit').value = draft.outfit || 'Không';
+                if (document.getElementById('input-prop')) document.getElementById('input-prop').value = draft.prop || 'Không';
+                if (document.getElementById('input-expression')) document.getElementById('input-expression').value = draft.expression || 'Không';
+                if (document.getElementById('input-pose')) document.getElementById('input-pose').value = draft.pose || 'Không';
+                if (document.getElementById('input-background')) document.getElementById('input-background').value = draft.background || 'Không';
+                
+                const addInfo = document.querySelector('#registry-form textarea[name="additionalInfo"]');
+                if (addInfo) addInfo.value = draft.additionalInfo || '';
+                const refNotes = document.querySelector('#registry-form textarea[name="referenceNotes"]');
+                if (refNotes) refNotes.value = draft.referenceNotes || '';
+
+                const restoreCustomInput = (inputId, val) => {
+                    const el = document.getElementById(inputId);
+                    if (el) { el.value = val || ''; if (val) el.classList.remove('hidden'); }
+                };
+                restoreCustomInput('custom-gender-input', draft.customGender);
+                restoreCustomInput('custom-hat-input', draft.customHat);
+                restoreCustomInput('custom-hatcolor-input', draft.customHatColor);
+                restoreCustomInput('custom-hair-input', draft.customHair);
+                restoreCustomInput('custom-faceacc-input', draft.customFaceAcc);
+                restoreCustomInput('custom-outfit-input', draft.customOutfit);
+                restoreCustomInput('custom-prop-input', draft.customProp);
+                restoreCustomInput('custom-expression-input', draft.customExpression);
+                restoreCustomInput('custom-pose-input', draft.customPose);
+                restoreCustomInput('custom-bg-input', draft.customBg);
+
+                const restoreGridActive = (gridId, val, customVal) => {
+                    const grid = document.getElementById(gridId);
+                    if (!grid) return;
+                    grid.querySelectorAll('button').forEach(btn => {
+                        btn.classList.remove('active', 'pill-btn-red');
+                        const btnVal = btn.getAttribute('data-val');
+                        if (btnVal === val) btn.classList.add('active', 'pill-btn-red');
+                        else if (btnVal === 'custom' && customVal) btn.classList.add('active', 'pill-btn-red');
+                    });
+                };
+                restoreGridActive('grid-gender', draft.gender, draft.customGender);
+                restoreGridActive('grid-hat', draft.hat, draft.customHat);
+                restoreGridActive('grid-hatcolor', draft.hatColor, draft.customHatColor);
+                restoreGridActive('grid-hair', draft.hairColor, draft.customHair);
+                restoreGridActive('grid-faceacc', draft.faceAccessory, draft.customFaceAcc);
+                restoreGridActive('grid-outfit', draft.outfit, draft.customOutfit);
+                restoreGridActive('grid-prop', draft.prop, draft.customProp);
+                restoreGridActive('grid-expression', draft.expression, draft.customExpression);
+                restoreGridActive('grid-pose', draft.pose, draft.customPose);
+                restoreGridActive('grid-bg', draft.background, draft.customBg);
+
+                updatePreview();
+            } catch (err) {
+                console.warn('Load draft failed:', err);
+            }
+        }
+
+        // ── DYNAMIC FONT AUTO-FIT BY TEXT LENGTH ──
+        function adjustAllCardFonts(prefix) {
+            const nameEl = document.getElementById(prefix + 'real-name');
+            if (nameEl) {
+                const len = nameEl.textContent.length;
+                nameEl.style.fontSize = len > 18 ? '28px' : len > 14 ? '30px' : '50px';
+            }
+            
+            const bioEl = document.getElementById(prefix + 'bio');
+            if (bioEl) {
+                const len = bioEl.textContent.length;
+                bioEl.style.fontSize = len > 80 ? '30px' : len > 60 ? '38px' : len > 35 ? '48px' : '60px';
+            }
+            
+            const chips = ['tinh-cach', 'so-thich', 'diem-manh', 'diem-yeu'];
+            chips.forEach(suffix => {
+                const el = document.getElementById(prefix + suffix);
+                if (el) {
+                    const len = el.textContent.length;
+                    el.style.fontSize = len > 24 ? '23px' : len > 16 ? '28px' : len > 10 ? '34px' : '40px';
+                }
+            });
+        }
+
+        // ── MOUSE DRAG TO SCROLL ──
+        function setupDragToScroll() {
+            const sliders = document.querySelectorAll('.custom-scroll');
+            sliders.forEach(slider => {
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+
+                slider.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    startX = e.pageX - slider.offsetLeft;
+                    scrollLeft = slider.scrollLeft;
+                });
+
+                slider.addEventListener('mouseleave', () => {
+                    isDown = false;
+                });
+
+                slider.addEventListener('mouseup', () => {
+                    isDown = false;
+                });
+
+                slider.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - slider.offsetLeft;
+                    const walk = (x - startX) * 2;
+                    slider.scrollLeft = scrollLeft - walk;
+                });
+            });
+        }
+
+        // ── VILLAGE GRID & FILTER LOGIC ──
+        function renderGrid() {
+            const grid = document.getElementById('residents-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            const filtered = RESIDENTS_DATA.filter(item => {
+                const matchesSearch = item.smurfName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.realName.toLowerCase().includes(searchQuery.toLowerCase());
+                
+                let matchesGroup = true;
+                if (activeFilter === 'N1') {
+                    matchesGroup = item.group.startsWith('N1');
+                } else if (activeFilter === 'N2') {
+                    matchesGroup = item.group.startsWith('N2');
+                }
+                
+                return matchesSearch && matchesGroup;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 font-bold">Không tìm thấy cư dân nào...</div>`;
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            filtered.forEach(item => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card-scene smurf-card flex flex-col overflow-hidden';
+                cardEl.onclick = function() { openModal(item.smurfName, this); };
+                cardEl.innerHTML = `
+                    <div class="w-full relative overflow-hidden" style="aspect-ratio: 3/4;">
+                        <img src="${item.avatar}" alt="Avatar" class="w-full h-full object-cover" loading="lazy" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                        <span class="absolute top-3 left-3 bg-white/90 text-smurf-blue p-1 rounded-full text-[11px] font-bold shadow-md material-symbols-outlined">park</span>
+                    </div>
+                    <div class="w-full py-2.5 px-3.5 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 58px;">
+                        <div class="flex justify-between items-center w-full">
+                            <span class="font-bold text-[13px] text-slate-700 truncate mr-2" style="max-width: 140px;">${item.realName}</span>
+                            <span class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase">${item.group}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-bold mt-1 truncate">
+                            ${(item.soThich || '').split(',')[0] || '—'} • ${(item.tinhCach || '').split(',')[0] || '—'}
+                        </div>
+                    </div>
+                `;
+                fragment.appendChild(cardEl);
+            });
+            grid.appendChild(fragment);
+            filteredResidentsList = filtered;
+        }
+
+        function setFilter(filter) {
+            activeFilter = filter;
+            document.querySelectorAll('#filter-container button').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            renderGrid();
+        }
+
+        function filterResidents() {
+            searchQuery = document.getElementById('search-input').value;
+            renderGrid();
+        }
+
+        // ── 3D DETAIL CARD FLIP & ASPECT MORPH LOGIC ──
+        let modalFlipped = false;
+        let activeModalItem = null;
+        let lastClickedRect = null;
+        let lastClickedElement = null;
+        let closeTimeoutId = null;
+        let manualRotateLandscape = false;
+        let isNavigating = false;
+
+        function isMobilePortrait() {
+            return window.innerWidth < 640 && window.innerHeight > window.innerWidth;
+        }
+
+        function updateRotateButtonState() {
+            const btn = document.getElementById('mobile-rotate-btn');
+            if (!btn) return;
+            if (isMobilePortrait() && modalFlipped) {
+                btn.style.display = 'flex';
+                if (manualRotateLandscape) {
+                    btn.classList.add('bg-smurf-blue', 'text-white', 'border-smurf-blue');
+                    btn.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
+                } else {
+                    btn.classList.remove('bg-smurf-blue', 'text-white', 'border-smurf-blue');
+                    btn.classList.add('bg-white', 'text-slate-600', 'border-slate-200');
+                }
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+
+        function toggleCardRotation() {
+            manualRotateLandscape = !manualRotateLandscape;
+            updateRotateButtonState();
+            resizeModalCard();
+            adjustControlsLayout();
+        }
+
+        function getModalTargetDimensions(isFlippedState) {
+            const viewportW = window.innerWidth;
+            const viewportH = window.innerHeight;
+            
+            const isLandscapeMode = !isMobilePortrait() || manualRotateLandscape;
+            
+            const cardW = isLandscapeMode ? 1516 : 1038;
+            const cardH = isLandscapeMode ? 1038 : 1516;
+            
+            let maxW = viewportW * 0.90;
+            let maxH = viewportH * 0.70;
+            
+            if (isLandscapeMode) {
+                maxH = viewportH * 0.65;
+            }
+            
+            if (viewportW >= 1024) {
+                maxW = viewportW * 0.70;
+                maxH = viewportH * 0.75;
+            }
+            
+            let targetW = maxW;
+            let targetH = targetW * (cardH / cardW);
+            
+            if (targetH > maxH) {
+                targetH = maxH;
+                targetW = targetH * (cardW / cardH);
+            }
+            
+            const top = (viewportH - targetH) / 2;
+            const left = (viewportW - targetW) / 2;
+            
+            return {
+                width: targetW,
+                height: targetH,
+                top: top,
+                left: left,
+                isLandscape: isLandscapeMode
+            };
+        }
+
+        function resizeModalCard() {
+            const container = document.getElementById('modalCardContainer');
+            if (!container || container.style.display === 'none') return;
+            
+            const dims = getModalTargetDimensions(modalFlipped);
+            
+            container.style.width = dims.width + 'px';
+            container.style.height = dims.height + 'px';
+            container.style.top = dims.top + 'px';
+            container.style.left = dims.left + 'px';
+            
+            const innerCardWidth = dims.isLandscape ? 1516 : 1038;
+            const scale = dims.width / innerCardWidth;
+            
+            const frontParent = document.getElementById('modal-card-front-parent');
+            
+            if (dims.isLandscape) {
+                container.classList.remove('portrait-card-mode');
+                if (frontParent) {
+                    frontParent.style.width = '100%';
+                    frontParent.style.height = '100%';
+                }
+                const scaleWrapper = document.getElementById('modalCardScaleWrapper');
+                if (scaleWrapper) {
+                    scaleWrapper.style.transform = `translateX(-50%) scale(${scale})`;
+                    scaleWrapper.style.top = '0';
+                    scaleWrapper.style.left = '50%';
+                    scaleWrapper.style.transformOrigin = 'top center';
+                }
+            } else {
+                container.classList.add('portrait-card-mode');
+                if (frontParent) {
+                    frontParent.style.width = '100%';
+                    frontParent.style.height = '100%';
+                }
+                const scaleWrapper = document.getElementById('modalCardScaleWrapper');
+                if (scaleWrapper) {
+                    scaleWrapper.style.transform = `translate(-50%, -50%) rotate(-90deg) scale(${scale})`;
+                    scaleWrapper.style.top = '50%';
+                    scaleWrapper.style.left = '50%';
+                    scaleWrapper.style.transformOrigin = 'center center';
+                }
+            }
+            
+            adjustAllCardFonts('m-preview-');
+        }
+
+        function adjustControlsLayout() {
+            const controls = document.getElementById('modal-controls');
+            const container = document.getElementById('modalCardContainer');
+            if (!controls || !container) return;
+            
+            const rect = container.getBoundingClientRect();
+            const viewportH = window.innerHeight;
+            
+            const spaceBelow = viewportH - rect.bottom;
+            
+            if (spaceBelow < 90) {
+                controls.style.bottom = '12px';
+            } else {
+                controls.style.bottom = '24px';
+            }
+        }
+
+        function openModal(smurfName, clickedElement) {
+            if (closeTimeoutId) {
+                clearTimeout(closeTimeoutId);
+                closeTimeoutId = null;
+            }
+            
+            const item = RESIDENTS_DATA.find(r => r.smurfName === smurfName);
+            if (!item) return;
+            activeModalItem = item;
+            
+            const avatarUrl = item.avatar;
+            document.getElementById('m-card-avatar').src = avatarUrl;
+            document.getElementById('m-card-avatar').onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
+            document.getElementById('m-preview-smurf-avatar').src = avatarUrl;
+            document.getElementById('m-preview-smurf-avatar').onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
+            
+            document.getElementById('m-card-group').textContent = item.group;
+            document.getElementById('m-preview-group').textContent = item.group;
+            document.getElementById('m-card-real-name').textContent = item.realName;
+            document.getElementById('m-preview-real-name').textContent = item.realName;
+            document.getElementById('m-card-name').textContent = item.smurfName;
+            document.getElementById('m-card-hobby').textContent = '🏸 ' + (item.soThich || 'Cư dân');
+            document.getElementById('m-card-personality').textContent = '🧠 ' + (item.tinhCach || 'Vui vẻ');
+            document.getElementById('m-preview-tinh-cach').textContent = item.tinhCach || '';
+            document.getElementById('m-preview-so-thich').textContent = item.soThich || '';
+            document.getElementById('m-preview-diem-manh').textContent = item.diemManh || '';
+            document.getElementById('m-preview-diem-yeu').textContent = item.diemYeu || '';
+            document.getElementById('m-preview-bio').textContent = item.bio || '';
+            
+            adjustAllCardFonts('m-preview-');
+            
+            const rect = clickedElement.getBoundingClientRect();
+            lastClickedRect = rect;
+            lastClickedElement = clickedElement;
+            
+            modalFlipped = true;
+            manualRotateLandscape = false;
+            updateRotateButtonState();
+            
+            const container = document.getElementById('modalCardContainer');
+            const dims = getModalTargetDimensions(modalFlipped);
+            
+            container.style.transition = 'none';
+            container.style.position = 'fixed';
+            container.style.top = dims.top + 'px';
+            container.style.left = dims.left + 'px';
+            container.style.width = dims.width + 'px';
+            container.style.height = dims.height + 'px';
+            
+            const scaleX = rect.width / dims.width;
+            const scaleY = rect.height / dims.height;
+            const translateX = rect.left - dims.left;
+            const translateY = rect.top - dims.top;
+            container.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
+            container.style.transformOrigin = 'top left';
+            container.style.display = 'block';
+
+            const card3d = document.getElementById('modalCard3d');
+            card3d.classList.remove('flipped');
+
+            clickedElement.style.opacity = '0';
+
+            const modal = document.getElementById('detail-modal');
+            modal.classList.remove('hidden');
+            modal.classList.remove('pointer-events-none');
+            
+            container.style.willChange = 'transform';
+            card3d.style.willChange = 'transform';
+            
+            void container.offsetWidth;
+            
+            const backdrop = document.getElementById('modal-backdrop');
+            backdrop.classList.add('opacity-100');
+            
+            const controls = document.getElementById('modal-controls');
+            controls.classList.add('opacity-100');
+            
+            const navRow = document.getElementById('modal-nav-row');
+            navRow.classList.add('opacity-100');
+            updatePageIndicator();
+
+            container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+            container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
+            
+            card3d.classList.add('flipped');
+
+            setTimeout(() => {
+                container.style.willChange = '';
+                card3d.style.willChange = '';
+            }, 450);
+
+            resizeModalCard();
+            adjustControlsLayout();
+        }
+
+        function toggleModalFlip() {
+            if (isNavigating) return;
+            
+            const card3d = document.getElementById('modalCard3d');
+            const container = document.getElementById('modalCardContainer');
+            if (!card3d || !container) return;
+            
+            container.style.willChange = 'transform';
+            card3d.style.willChange = 'transform';
+            
+            const prevDims = getModalTargetDimensions(modalFlipped);
+            
+            modalFlipped = !modalFlipped;
+            adjustAllCardFonts('m-preview-');
+            updateRotateButtonState();
+            
+            const dims = getModalTargetDimensions(modalFlipped);
+            
+            const scaleX = prevDims.width / dims.width;
+            const scaleY = prevDims.height / dims.height;
+            const translateX = prevDims.left - dims.left;
+            const translateY = prevDims.top - dims.top;
+            
+            container.style.transition = 'none';
+            container.style.top = dims.top + 'px';
+            container.style.left = dims.left + 'px';
+            container.style.width = dims.width + 'px';
+            container.style.height = dims.height + 'px';
+            container.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
+            container.style.transformOrigin = 'top left';
+            
+            if (modalFlipped) {
+                card3d.classList.add('flipped');
+            } else {
+                card3d.classList.remove('flipped');
+            }
+            
+            void container.offsetWidth;
+            container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+            container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
+            
+            setTimeout(() => {
+                container.style.willChange = '';
+                card3d.style.willChange = '';
+            }, 450);
+            
+            resizeModalCard();
+            adjustControlsLayout();
+        }
+
+        function closeModal() {
+            if (closeTimeoutId) {
+                clearTimeout(closeTimeoutId);
+                closeTimeoutId = null;
+            }
+            const container = document.getElementById('modalCardContainer');
+            const modal = document.getElementById('detail-modal');
+            const backdrop = document.getElementById('modal-backdrop');
+            const controls = document.getElementById('modal-controls');
+
+            backdrop.classList.remove('opacity-100');
+            controls.classList.remove('opacity-100');
+            const navRow = document.getElementById('modal-nav-row');
+            navRow.classList.remove('opacity-100');
+            modal.classList.add('pointer-events-none');
+
+            if (lastClickedRect && lastClickedElement) {
+                const card3d = document.getElementById('modalCard3d');
+                card3d.classList.remove('flipped');
+                
+                const dims = getModalTargetDimensions(modalFlipped);
+                
+                modalFlipped = false;
+                manualRotateLandscape = false;
+                adjustAllCardFonts('m-preview-');
+                updateRotateButtonState();
+
+                container.style.willChange = 'transform';
+                card3d.style.willChange = 'transform';
+
+                const scaleX = lastClickedRect.width / dims.width;
+                const scaleY = lastClickedRect.height / dims.height;
+                const translateX = lastClickedRect.left - dims.left;
+                const translateY = lastClickedRect.top - dims.top;
+                
+                container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+                container.style.transformOrigin = 'top left';
+                container.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
+
+                lastClickedElement.style.opacity = '1';
+
+                closeTimeoutId = setTimeout(() => {
+                    container.style.willChange = '';
+                    card3d.style.willChange = '';
+                    container.style.display = 'none';
+                    container.style.transform = '';
+                    container.style.top = '';
+                    container.style.left = '';
+                    container.style.width = '';
+                    container.style.height = '';
+                    modal.classList.add('hidden');
+                    closeTimeoutId = null;
+                    adjustControlsLayout();
+                }, 400);
+            } else {
+                container.style.display = 'none';
+                container.style.transform = '';
+                container.style.top = '';
+                container.style.left = '';
+                container.style.width = '';
+                container.style.height = '';
+                modal.classList.add('hidden');
+                adjustControlsLayout();
+            }
+        }
+
+        function updatePageIndicator() {
+            const indicator = document.getElementById('modal-page-indicator');
+            if (!indicator || !activeModalItem) return;
+            const index = filteredResidentsList.findIndex(r => r.smurfName === activeModalItem.smurfName);
+            if (index !== -1) {
+                indicator.textContent = `${index + 1} / ${filteredResidentsList.length}`;
+            }
+        }
+
+        function navigateModal(direction) {
+            if (filteredResidentsList.length <= 1 || isNavigating) return;
+            
+            const currentIndex = filteredResidentsList.findIndex(r => r.smurfName === activeModalItem.smurfName);
+            if (currentIndex === -1) return;
+            
+            let nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+            if (nextIndex >= filteredResidentsList.length) nextIndex = 0;
+            if (nextIndex < 0) nextIndex = filteredResidentsList.length - 1;
+            
+            const nextItem = filteredResidentsList[nextIndex];
+            const animator = document.getElementById('modalCardAnimator');
+            
+            isNavigating = true;
+            
+            const outClass = direction === 'next' ? 'animate-slide-out-left' : 'animate-slide-out-right';
+            const inClass = direction === 'next' ? 'animate-slide-in-right' : 'animate-slide-in-left';
+            
+            animator.className = `h-full w-full ${outClass}`;
+            
+            setTimeout(() => {
+                activeModalItem = nextItem;
+                
+                const avatarUrl = nextItem.avatar;
+                document.getElementById('m-card-avatar').src = avatarUrl;
+                document.getElementById('m-card-avatar').onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
+                document.getElementById('m-preview-smurf-avatar').src = avatarUrl;
+                document.getElementById('m-preview-smurf-avatar').onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
+                
+                document.getElementById('m-card-group').textContent = nextItem.group;
+                document.getElementById('m-preview-group').textContent = nextItem.group;
+                document.getElementById('m-card-real-name').textContent = nextItem.realName;
+                document.getElementById('m-preview-real-name').textContent = nextItem.realName;
+                document.getElementById('m-card-name').textContent = nextItem.smurfName;
+                document.getElementById('m-card-hobby').textContent = '🏸 ' + (nextItem.soThich || 'Cư dân');
+                document.getElementById('m-card-personality').textContent = '🧠 ' + (nextItem.tinhCach || 'Vui vẻ');
+                document.getElementById('m-preview-tinh-cach').textContent = nextItem.tinhCach || '';
+                document.getElementById('m-preview-so-thich').textContent = nextItem.soThich || '';
+                document.getElementById('m-preview-diem-manh').textContent = nextItem.diemManh || '';
+                document.getElementById('m-preview-diem-yeu').textContent = nextItem.diemYeu || '';
+                document.getElementById('m-preview-bio').textContent = nextItem.bio || '';
+                
+                adjustAllCardFonts('m-preview-');
+                updatePageIndicator();
+                
+                animator.className = `h-full w-full ${inClass}`;
+                
+                setTimeout(() => {
+                    animator.className = 'h-full w-full';
+                    isNavigating = false;
+                }, 320);
+                
+            }, 300);
+        }
+
+        // ── BOOT ──
+        window.addEventListener('load', initApp);
+        window.addEventListener('resize', () => { 
+            const activeView = getActiveView();
+            if (activeView === 'register') resizePreviewCard(); 
+            if (document.getElementById('card-sheet').classList.contains('active')) resizeCardSheet(); 
+            const modal = document.getElementById('detail-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                resizeModalCard();
+                adjustControlsLayout();
+                updateRotateButtonState();
+            }
+        });
+        
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                const modal = document.getElementById('detail-modal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    resizeModalCard();
+                    adjustControlsLayout();
+                    updateRotateButtonState();
+                }
+            }, 100);
+        });
+
+        // Initialize drag and drop/scroll helpers
+        setupDragToScroll();

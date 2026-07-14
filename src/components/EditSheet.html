@@ -1,0 +1,68 @@
+    <!-- ═══════════════════════════════════════ -->
+    <!-- BOTTOM SHEET: Edit Info                 -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="bottom-sheet-overlay" id="edit-sheet-overlay" onclick="closeEditSheet()"></div>
+    <div class="bottom-sheet" id="edit-sheet" style="max-height: 85vh;">
+        <div class="bottom-sheet-handle"></div>
+        <div class="px-4 pb-6 pt-2">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-fredoka text-lg text-smurf-blue">✏️ Chỉnh Sửa Thông Tin</h3>
+                <button onclick="closeEditSheet()" class="text-slate-400 hover:text-slate-600 p-1"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <form id="edit-form" onsubmit="submitEdit(event)" class="flex flex-col gap-3">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-500">Tên Xì Trum</label>
+                    <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-smurf-name" required maxlength="20"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-500">Tên Thật</label>
+                    <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-real-name" required maxlength="30"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-500">Nhóm</label>
+                    <select class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-group" required>
+                        <option value="N1T1">N1T1</option><option value="N1T2">N1T2</option><option value="N1T3">N1T3</option><option value="N1T4">N1T4</option><option value="N1T5">N1T5</option>
+                        <option value="N2T1">N2T1</option><option value="N2T2">N2T2</option><option value="N2T3">N2T3</option><option value="N2T4">N2T4</option><option value="N2T5">N2T5</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-500">Giới Tính</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-sm"><input type="radio" name="editGender" value="Nam" class="w-4 h-4"> Nam</label>
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-sm"><input type="radio" name="editGender" value="Nữ" class="w-4 h-4"> Nữ</label>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-500">Sở Thích</label>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-hobbies" maxlength="40"/>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-500">Tính Cách</label>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-personality" maxlength="40"/>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-500">Điểm Mạnh</label>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-strength" maxlength="30"/>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-500">Điểm Yếu</label>
+                        <input class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl text-sm" id="edit-weakness" maxlength="30"/>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-500">Bio</label>
+                    <textarea class="w-full bg-slate-50 border-2 border-slate-200 p-2.5 font-bold rounded-xl resize-none text-sm" id="edit-bio" rows="2" maxlength="100"></textarea>
+                </div>
+                <div class="flex gap-3 mt-2">
+                    <button type="submit" id="edit-save-btn" class="flex-1 mushroom-btn py-3 rounded-2xl font-fredoka text-base relative overflow-hidden">
+                        <div class="absolute inset-x-0 top-0 h-1/2 bg-white opacity-15 rounded-t-2xl"></div>
+                        <span class="relative z-10">💾 Lưu</span>
+                    </button>
+                    <button type="button" onclick="closeEditSheet()" class="flex-1 py-3 rounded-2xl font-fredoka text-base bg-slate-100 text-slate-500 font-bold active:scale-95 transition-all">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>

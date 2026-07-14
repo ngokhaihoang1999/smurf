@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <title>Làng Xì Trum - Avatar Hub</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="styles.css?v=5" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        smurf: {
+                            blue: "#00a2ff",
+                            blueLight: "#e0f2fe",
+                            red: "#ef4444",
+                            redLight: "#fee2e2",
+                            yellow: "#ffb300",
+                            yellowLight: "#fef3c7",
+                            green: "#22c55e",
+                            greenLight: "#dcfce7",
+                            cream: "#fafaf6",
+                            wood: "#904d00",
+                            woodDark: "#6e3900"
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        quicksand: ['Quicksand', 'sans-serif'],
+                        baloo: ['"Baloo 2"', 'cursive'],
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+{{CSS}}
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+    <!-- Top Decorative Gradient -->
+    <div class="w-full max-w-md h-48 bg-gradient-to-b from-sky-200 to-transparent absolute top-0 left-50 -translate-x-50 pointer-events-none opacity-30 z-0"></div>
+
+{{HEADER}}
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- MAIN CONTAINER WITH SPA VIEWS           -->
+    <!-- ═══════════════════════════════════════ -->
+    <main class="w-full max-w-md bg-[#fafaf6] min-h-screen shadow-2xl relative flex flex-col z-10 overflow-x-hidden">
+        
+{{LOADING_VIEW}}
+        
+{{REGISTER_VIEW}}
+        
+{{PROFILE_VIEW}}
+        
+{{VILLAGE_VIEW}}
+        
+    </main>
+
+{{BOTTOM_NAV}}
+
+{{CARD_SHEET}}
+
+{{EDIT_SHEET}}
+
+{{DETAIL_MODAL}}
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- SCRIPT LOGIC                            -->
+    <!-- ═══════════════════════════════════════ -->
+    <script>
+{{CORE_JS}}
+    </script>
+</body>
+</html>
