@@ -1096,7 +1096,7 @@
                     </div>
                 </div>
                 <!-- Mặt trước: Thẻ Ngang 1.5:1 (Thiết kế phôi thẻ cư dân đầy đủ) -->
-                <div class="card-face card-front relative overflow-hidden" id="modal-card-front-parent" style="background: transparent; border: none; box-shadow: none;">
+                <div class="card-face card-front relative" id="modal-card-front-parent" style="background: transparent; border: none; box-shadow: none; overflow: visible !important;">
                     <!-- Scaled container wrapper -->
                     <div id="modalCardScaleWrapper" style="width: 1516px; height: 1038px; transform-origin: top center; position: absolute; left: 50%; transform: translateX(-50%) scale(0.5); border-radius: 40px; overflow: hidden; background: transparent;">
                         
@@ -2717,13 +2717,11 @@
             
             if (isMobilePortrait() && modalFlipped) {
                 const dims = getModalTargetDimensions(true);
+                cardFront.style.width = dims.width + 'px';
+                cardFront.style.height = dims.height + 'px';
                 if (manualRotateLandscape) {
-                    cardFront.style.width = dims.width + 'px';
-                    cardFront.style.height = dims.height + 'px';
                     cardFront.classList.add('non-rotated-landscape');
                 } else {
-                    cardFront.style.width = dims.height + 'px';
-                    cardFront.style.height = dims.width + 'px';
                     cardFront.classList.remove('non-rotated-landscape');
                 }
             } else {

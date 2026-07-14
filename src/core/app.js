@@ -1440,13 +1440,11 @@
             
             if (isMobilePortrait() && modalFlipped) {
                 const dims = getModalTargetDimensions(true);
+                cardFront.style.width = dims.width + 'px';
+                cardFront.style.height = dims.height + 'px';
                 if (manualRotateLandscape) {
-                    cardFront.style.width = dims.width + 'px';
-                    cardFront.style.height = dims.height + 'px';
                     cardFront.classList.add('non-rotated-landscape');
                 } else {
-                    cardFront.style.width = dims.height + 'px';
-                    cardFront.style.height = dims.width + 'px';
                     cardFront.classList.remove('non-rotated-landscape');
                 }
             } else {
