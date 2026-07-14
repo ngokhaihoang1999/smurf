@@ -854,48 +854,40 @@
         }
 
         function toggleModalFlip() {
+            if (isNavigating) return;
+            
             const card3d = document.getElementById('modalCard3d');
             const container = document.getElementById('modalCardContainer');
+            if (!card3d || !container) return;
             
-            // 1. Get current size/position of the modal container
-            const prevDims = getModalTargetDimensions(modalFlipped);
-            
-            // 2. Toggle state
+            // 1. Toggle state
             modalFlipped = !modalFlipped;
-            updateCardFrontDimensions();
-            updateRotateButtonState();
             
-            // 3. Get new target size/position
-            const dims = getModalTargetDimensions(modalFlipped);
-            
-            // 4. Invert: Set static dimensions of container to the new dimensions (dims),
-            // but transform it to match the old dimensions (prevDims)
-            const scaleX = prevDims.width / dims.width;
-            const scaleY = prevDims.height / dims.height;
-            const translateX = prevDims.left - dims.left;
-            const translateY = prevDims.top - dims.top;
-            
-            container.style.transition = 'none';
-            container.style.top = dims.top + 'px';
-            container.style.left = dims.left + 'px';
-            container.style.width = dims.width + 'px';
-            container.style.height = dims.height + 'px';
-            container.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
-            container.style.transformOrigin = 'top left';
-            
+            // 2. Start the flip rotation transition on card3d (400ms duration)
             if (modalFlipped) {
                 card3d.classList.add('flipped');
             } else {
                 card3d.classList.remove('flipped');
             }
             
-            // 5. Play: transition transform to scale(1) translate3d(0,0,0)
-            void container.offsetWidth;
-            container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-            container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
-            
-            resizeModalCard();
-            adjustControlsLayout();
+            // 3. Midpoint swap at 200ms: swap layout dimensions when card is perpendicular (invisible)
+            setTimeout(() => {
+                updateCardFrontDimensions();
+                updateRotateButtonState();
+                
+                const dims = getModalTargetDimensions(modalFlipped);
+                
+                // Instantly update container layout (no transition)
+                container.style.transition = 'none';
+                container.style.top = dims.top + 'px';
+                container.style.left = dims.left + 'px';
+                container.style.width = dims.width + 'px';
+                container.style.height = dims.height + 'px';
+                container.style.transform = ''; // Clear container transform to avoid double transforms
+                
+                resizeModalCard();
+                adjustControlsLayout();
+            }, 200);
         }
 
         function closeModal() {
