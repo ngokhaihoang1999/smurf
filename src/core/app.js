@@ -1077,11 +1077,44 @@
 
         // Devtools adjustment panel state offsets
         let devPopupOffset = { y: 0, scale: 1.0, controlsOffset: 0 };
+        try {
+            const savedOffsets = localStorage.getItem('smurf_popup_offsets');
+            if (savedOffsets) {
+                devPopupOffset = JSON.parse(savedOffsets);
+            }
+        } catch (e) {
+            console.warn('Failed to load saved offsets', e);
+        }
 
         function togglePopupDevtools() {
             const panel = document.getElementById('popup-devtools-panel');
             if (panel) {
                 panel.classList.toggle('hidden');
+                if (!panel.classList.contains('hidden')) {
+                    initDevtoolsSliders();
+                }
+            }
+        }
+
+        function initDevtoolsSliders() {
+            const ySlider = document.getElementById('dev-slider-y');
+            const scaleSlider = document.getElementById('dev-slider-scale');
+            const ctrlSlider = document.getElementById('dev-slider-controls');
+
+            if (ySlider) {
+                ySlider.value = devPopupOffset.y;
+                const valY = document.getElementById('dev-val-y');
+                if (valY) valY.textContent = devPopupOffset.y + 'px';
+            }
+            if (scaleSlider) {
+                scaleSlider.value = Math.round(devPopupOffset.scale * 100);
+                const valScale = document.getElementById('dev-val-scale');
+                if (valScale) valScale.textContent = Math.round(devPopupOffset.scale * 100) + '%';
+            }
+            if (ctrlSlider) {
+                ctrlSlider.value = devPopupOffset.controlsOffset;
+                const valCtrl = document.getElementById('dev-val-controls');
+                if (valCtrl) valCtrl.textContent = devPopupOffset.controlsOffset + 'px';
             }
         }
 
@@ -1106,6 +1139,10 @@
                 if (valCtrl) valCtrl.textContent = devPopupOffset.controlsOffset + 'px';
             }
 
+            try {
+                localStorage.setItem('smurf_popup_offsets', JSON.stringify(devPopupOffset));
+            } catch (e) {}
+
             resizeModalCard();
             adjustControlsLayout();
         }
@@ -1127,6 +1164,10 @@
             if (valScale) valScale.textContent = '100%';
             const valCtrl = document.getElementById('dev-val-controls');
             if (valCtrl) valCtrl.textContent = '0px';
+
+            try {
+                localStorage.removeItem('smurf_popup_offsets');
+            } catch (e) {}
 
             resizeModalCard();
             adjustControlsLayout();
@@ -1377,6 +1418,16 @@
             const reactionBar = document.getElementById('modal-reaction-bar');
             if (reactionBar) reactionBar.classList.add('opacity-100');
             loadSocialData();
+
+            // Show devtools gear only if user is developer (ID: 1539535605) or running on localhost
+            const devFab = document.getElementById('popup-devtools-fab');
+            if (devFab) {
+                if (String(telegramId) === '1539535605' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    devFab.classList.remove('hidden');
+                } else {
+                    devFab.classList.add('hidden');
+                }
+            }
 
             container.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             container.style.transform = 'translate3d(0, 0, 0) scale(1, 1)';
