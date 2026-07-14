@@ -1242,6 +1242,10 @@
                             // Compress as JPEG (quality 0.7) for very small file size
                             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
                             document.getElementById('reference-image-base64').value = compressedBase64;
+                            
+                            // Also update the card preview image
+                            const previewImg = document.getElementById('preview-smurf-avatar');
+                            if (previewImg) previewImg.src = compressedBase64;
                         };
                         img.src = evt.target.result;
                     };
