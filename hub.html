@@ -730,6 +730,12 @@
             
             // Auto-resize card in sheet
             setTimeout(resizeCardSheet, 100);
+            
+            // Auto-open edit sheet if edit parameter is set to 1
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('edit') === '1') {
+                openEditSheet();
+            }
         }
 
         // ── REGISTRATION FORM SETUP ──

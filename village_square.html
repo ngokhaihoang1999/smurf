@@ -248,6 +248,54 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* ── BOTTOM NAV BAR ── */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 90;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 3px solid #e0f2fe;
+            border-radius: 24px 24px 0 0;
+            height: 56px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 16px;
+            box-shadow: 0 -4px 20px rgba(148,163,184,0.12);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 700;
+            gap: 2px;
+        }
+
+        .nav-item:hover {
+            color: #00a2ff;
+        }
+
+        .nav-item.active {
+            color: #00a2ff;
+            background: #e0f2fe;
+        }
+
+        .nav-item .material-symbols-outlined {
+            font-size: 22px;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center pb-32">
@@ -291,6 +339,22 @@
             <!-- Grid items will be injected dynamically -->
         </section>
     </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav max-w-md mx-auto">
+        <div class="nav-item" onclick="goToPage('registration.html')">
+            <span class="material-symbols-outlined">home</span>
+            <span>Trang Chủ</span>
+        </div>
+        <div class="nav-item" onclick="goToPage('registration.html?edit=1')">
+            <span class="material-symbols-outlined">account_circle</span>
+            <span>Hồ Sơ</span>
+        </div>
+        <div class="nav-item active" onclick="window.location.reload()">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">park</span>
+            <span>Làng</span>
+        </div>
+    </nav>
 
     <!-- ── DETAIL MODAL (3D CARD FLIP & aspect ratio morph) ── -->
     <div id="detail-modal" class="fixed inset-0 z-[100] pointer-events-none hidden">
@@ -410,6 +474,17 @@
 
     <!-- Script Logic -->
     <script>
+        function goToPage(target) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tid = urlParams.get('tid');
+            let url = target;
+            if (tid) {
+                const separator = url.includes('?') ? '&' : '?';
+                url += `${separator}tid=${encodeURIComponent(tid)}`;
+            }
+            window.location.href = url;
+        }
+
         // ═══ LIVE DATA from GAS API ═══
         const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzvH1zgIVFQUXaSz_JhScriUOUByapUN5zXavJ9AowcTsqy-Q1EuWoXLALD082zPOyTow/exec";
         let RESIDENTS_DATA = [];
