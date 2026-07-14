@@ -208,8 +208,8 @@
 
         // ── VIEW SWITCHER ──
         function showView(name) {
-            // Hide all views
-            ['view-loading', 'view-register', 'view-profile', 'view-village'].forEach(id => {
+            // Hide all views including view-home
+            ['view-loading', 'view-home', 'view-register', 'view-profile', 'view-village'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
@@ -224,12 +224,13 @@
                 if (name === 'register') titleEl.textContent = "Đăng Ký Cư Dân";
                 else if (name === 'profile') titleEl.textContent = "Làng Xì Trum";
                 else if (name === 'village') titleEl.textContent = "Quảng Trường Cư Dân";
+                else if (name === 'home') titleEl.textContent = "Bản Đồ Làng";
             }
 
             // Hide/Show main bottom nav
             const bottomNav = document.getElementById('main-bottom-nav');
             if (bottomNav) {
-                if (name === 'profile' || name === 'village') {
+                if (name === 'home' || name === 'profile' || name === 'village') {
                     bottomNav.classList.remove('hidden');
                 } else {
                     bottomNav.classList.add('hidden');
@@ -930,6 +931,51 @@
                     const walk = (x - startX) * 2;
                     slider.scrollLeft = scrollLeft - walk;
                 });
+            });
+        }
+
+        // ── MAP DRAG TO SCROLL (Horizontal + Vertical) ──
+        function setupMapDragScroll() {
+            const container = document.getElementById('map-scroll-container');
+            if (!container) return;
+            
+            let isDown = false;
+            let startX, startY;
+            let scrollLeft, scrollTop;
+            
+            container.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return; // Only left mouse button drag
+                isDown = true;
+                container.style.cursor = 'grabbing';
+                startX = e.pageX - container.offsetLeft;
+                startY = e.pageY - container.offsetTop;
+                scrollLeft = container.scrollLeft;
+                scrollTop = container.scrollTop;
+            });
+            
+            window.addEventListener('mouseup', () => {
+                if (isDown) {
+                    isDown = false;
+                    container.style.cursor = 'grab';
+                }
+            });
+            
+            container.addEventListener('mouseleave', () => {
+                if (isDown) {
+                    isDown = false;
+                    container.style.cursor = 'grab';
+                }
+            });
+            
+            container.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - container.offsetLeft;
+                const y = e.pageY - container.offsetTop;
+                const walkX = (x - startX) * 1.5;
+                const walkY = (y - startY) * 1.5;
+                container.scrollLeft = scrollLeft - walkX;
+                container.scrollTop = scrollTop - walkY;
             });
         }
 
@@ -1810,3 +1856,4 @@
 
         // Initialize drag and drop/scroll helpers
         setupDragToScroll();
+        setupMapDragScroll();
