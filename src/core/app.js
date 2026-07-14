@@ -1075,86 +1075,166 @@
             adjustControlsLayout();
         }
 
-        // Devtools adjustment panel state configuration (separate for vertical and horizontal states)
-        let devPopupConfig = {
-            verticalY: 0,
-            verticalScale: 1.0,
-            verticalControlsBottom: 0,
-            horizontalY: 0,
-            horizontalScale: 1.0,
-            horizontalControlsBottom: 0
+        // 5 layout states configuration
+        const DEFAULT_POPUP_CONFIG = {
+            mobile_vertical: { cardY: 0, cardScale: 1.0, reactionBottom: 86, controlsBottom: 24 },
+            mobile_horizontal_rotated: { cardY: 0, cardScale: 1.0, reactionBottom: 86, controlsBottom: 24 },
+            mobile_horizontal_flat: { cardY: 0, cardScale: 1.0, reactionBottom: 86, controlsBottom: 24 },
+            desktop_vertical: { cardY: 0, cardScale: 1.0, reactionBottom: 86, controlsBottom: 24 },
+            desktop_horizontal: { cardY: 0, cardScale: 1.0, reactionBottom: 86, controlsBottom: 24 }
         };
 
+        let devPopupConfig = JSON.parse(JSON.stringify(DEFAULT_POPUP_CONFIG));
+        
         try {
-            const savedConfig = localStorage.getItem('smurf_popup_config');
+            const savedConfig = localStorage.getItem('smurf_popup_config_v2');
             if (savedConfig) {
-                devPopupConfig = JSON.parse(savedConfig);
+                const parsed = JSON.parse(savedConfig);
+                for (let key in DEFAULT_POPUP_CONFIG) {
+                    if (parsed[key]) {
+                        devPopupConfig[key] = Object.assign({}, DEFAULT_POPUP_CONFIG[key], parsed[key]);
+                    }
+                }
+            } else {
+                // Fallback to load old configuration style if exists
+                const oldConfig = localStorage.getItem('smurf_popup_config');
+                if (oldConfig) {
+                    const parsedOld = JSON.parse(oldConfig);
+                    devPopupConfig.mobile_vertical.cardY = parsedOld.verticalY || 0;
+                    devPopupConfig.mobile_vertical.cardScale = parsedOld.verticalScale || 1.0;
+                    devPopupConfig.mobile_vertical.controlsBottom = 24 + (parsedOld.verticalControlsBottom || 0);
+                    devPopupConfig.mobile_vertical.reactionBottom = 86 + (parsedOld.verticalControlsBottom || 0);
+
+                    devPopupConfig.mobile_horizontal_rotated.cardY = parsedOld.horizontalY || 0;
+                    devPopupConfig.mobile_horizontal_rotated.cardScale = parsedOld.horizontalScale || 1.0;
+                    devPopupConfig.mobile_horizontal_rotated.controlsBottom = 24 + (parsedOld.horizontalControlsBottom || 0);
+                    devPopupConfig.mobile_horizontal_rotated.reactionBottom = 86 + (parsedOld.horizontalControlsBottom || 0);
+                }
             }
         } catch (e) {
             console.warn('Failed to load saved popup configuration', e);
         }
 
-        let isDraggingCard = false;
+        function getActiveLayoutState() {
+            const isMobile = isMobilePortrait();
+            const isFlipped = modalFlipped;
+            if (isMobile) {
+                if (!isFlipped) return 'mobile_vertical';
+                return manualRotateLandscape ? 'mobile_horizontal_rotated' : 'mobile_horizontal_flat';
+            } else {
+                return isFlipped ? 'desktop_horizontal' : 'desktop_vertical';
+            }
+        }
+
+        let activeDragTarget = null; // 'card', 'reaction', 'controls'
         let dragStartY = 0;
-        let dragStartOffset = 0;
+        let dragStartOffsetVal = 0;
+        let hasDragged = false;
 
         function setupPopupDragToMove() {
-            const container = document.getElementById('modalCardContainer');
-            if (!container) return;
+            const card = document.getElementById('modalCardContainer');
+            const reaction = document.getElementById('modal-reaction-bar');
+            const controls = document.getElementById('modal-controls');
 
-            container.addEventListener('pointerdown', (e) => {
+            if (!card || !reaction || !controls) return;
+
+            const handlePointerDown = (e, targetName) => {
                 const panel = document.getElementById('popup-devtools-panel');
                 if (!panel || panel.classList.contains('hidden')) return;
 
-                // Don't drag if clicking buttons, links or inputs
-                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a') || e.target.closest('#popup-devtools-panel')) return;
+                if (e.target.closest('input') || e.target.closest('a')) return;
 
-                isDraggingCard = true;
+                activeDragTarget = targetName;
                 dragStartY = e.clientY;
-                dragStartOffset = modalFlipped ? devPopupConfig.horizontalY : devPopupConfig.verticalY;
-                container.setPointerCapture(e.pointerId);
-                
-                // Add grabbing cursor
-                container.style.cursor = 'grabbing';
-            });
+                hasDragged = false;
 
-            container.addEventListener('pointermove', (e) => {
-                if (!isDraggingCard) return;
+                const state = getActiveLayoutState();
+                const config = devPopupConfig[state];
+
+                if (targetName === 'card') {
+                    dragStartOffsetVal = config.cardY;
+                } else if (targetName === 'reaction') {
+                    dragStartOffsetVal = config.reactionBottom;
+                } else if (targetName === 'controls') {
+                    dragStartOffsetVal = config.controlsBottom;
+                }
+
+                const element = e.currentTarget;
+                element.setPointerCapture(e.pointerId);
+                element.style.cursor = 'grabbing';
+                element.style.outline = '2px dashed #3b82f6';
+                e.stopPropagation();
+            };
+
+            const handlePointerMove = (e, targetName) => {
+                if (activeDragTarget !== targetName) return;
                 const deltaY = e.clientY - dragStartY;
-                const activeMode = modalFlipped;
-                const totalOffset = dragStartOffset + deltaY;
-                
-                if (activeMode) {
-                    devPopupConfig.horizontalY = totalOffset;
-                } else {
-                    devPopupConfig.verticalY = totalOffset;
+
+                if (Math.abs(deltaY) > 3) {
+                    hasDragged = true;
                 }
 
-                // Update Y slider input in real-time
-                const ySlider = document.getElementById('dev-slider-y');
-                if (ySlider) {
-                    ySlider.value = totalOffset;
-                }
-                const valY = document.getElementById('dev-val-y');
-                if (valY) {
-                    valY.textContent = totalOffset + 'px';
+                const state = getActiveLayoutState();
+                const config = devPopupConfig[state];
+
+                if (targetName === 'card') {
+                    config.cardY = Math.round(dragStartOffsetVal + deltaY);
+                    
+                    const slider = document.getElementById('dev-slider-y');
+                    if (slider) slider.value = config.cardY;
+                    const valLbl = document.getElementById('dev-val-y');
+                    if (valLbl) valLbl.textContent = config.cardY + 'px';
+                } else if (targetName === 'reaction') {
+                    config.reactionBottom = Math.max(10, Math.round(dragStartOffsetVal - deltaY));
+
+                    const slider = document.getElementById('dev-slider-emojis');
+                    if (slider) slider.value = config.reactionBottom;
+                    const valLbl = document.getElementById('dev-val-emojis');
+                    if (valLbl) valLbl.textContent = config.reactionBottom + 'px';
+                } else if (targetName === 'controls') {
+                    config.controlsBottom = Math.max(0, Math.round(dragStartOffsetVal - deltaY));
+
+                    const slider = document.getElementById('dev-slider-buttons');
+                    if (slider) slider.value = config.controlsBottom;
+                    const valLbl = document.getElementById('dev-val-buttons');
+                    if (valLbl) valLbl.textContent = config.controlsBottom + 'px';
                 }
 
                 resizeModalCard();
                 adjustControlsLayout();
-            });
+                e.stopPropagation();
+            };
 
-            container.addEventListener('pointerup', (e) => {
-                if (isDraggingCard) {
-                    isDraggingCard = false;
-                    container.releasePointerCapture(e.pointerId);
-                    container.style.cursor = 'pointer';
+            const handlePointerUp = (e, targetName) => {
+                if (activeDragTarget !== targetName) return;
+                activeDragTarget = null;
 
-                    try {
-                        localStorage.setItem('smurf_popup_config', JSON.stringify(devPopupConfig));
-                    } catch (err) {}
+                const element = e.currentTarget;
+                element.releasePointerCapture(e.pointerId);
+                element.style.cursor = '';
+                element.style.outline = '';
+
+                try {
+                    localStorage.setItem('smurf_popup_config_v2', JSON.stringify(devPopupConfig));
+                } catch (err) {}
+
+                if (hasDragged) {
+                    e.stopPropagation();
+                    e.preventDefault();
                 }
-            });
+            };
+
+            card.addEventListener('pointerdown', (e) => handlePointerDown(e, 'card'));
+            card.addEventListener('pointermove', (e) => handlePointerMove(e, 'card'));
+            card.addEventListener('pointerup', (e) => handlePointerUp(e, 'card'));
+
+            reaction.addEventListener('pointerdown', (e) => handlePointerDown(e, 'reaction'));
+            reaction.addEventListener('pointermove', (e) => handlePointerMove(e, 'reaction'));
+            reaction.addEventListener('pointerup', (e) => handlePointerUp(e, 'reaction'));
+
+            controls.addEventListener('pointerdown', (e) => handlePointerDown(e, 'controls'));
+            controls.addEventListener('pointermove', (e) => handlePointerMove(e, 'controls'));
+            controls.addEventListener('pointerup', (e) => handlePointerUp(e, 'controls'));
         }
 
         function togglePopupDevtools() {
@@ -1168,71 +1248,83 @@
         }
 
         function initDevtoolsSliders() {
-            const activeMode = modalFlipped; // true = horizontal (ngang), false = vertical (dọc)
+            const state = getActiveLayoutState();
+            const config = devPopupConfig[state];
+
             const badge = document.getElementById('dev-active-mode-badge');
             if (badge) {
-                badge.textContent = activeMode ? 'THẺ NGANG' : 'THẺ DỌC';
-                badge.className = activeMode 
+                const stateNames = {
+                    mobile_vertical: 'THẺ DỌC (MOBILE)',
+                    mobile_horizontal_rotated: 'THẺ NGANG XOAY (MOBILE)',
+                    mobile_horizontal_flat: 'THẺ NGANG THẲNG (MOBILE)',
+                    desktop_vertical: 'THẺ DỌC (DESKTOP)',
+                    desktop_horizontal: 'THẺ NGANG (DESKTOP)'
+                };
+                badge.textContent = stateNames[state] || state;
+                badge.className = state.includes('horizontal')
                     ? 'px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-400 border border-amber-500/30' 
                     : 'px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-400 border border-blue-500/30';
             }
 
             const ySlider = document.getElementById('dev-slider-y');
             const scaleSlider = document.getElementById('dev-slider-scale');
-            const ctrlSlider = document.getElementById('dev-slider-controls');
-
-            const currentY = activeMode ? devPopupConfig.horizontalY : devPopupConfig.verticalY;
-            const currentScale = activeMode ? devPopupConfig.horizontalScale : devPopupConfig.verticalScale;
-            const currentCtrl = activeMode ? devPopupConfig.horizontalControlsBottom : devPopupConfig.verticalControlsBottom;
+            const emojisSlider = document.getElementById('dev-slider-emojis');
+            const buttonsSlider = document.getElementById('dev-slider-buttons');
 
             if (ySlider) {
-                ySlider.value = currentY;
+                ySlider.value = config.cardY;
                 const valY = document.getElementById('dev-val-y');
-                if (valY) valY.textContent = currentY + 'px';
+                if (valY) valY.textContent = config.cardY + 'px';
             }
             if (scaleSlider) {
-                scaleSlider.value = Math.round(currentScale * 100);
+                scaleSlider.value = Math.round(config.cardScale * 100);
                 const valScale = document.getElementById('dev-val-scale');
-                if (valScale) valScale.textContent = Math.round(currentScale * 100) + '%';
+                if (valScale) valScale.textContent = Math.round(config.cardScale * 100) + '%';
             }
-            if (ctrlSlider) {
-                ctrlSlider.value = currentCtrl;
-                const valCtrl = document.getElementById('dev-val-controls');
-                if (valCtrl) valCtrl.textContent = currentCtrl + 'px';
+            if (emojisSlider) {
+                emojisSlider.value = config.reactionBottom;
+                const valEmojis = document.getElementById('dev-val-emojis');
+                if (valEmojis) valEmojis.textContent = config.reactionBottom + 'px';
+            }
+            if (buttonsSlider) {
+                buttonsSlider.value = config.controlsBottom;
+                const valButtons = document.getElementById('dev-val-buttons');
+                if (valButtons) valButtons.textContent = config.controlsBottom + 'px';
             }
         }
 
         function applyDevtoolsOffset() {
-            const activeMode = modalFlipped; // true = horizontal, false = vertical
-            
+            const state = getActiveLayoutState();
+            const config = devPopupConfig[state];
+
             const ySlider = document.getElementById('dev-slider-y');
             const scaleSlider = document.getElementById('dev-slider-scale');
-            const ctrlSlider = document.getElementById('dev-slider-controls');
+            const emojisSlider = document.getElementById('dev-slider-emojis');
+            const buttonsSlider = document.getElementById('dev-slider-buttons');
 
             if (ySlider) {
-                const val = parseInt(ySlider.value);
-                if (activeMode) devPopupConfig.horizontalY = val;
-                else devPopupConfig.verticalY = val;
+                config.cardY = parseInt(ySlider.value);
                 const valY = document.getElementById('dev-val-y');
-                if (valY) valY.textContent = val + 'px';
+                if (valY) valY.textContent = config.cardY + 'px';
             }
             if (scaleSlider) {
-                const val = parseInt(scaleSlider.value) / 100;
-                if (activeMode) devPopupConfig.horizontalScale = val;
-                else devPopupConfig.verticalScale = val;
+                config.cardScale = parseInt(scaleSlider.value) / 100;
                 const valScale = document.getElementById('dev-val-scale');
-                if (valScale) valScale.textContent = Math.round(val * 100) + '%';
+                if (valScale) valScale.textContent = Math.round(config.cardScale * 100) + '%';
             }
-            if (ctrlSlider) {
-                const val = parseInt(ctrlSlider.value);
-                if (activeMode) devPopupConfig.horizontalControlsBottom = val;
-                else devPopupConfig.verticalControlsBottom = val;
-                const valCtrl = document.getElementById('dev-val-controls');
-                if (valCtrl) valCtrl.textContent = val + 'px';
+            if (emojisSlider) {
+                config.reactionBottom = parseInt(emojisSlider.value);
+                const valEmojis = document.getElementById('dev-val-emojis');
+                if (valEmojis) valEmojis.textContent = config.reactionBottom + 'px';
+            }
+            if (buttonsSlider) {
+                config.controlsBottom = parseInt(buttonsSlider.value);
+                const valButtons = document.getElementById('dev-val-buttons');
+                if (valButtons) valButtons.textContent = config.controlsBottom + 'px';
             }
 
             try {
-                localStorage.setItem('smurf_popup_config', JSON.stringify(devPopupConfig));
+                localStorage.setItem('smurf_popup_config_v2', JSON.stringify(devPopupConfig));
             } catch (e) {}
 
             resizeModalCard();
@@ -1240,19 +1332,12 @@
         }
 
         function resetDevtoolsOffset() {
-            const activeMode = modalFlipped;
-            if (activeMode) {
-                devPopupConfig.horizontalY = 0;
-                devPopupConfig.horizontalScale = 1.0;
-                devPopupConfig.horizontalControlsBottom = 0;
-            } else {
-                devPopupConfig.verticalY = 0;
-                devPopupConfig.verticalScale = 1.0;
-                devPopupConfig.verticalControlsBottom = 0;
-            }
+            const state = getActiveLayoutState();
+            const defaults = DEFAULT_POPUP_CONFIG[state];
+            devPopupConfig[state] = JSON.parse(JSON.stringify(defaults));
 
             try {
-                localStorage.setItem('smurf_popup_config', JSON.stringify(devPopupConfig));
+                localStorage.setItem('smurf_popup_config_v2', JSON.stringify(devPopupConfig));
             } catch (e) {}
 
             initDevtoolsSliders();
@@ -1275,11 +1360,23 @@
             const viewportW = window.innerWidth;
             const viewportH = window.innerHeight;
             
+            // Detect active layout state for sizing calculations
+            const isMobile = isMobilePortrait();
+            let stateKey;
+            if (isMobile) {
+                if (!isFlippedState) stateKey = 'mobile_vertical';
+                else stateKey = manualRotateLandscape ? 'mobile_horizontal_rotated' : 'mobile_horizontal_flat';
+            } else {
+                stateKey = isFlippedState ? 'desktop_horizontal' : 'desktop_vertical';
+            }
+
+            const stateConfig = devPopupConfig[stateKey] || { cardY: 0, cardScale: 1.0 };
+            
             // Flipped state (true) shows the horizontal face (1516x1038)
             // Unflipped state (false) shows the vertical face (1038x1516)
             let cardW, cardH;
             if (isFlippedState) {
-                if (isMobilePortrait() && manualRotateLandscape) {
+                if (isMobile && manualRotateLandscape) {
                     cardW = 1038;
                     cardH = 1516;
                 } else {
@@ -1314,15 +1411,15 @@
                 targetW = targetH * (cardW / cardH);
             }
             
-            // Apply scale based on active state (vertical or horizontal)
-            const activeScale = isFlippedState ? devPopupConfig.horizontalScale : devPopupConfig.verticalScale;
+            // Apply scale based on active state
+            const activeScale = stateConfig.cardScale || 1.0;
             targetW *= activeScale;
             targetH *= activeScale;
 
-            const baseTop = (viewportH - targetH) / 2 - (isMobilePortrait() ? 40 : 10);
+            const baseTop = (viewportH - targetH) / 2 - (isMobile ? 40 : 10);
             
             // Apply Y-offset based on active state
-            const activeY = isFlippedState ? devPopupConfig.horizontalY : devPopupConfig.verticalY;
+            const activeY = stateConfig.cardY || 0;
             const top = baseTop + activeY;
             const left = (viewportW - targetW) / 2;
             
@@ -1401,25 +1498,14 @@
             const container = document.getElementById('modalCardContainer');
             if (!controls || !container) return;
             
-            const rect = container.getBoundingClientRect();
-            const viewportH = window.innerHeight;
-            const spaceBelow = viewportH - rect.bottom;
+            const stateKey = getActiveLayoutState();
+            const stateConfig = devPopupConfig[stateKey];
 
-            // Apply baseline bottom positions
-            let baseControlsBottom = 24;
-            let baseReactionBottom = 86;
-
-            if (spaceBelow < 90) {
-                baseControlsBottom = 12;
-                baseReactionBottom = 74;
-            }
-
-            // Apply devtools adjustments based on mode
-            const activeControlsBottom = modalFlipped ? devPopupConfig.horizontalControlsBottom : devPopupConfig.verticalControlsBottom;
-
-            controls.style.bottom = (baseControlsBottom + activeControlsBottom) + 'px';
-            if (reactionBar) {
-                reactionBar.style.bottom = (baseReactionBottom + activeControlsBottom) + 'px';
+            if (stateConfig) {
+                controls.style.bottom = stateConfig.controlsBottom + 'px';
+                if (reactionBar) {
+                    reactionBar.style.bottom = stateConfig.reactionBottom + 'px';
+                }
             }
         }
 

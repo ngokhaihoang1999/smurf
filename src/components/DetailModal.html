@@ -162,8 +162,8 @@
         <!-- Y-Offset offset -->
         <div class="flex flex-col gap-1">
             <div class="flex justify-between font-bold text-[10px] text-slate-400">
-                <span>Vị trí Y (Dịch dọc)</span>
-                <span id="dev-val-y" class="text-blue-400">0px</span>
+                <span>Vị trí Y của Thẻ</span>
+                <span id="dev-val-y" class="text-blue-400 font-bold">0px</span>
             </div>
             <input type="range" id="dev-slider-y" min="-180" max="180" value="0" oninput="applyDevtoolsOffset()" class="w-full">
         </div>
@@ -172,18 +172,27 @@
         <div class="flex flex-col gap-1">
             <div class="flex justify-between font-bold text-[10px] text-slate-400">
                 <span>Kích thước Thẻ (Scale)</span>
-                <span id="dev-val-scale" class="text-blue-400">100%</span>
+                <span id="dev-val-scale" class="text-blue-400 font-bold">100%</span>
             </div>
             <input type="range" id="dev-slider-scale" min="40" max="140" value="100" oninput="applyDevtoolsOffset()" class="w-full">
         </div>
 
-        <!-- Controls panel offset Y -->
+        <!-- Emojis panel position Y -->
         <div class="flex flex-col gap-1">
             <div class="flex justify-between font-bold text-[10px] text-slate-400">
-                <span>Vị trí Emojis & Nút (Bottom Offset)</span>
-                <span id="dev-val-controls" class="text-blue-400">0px</span>
+                <span>Vị trí Bảng Emojis (Bottom)</span>
+                <span id="dev-val-emojis" class="text-amber-500 font-bold">86px</span>
             </div>
-            <input type="range" id="dev-slider-controls" min="-80" max="120" value="0" oninput="applyDevtoolsOffset()" class="w-full">
+            <input type="range" id="dev-slider-emojis" min="10" max="220" value="86" oninput="applyDevtoolsOffset()" class="w-full">
+        </div>
+
+        <!-- Buttons panel position Y -->
+        <div class="flex flex-col gap-1">
+            <div class="flex justify-between font-bold text-[10px] text-slate-400">
+                <span>Vị trí Nút bấm (Bottom)</span>
+                <span id="dev-val-buttons" class="text-cyan-400 font-bold">24px</span>
+            </div>
+            <input type="range" id="dev-slider-buttons" min="0" max="150" value="24" oninput="applyDevtoolsOffset()" class="w-full">
         </div>
 
         <div class="grid grid-cols-2 gap-2 mt-1">
@@ -197,4 +206,3 @@
             </button>
         </div>
     </div>
-
