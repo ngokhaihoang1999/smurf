@@ -242,7 +242,7 @@ function handleRegister(data) {
     sanitizeInput(data.pose || "Không"),
     sanitizeInput(data.background || "Không"),
     sanitizeInput(data.additionalInfo),
-    sanitizeInput(fileUrl),
+    fileUrl,
     sanitizeInput(data.referenceNotes)
   ]);
   
