@@ -222,8 +222,10 @@ body.dotted-bg {
     z-index: 2;
 }
 
-.nav-item:hover {
-    color: var(--smurf-blue);
+@media (hover: hover) {
+    .nav-item:hover {
+        color: var(--smurf-blue);
+    }
 }
 
 .nav-item.active {
@@ -237,6 +239,17 @@ body.dotted-bg {
 
 .nav-item * {
     pointer-events: none;
+}
+
+/* Disable mobile 300ms double-tap-to-zoom delay on active touch targets */
+.nav-item, 
+.bottom-nav, 
+button, 
+.smurf-card,
+.card-scene,
+#modal-nav-row button,
+#chat-fab-container button {
+    touch-action: manipulation;
 }
 
 /* ── TAP TARGET EXPANSION FOR FAB BUTTONS ── */

@@ -2241,6 +2241,83 @@
         let chatPollingIntervalId = null;
         let selectedChatMood = 'normal';
         let lastChatCount = 0;
+        let chatBgLoopId = null;
+
+        function spawnChatBubble() {
+            const container = document.getElementById('chat-background-effects');
+            if (!container || selectedChatMood !== 'floating') return;
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble-element';
+            const size = Math.random() * 20 + 8; // 8px to 28px
+            const left = Math.random() * 90 + 5; // 5% to 95%
+            const duration = Math.random() * 2.5 + 2.5; // 2.5s to 5.0s
+            
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            bubble.style.left = left + '%';
+            bubble.style.animationDuration = duration + 's';
+            
+            container.appendChild(bubble);
+            setTimeout(() => {
+                bubble.remove();
+            }, duration * 1000);
+        }
+
+        function spawnChatEmoji() {
+            const container = document.getElementById('chat-background-effects');
+            if (!container || selectedChatMood !== 'smurfed') return;
+            const emojis = ['🍄', '🍃', '🌸', '✨', '💧', '💙'];
+            const emojiChar = emojis[Math.floor(Math.random() * emojis.length)];
+            const el = document.createElement('div');
+            el.className = 'chat-emoji-element';
+            el.textContent = emojiChar;
+            const left = Math.random() * 90 + 5;
+            const duration = Math.random() * 2.5 + 3.0; // 3s to 5.5s
+            
+            el.style.left = left + '%';
+            el.style.animationDuration = duration + 's';
+            
+            container.appendChild(el);
+            setTimeout(() => {
+                el.remove();
+            }, duration * 1000);
+        }
+
+        function initChatBgEffectsLoop() {
+            if (chatBgLoopId) return;
+            chatBgLoopId = setInterval(() => {
+                if (selectedChatMood === 'floating') {
+                    spawnChatBubble();
+                } else if (selectedChatMood === 'smurfed') {
+                    spawnChatEmoji();
+                }
+            }, 300);
+        }
+
+        function setupChatKeyboardHandling() {
+            const input = document.getElementById('chat-msg-input');
+            const sheet = document.getElementById('village-chat-sheet');
+            if (!input || !sheet) return;
+            
+            input.addEventListener('focus', () => {
+                if (window.innerWidth < 768) {
+                    sheet.style.height = '48vh';
+                    sheet.style.maxHeight = '48vh';
+                    setTimeout(() => {
+                        const feed = document.getElementById('chat-messages-feed');
+                        if (feed) feed.scrollTop = feed.scrollHeight;
+                        input.scrollIntoView({ block: 'nearest' });
+                    }, 120);
+                }
+            });
+            
+            input.addEventListener('blur', () => {
+                if (window.innerWidth < 768) {
+                    sheet.style.height = '80vh';
+                    sheet.style.maxHeight = '80vh';
+                }
+            });
+        }
 
         function openVillageChat() {
             const overlay = document.getElementById('village-chat-overlay');
@@ -2259,6 +2336,7 @@
             if (badge) badge.style.display = 'none';
             
             fetchChatMessages();
+            initChatBgEffectsLoop();
             
             // Start background polling loop (every 8 seconds)
             if (!chatPollingIntervalId) {
@@ -2272,9 +2350,15 @@
             if (overlay && sheet) {
                 overlay.classList.remove('active');
                 sheet.classList.remove('active');
+                
+                const input = document.getElementById('chat-msg-input');
+                if (input) input.blur();
+                
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     sheet.style.display = 'none';
+                    sheet.style.height = '';
+                    sheet.style.maxHeight = '';
                 }, 300);
             }
             
@@ -2283,6 +2367,14 @@
                 clearInterval(chatPollingIntervalId);
                 chatPollingIntervalId = null;
             }
+            
+            // Stop background animations
+            if (chatBgLoopId) {
+                clearInterval(chatBgLoopId);
+                chatBgLoopId = null;
+            }
+            const container = document.getElementById('chat-background-effects');
+            if (container) container.innerHTML = '';
         }
 
         function selectChatMood(mood) {
@@ -2290,6 +2382,20 @@
             document.querySelectorAll('#chat-mood-selector button').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById('mood-btn-' + mood);
             if (activeBtn) activeBtn.classList.add('active');
+            
+            const container = document.getElementById('chat-background-effects');
+            const feed = document.getElementById('chat-messages-feed');
+            if (container && feed) {
+                container.innerHTML = '';
+                container.className = 'absolute inset-0 pointer-events-none overflow-hidden z-0';
+                feed.className = 'w-full h-full overflow-y-auto p-3 flex flex-col gap-2.5 text-xs relative z-10 bg-transparent';
+                
+                if (mood === 'earthquake') {
+                    feed.classList.add('chat-bg-shake');
+                } else if (mood === 'lightning') {
+                    container.classList.add('chat-bg-lightning');
+                }
+            }
         }
 
         function submitChatMessage(e) {
@@ -2437,3 +2543,4 @@
         setupDragToScroll();
         setupMapDragScroll();
         setupPopupDragToMove();
+        setupChatKeyboardHandling();

@@ -18,6 +18,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
+            future: {
+                hoverOnlyWhenSupported: true
+            },
             theme: {
                 extend: {
                     colors: {
@@ -273,9 +276,82 @@
         }
 
         .chat-mood-badge.active {
-            background-color: #1e90ff !important;
+            background-color: #00a2ff !important;
             color: white !important;
-            border-color: #1e90ff !important;
+            border-color: #00a2ff !important;
+        }
+
+        /* ── CHAT SCREEN-WIDE BACKGROUND EFFECTS ── */
+        @keyframes chatBgShake {
+            0%, 100% { transform: translate(0, 0); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-1.5px, -1px); }
+            20%, 40%, 60%, 80% { transform: translate(1.5px, 1px); }
+        }
+        .chat-bg-shake {
+            animation: chatBgShake 0.4s ease-in-out infinite;
+        }
+
+        @keyframes bubbleRise {
+            0% {
+                transform: translateY(110%) scale(0.3);
+                opacity: 0;
+            }
+            15% {
+                opacity: 0.5;
+            }
+            85% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-10%) scale(1.1);
+                opacity: 0;
+            }
+        }
+        .chat-bubble-element {
+            position: absolute;
+            bottom: 0;
+            background: rgba(14, 165, 233, 0.15);
+            border: 1.2px solid rgba(14, 165, 233, 0.25);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: bubbleRise 3.5s linear forwards;
+            will-change: transform, opacity;
+        }
+
+        @keyframes lightningFlash {
+            0%, 92%, 100% { background: transparent; }
+            93% { background: rgba(234, 179, 8, 0.1); }
+            94% { background: transparent; }
+            96% { background: rgba(234, 179, 8, 0.2); }
+            97% { background: transparent; }
+        }
+        .chat-bg-lightning {
+            animation: lightningFlash 3.5s infinite;
+        }
+
+        @keyframes emojiRise {
+            0% {
+                transform: translateY(110%) rotate(0deg) scale(0.6);
+                opacity: 0;
+            }
+            15% {
+                opacity: 0.7;
+            }
+            85% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-10%) rotate(360deg) scale(1.2);
+                opacity: 0;
+            }
+        }
+        .chat-emoji-element {
+            position: absolute;
+            bottom: 0;
+            font-size: 14px;
+            pointer-events: none;
+            animation: emojiRise 4.2s ease-out forwards;
+            will-change: transform, opacity;
         }
 
 
@@ -933,10 +1009,16 @@
                 <button onclick="closeVillageChat()" class="text-slate-400 hover:text-slate-600 p-1"><span class="material-symbols-outlined">close</span></button>
             </div>
             
-            <!-- Message Stream scrolling feed -->
-            <div id="chat-messages-feed" class="flex-1 min-h-0 overflow-y-auto bg-slate-50 rounded-2xl p-3 border border-slate-100 flex flex-col gap-2.5 text-xs" style="scroll-behavior: smooth;">
-                <!-- Bubbles will be injected dynamically -->
-                <p class="text-slate-400 text-center py-8 italic" id="chat-empty-state">Chưa có lời rao nào. Hãy là người đầu tiên lên tiếng!</p>
+            <!-- Message Stream wrapper -->
+            <div class="flex-1 min-h-0 relative rounded-2xl overflow-hidden border border-slate-100 bg-slate-50">
+                <!-- Background Effects Container -->
+                <div id="chat-background-effects" class="absolute inset-0 pointer-events-none overflow-hidden z-0"></div>
+                
+                <!-- Message Stream scrolling feed -->
+                <div id="chat-messages-feed" class="w-full h-full overflow-y-auto p-3 flex flex-col gap-2.5 text-xs relative z-10 bg-transparent" style="scroll-behavior: smooth;">
+                    <!-- Bubbles will be injected dynamically -->
+                    <p class="text-slate-400 text-center py-8 italic" id="chat-empty-state">Chưa có lời rao nào. Hãy là người đầu tiên lên tiếng!</p>
+                </div>
             </div>
 
             <!-- Chat Mood/Effect Selector Bar -->
@@ -1082,16 +1164,16 @@
                     </div>
                     
                     <!-- Compact info below avatar in modal vertical card -->
-                    <div class="w-full py-3.5 px-5 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 80px;">
+                    <div class="w-full py-2 px-4.5 flex flex-col justify-center bg-white border-t border-slate-100">
                         <div class="flex justify-between items-center w-full">
-                            <span class="font-bold text-[16px] text-slate-700" id="m-card-real-name">Tên thật</span>
-                            <span class="text-xs text-slate-400 font-bold" id="m-card-name">Tí...</span>
+                            <span class="font-bold text-[13px] text-slate-700 truncate mr-2" style="max-width: 170px;" id="m-card-real-name">Tên thật</span>
+                            <span class="text-[10px] text-slate-400 font-bold truncate" style="max-width: 110px;" id="m-card-name">Tí...</span>
                         </div>
                         
-                        <div class="flex justify-between w-full mt-2 pt-2 border-t border-slate-100 text-xs text-smurf-red font-bold">
-                            <span id="m-card-hobby">🏸 Cầu lông</span>
+                        <div class="flex justify-between w-full mt-1.5 pt-1.5 border-t border-slate-100 text-[10px] text-smurf-red font-bold">
+                            <span id="m-card-hobby" class="truncate" style="max-width: 130px;">🏸 Cầu lông</span>
                             <span class="text-slate-300">•</span>
-                            <span id="m-card-personality">🧠 Kiên nhẫn</span>
+                            <span id="m-card-personality" class="truncate" style="max-width: 130px;">🧠 Kiên nhẫn</span>
                         </div>
                     </div>
                 </div>
@@ -3518,6 +3600,83 @@
         let chatPollingIntervalId = null;
         let selectedChatMood = 'normal';
         let lastChatCount = 0;
+        let chatBgLoopId = null;
+
+        function spawnChatBubble() {
+            const container = document.getElementById('chat-background-effects');
+            if (!container || selectedChatMood !== 'floating') return;
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble-element';
+            const size = Math.random() * 20 + 8; // 8px to 28px
+            const left = Math.random() * 90 + 5; // 5% to 95%
+            const duration = Math.random() * 2.5 + 2.5; // 2.5s to 5.0s
+            
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            bubble.style.left = left + '%';
+            bubble.style.animationDuration = duration + 's';
+            
+            container.appendChild(bubble);
+            setTimeout(() => {
+                bubble.remove();
+            }, duration * 1000);
+        }
+
+        function spawnChatEmoji() {
+            const container = document.getElementById('chat-background-effects');
+            if (!container || selectedChatMood !== 'smurfed') return;
+            const emojis = ['🍄', '🍃', '🌸', '✨', '💧', '💙'];
+            const emojiChar = emojis[Math.floor(Math.random() * emojis.length)];
+            const el = document.createElement('div');
+            el.className = 'chat-emoji-element';
+            el.textContent = emojiChar;
+            const left = Math.random() * 90 + 5;
+            const duration = Math.random() * 2.5 + 3.0; // 3s to 5.5s
+            
+            el.style.left = left + '%';
+            el.style.animationDuration = duration + 's';
+            
+            container.appendChild(el);
+            setTimeout(() => {
+                el.remove();
+            }, duration * 1000);
+        }
+
+        function initChatBgEffectsLoop() {
+            if (chatBgLoopId) return;
+            chatBgLoopId = setInterval(() => {
+                if (selectedChatMood === 'floating') {
+                    spawnChatBubble();
+                } else if (selectedChatMood === 'smurfed') {
+                    spawnChatEmoji();
+                }
+            }, 300);
+        }
+
+        function setupChatKeyboardHandling() {
+            const input = document.getElementById('chat-msg-input');
+            const sheet = document.getElementById('village-chat-sheet');
+            if (!input || !sheet) return;
+            
+            input.addEventListener('focus', () => {
+                if (window.innerWidth < 768) {
+                    sheet.style.height = '48vh';
+                    sheet.style.maxHeight = '48vh';
+                    setTimeout(() => {
+                        const feed = document.getElementById('chat-messages-feed');
+                        if (feed) feed.scrollTop = feed.scrollHeight;
+                        input.scrollIntoView({ block: 'nearest' });
+                    }, 120);
+                }
+            });
+            
+            input.addEventListener('blur', () => {
+                if (window.innerWidth < 768) {
+                    sheet.style.height = '80vh';
+                    sheet.style.maxHeight = '80vh';
+                }
+            });
+        }
 
         function openVillageChat() {
             const overlay = document.getElementById('village-chat-overlay');
@@ -3536,6 +3695,7 @@
             if (badge) badge.style.display = 'none';
             
             fetchChatMessages();
+            initChatBgEffectsLoop();
             
             // Start background polling loop (every 8 seconds)
             if (!chatPollingIntervalId) {
@@ -3549,9 +3709,15 @@
             if (overlay && sheet) {
                 overlay.classList.remove('active');
                 sheet.classList.remove('active');
+                
+                const input = document.getElementById('chat-msg-input');
+                if (input) input.blur();
+                
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     sheet.style.display = 'none';
+                    sheet.style.height = '';
+                    sheet.style.maxHeight = '';
                 }, 300);
             }
             
@@ -3560,6 +3726,14 @@
                 clearInterval(chatPollingIntervalId);
                 chatPollingIntervalId = null;
             }
+            
+            // Stop background animations
+            if (chatBgLoopId) {
+                clearInterval(chatBgLoopId);
+                chatBgLoopId = null;
+            }
+            const container = document.getElementById('chat-background-effects');
+            if (container) container.innerHTML = '';
         }
 
         function selectChatMood(mood) {
@@ -3567,6 +3741,20 @@
             document.querySelectorAll('#chat-mood-selector button').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById('mood-btn-' + mood);
             if (activeBtn) activeBtn.classList.add('active');
+            
+            const container = document.getElementById('chat-background-effects');
+            const feed = document.getElementById('chat-messages-feed');
+            if (container && feed) {
+                container.innerHTML = '';
+                container.className = 'absolute inset-0 pointer-events-none overflow-hidden z-0';
+                feed.className = 'w-full h-full overflow-y-auto p-3 flex flex-col gap-2.5 text-xs relative z-10 bg-transparent';
+                
+                if (mood === 'earthquake') {
+                    feed.classList.add('chat-bg-shake');
+                } else if (mood === 'lightning') {
+                    container.classList.add('chat-bg-lightning');
+                }
+            }
         }
 
         function submitChatMessage(e) {
@@ -3714,6 +3902,7 @@
         setupDragToScroll();
         setupMapDragScroll();
         setupPopupDragToMove();
+        setupChatKeyboardHandling();
 
     </script>
 </body>

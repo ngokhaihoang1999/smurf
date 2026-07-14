@@ -65,10 +65,16 @@
                 <button onclick="closeVillageChat()" class="text-slate-400 hover:text-slate-600 p-1"><span class="material-symbols-outlined">close</span></button>
             </div>
             
-            <!-- Message Stream scrolling feed -->
-            <div id="chat-messages-feed" class="flex-1 min-h-0 overflow-y-auto bg-slate-50 rounded-2xl p-3 border border-slate-100 flex flex-col gap-2.5 text-xs" style="scroll-behavior: smooth;">
-                <!-- Bubbles will be injected dynamically -->
-                <p class="text-slate-400 text-center py-8 italic" id="chat-empty-state">Chưa có lời rao nào. Hãy là người đầu tiên lên tiếng!</p>
+            <!-- Message Stream wrapper -->
+            <div class="flex-1 min-h-0 relative rounded-2xl overflow-hidden border border-slate-100 bg-slate-50">
+                <!-- Background Effects Container -->
+                <div id="chat-background-effects" class="absolute inset-0 pointer-events-none overflow-hidden z-0"></div>
+                
+                <!-- Message Stream scrolling feed -->
+                <div id="chat-messages-feed" class="w-full h-full overflow-y-auto p-3 flex flex-col gap-2.5 text-xs relative z-10 bg-transparent" style="scroll-behavior: smooth;">
+                    <!-- Bubbles will be injected dynamically -->
+                    <p class="text-slate-400 text-center py-8 italic" id="chat-empty-state">Chưa có lời rao nào. Hãy là người đầu tiên lên tiếng!</p>
+                </div>
             </div>
 
             <!-- Chat Mood/Effect Selector Bar -->
