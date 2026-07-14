@@ -133,3 +133,23 @@
         .modal-card-3d.flipped {
             transform: rotateY(180deg);
         }
+
+        /* Auto-rotate horizontal card face on mobile portrait */
+        @media (max-width: 640px) and (orientation: portrait) {
+            .card-front {
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) rotate(90deg) rotateY(180deg) !important;
+                position: absolute !important;
+                transform-origin: center center !important;
+            }
+            .card-front.non-rotated-landscape {
+                transform: translate(-50%, -50%) rotateY(180deg) !important;
+            }
+            #modalCardScaleWrapper {
+                transform-origin: center center !important;
+                top: 50% !important;
+                left: 50% !important;
+            }
+        }
+

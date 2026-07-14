@@ -176,6 +176,26 @@
             transform: rotateY(180deg);
         }
 
+        /* Auto-rotate horizontal card face on mobile portrait */
+        @media (max-width: 640px) and (orientation: portrait) {
+            .card-front {
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) rotate(90deg) rotateY(180deg) !important;
+                position: absolute !important;
+                transform-origin: center center !important;
+            }
+            .card-front.non-rotated-landscape {
+                transform: translate(-50%, -50%) rotateY(180deg) !important;
+            }
+            #modalCardScaleWrapper {
+                transform-origin: center center !important;
+                top: 50% !important;
+                left: 50% !important;
+            }
+        }
+
+
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center">
@@ -1807,6 +1827,10 @@
             
             if (isLandscapeMode) {
                 maxH = viewportH * 0.65;
+            } else {
+                // Portrait mode: make it smaller to prevent overlap with bottom navigation row at bottom-24
+                maxW = viewportW * 0.85;
+                maxH = viewportH * 0.58;
             }
             
             if (viewportW >= 1024) {
@@ -1834,6 +1858,29 @@
             };
         }
 
+        // Apply physical aspect swap dimensions dynamically to card-front for rotation styling
+        function updateCardFrontDimensions() {
+            const cardFront = document.querySelector('.card-front');
+            if (!cardFront) return;
+            
+            if (isMobilePortrait() && modalFlipped) {
+                const dims = getModalTargetDimensions(true);
+                if (manualRotateLandscape) {
+                    cardFront.style.width = dims.width + 'px';
+                    cardFront.style.height = dims.height + 'px';
+                    cardFront.classList.add('non-rotated-landscape');
+                } else {
+                    cardFront.style.width = dims.height + 'px';
+                    cardFront.style.height = dims.width + 'px';
+                    cardFront.classList.remove('non-rotated-landscape');
+                }
+            } else {
+                cardFront.style.width = '';
+                cardFront.style.height = '';
+                cardFront.classList.remove('non-rotated-landscape');
+            }
+        }
+
         function resizeModalCard() {
             const container = document.getElementById('modalCardContainer');
             if (!container || container.style.display === 'none') return;
@@ -1845,40 +1892,24 @@
             container.style.top = dims.top + 'px';
             container.style.left = dims.left + 'px';
             
-            const innerCardWidth = dims.isLandscape ? 1516 : 1038;
-            const scale = dims.width / innerCardWidth;
-            
-            const frontParent = document.getElementById('modal-card-front-parent');
-            
-            if (dims.isLandscape) {
-                container.classList.remove('portrait-card-mode');
-                if (frontParent) {
-                    frontParent.style.width = '100%';
-                    frontParent.style.height = '100%';
-                }
-                const scaleWrapper = document.getElementById('modalCardScaleWrapper');
-                if (scaleWrapper) {
+            const scaleWrapper = document.getElementById('modalCardScaleWrapper');
+            if (scaleWrapper) {
+                if (isMobilePortrait() && modalFlipped) {
+                    let scale;
+                    if (manualRotateLandscape) {
+                        scale = dims.width / 1516;
+                    } else {
+                        scale = dims.height / 1516;
+                    }
+                    scaleWrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                } else {
+                    const scale = dims.width / 1516;
                     scaleWrapper.style.transform = `translateX(-50%) scale(${scale})`;
-                    scaleWrapper.style.top = '0';
-                    scaleWrapper.style.left = '50%';
-                    scaleWrapper.style.transformOrigin = 'top center';
-                }
-            } else {
-                container.classList.add('portrait-card-mode');
-                if (frontParent) {
-                    frontParent.style.width = '100%';
-                    frontParent.style.height = '100%';
-                }
-                const scaleWrapper = document.getElementById('modalCardScaleWrapper');
-                if (scaleWrapper) {
-                    scaleWrapper.style.transform = `translate(-50%, -50%) rotate(-90deg) scale(${scale})`;
-                    scaleWrapper.style.top = '50%';
-                    scaleWrapper.style.left = '50%';
-                    scaleWrapper.style.transformOrigin = 'center center';
                 }
             }
             
             adjustAllCardFonts('m-preview-');
+            updateCardFrontDimensions();
         }
 
         function adjustControlsLayout() {
@@ -2069,6 +2100,7 @@
                 manualRotateLandscape = false;
                 adjustAllCardFonts('m-preview-');
                 updateRotateButtonState();
+                updateCardFrontDimensions();
 
                 container.style.willChange = 'transform';
                 card3d.style.willChange = 'transform';
