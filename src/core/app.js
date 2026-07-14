@@ -55,12 +55,10 @@
                     }
                 } catch(e) {
                     console.warn('Failed to parse cached user');
-                    showHomeTab();
+                    // Stay on loading view
                 }
             } else {
-                // If there's no cached user, still load the home view immediately as guest
-                // instead of showing a blocking loading screen
-                showHomeTab();
+                // Stay on loading view while fetching data
             }
 
             // Update user badge if info is available
@@ -124,14 +122,16 @@
                                 showHomeTab();
                             }
                         } else {
-                            // User not registered -> show Home as guest
+                            // User not registered -> force registration
                             currentUser = null;
-                            showHomeTab();
+                            showView('register');
+                            setupRegistrationForm();
                         }
                     } else {
-                        // Outside Telegram & no query param -> show Home as guest
+                        // Outside Telegram & no query param -> force registration
                         currentUser = null;
-                        showHomeTab();
+                        showView('register');
+                        setupRegistrationForm();
                     }
 
                     // Render grid silently in background if on village tab
@@ -147,9 +147,10 @@
         }
 
         function handleFetchError() {
-            // Fallback: If network is offline/CORS error, show Home view as guest instead of locking them out on register screen
+            // Fallback: If network is offline/CORS error, force register screen
             if (!currentUser) {
-                showHomeTab();
+                showView('register');
+                setupRegistrationForm();
             }
         }
 
