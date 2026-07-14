@@ -1377,7 +1377,7 @@
             // Unflipped state (false) shows the vertical face (1038x1516)
             let cardW, cardH;
             if (isFlippedState) {
-                if (isMobile && manualRotateLandscape) {
+                if (isMobile && !manualRotateLandscape) {
                     cardW = 1038;
                     cardH = 1516;
                 } else {
@@ -1473,13 +1473,17 @@
                     let scale;
                     if (manualRotateLandscape) {
                         scale = dims.width / 1516;
+                        scaleWrapper.style.top = '50%';
+                        scaleWrapper.style.left = '50%';
+                        scaleWrapper.style.transformOrigin = 'center center';
+                        scaleWrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
                     } else {
                         scale = dims.height / 1516;
+                        scaleWrapper.style.top = '50%';
+                        scaleWrapper.style.left = '50%';
+                        scaleWrapper.style.transformOrigin = 'center center';
+                        scaleWrapper.style.transform = `translate(-50%, -50%) rotate(-90deg) scale(${scale})`;
                     }
-                    scaleWrapper.style.top = '50%';
-                    scaleWrapper.style.left = '50%';
-                    scaleWrapper.style.transformOrigin = 'center center';
-                    scaleWrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
                 } else {
                     const scale = dims.width / 1516;
                     scaleWrapper.style.top = '0';
