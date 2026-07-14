@@ -522,6 +522,7 @@
         let lastClickedElement = null;
         let closeTimeoutId = null;
         let manualRotateLandscape = false;
+        let isNavigating = false;
         
         // Screen orientation detection helpers
         function isMobilePortrait() {
@@ -820,6 +821,8 @@
             // Fade in modal overlay and controls
             const modal = document.getElementById('detail-modal');
             modal.classList.remove('hidden');
+            modal.classList.remove('pointer-events-none');
+            document.body.style.overflow = 'hidden';
             
             // Force browser reflow to apply initial inverted transform and unhide modal
             void container.offsetWidth;
@@ -906,6 +909,7 @@
             controls.classList.remove('opacity-100');
             const navRow = document.getElementById('modal-nav-row');
             navRow.classList.remove('opacity-100');
+            modal.classList.add('pointer-events-none');
 
             if (lastClickedRect && lastClickedElement) {
                 // Ensure card is flipped back to vertical front before closing to zoom back to grid position cleanly
@@ -941,6 +945,7 @@
                     container.style.width = '';
                     container.style.height = '';
                     modal.classList.add('hidden');
+                    document.body.style.overflow = '';
                     closeTimeoutId = null;
                     adjustControlsLayout();
                 }, 400); // Wait for transition animation to finish
@@ -954,6 +959,7 @@
                 manualRotateLandscape = false;
                 updateRotateButtonState();
                 modal.classList.add('hidden');
+                document.body.style.overflow = '';
                 adjustControlsLayout();
             }
         }
@@ -1011,11 +1017,15 @@
         }
 
         function navigateModal(direction) {
-            if (!activeModalItem || filteredResidentsList.length <= 1) return;
+            if (isNavigating || !activeModalItem || filteredResidentsList.length <= 1) return;
+            isNavigating = true;
             
             const animator = document.getElementById('modalCardAnimator');
             const controls = document.getElementById('modal-controls');
-            if (!animator || !controls) return;
+            if (!animator || !controls) {
+                isNavigating = false;
+                return;
+            }
             
             // Disable pointer events on all navigation buttons to prevent double clicks during animation
             const prevBtns = document.querySelectorAll('button[onclick*="prev"]');
@@ -1030,7 +1040,10 @@
             // 2. Wait for slide-out, then update content and trigger slide-in
             setTimeout(() => {
                 let idx = filteredResidentsList.findIndex(x => x.smurfName === activeModalItem.smurfName);
-                if (idx === -1) return;
+                if (idx === -1) {
+                    isNavigating = false;
+                    return;
+                }
                 
                 // Restore previous clicked grid card opacity
                 if (lastClickedElement) {
@@ -1097,6 +1110,7 @@
                     animator.classList.remove(inClass);
                     prevBtns.forEach(btn => btn.style.pointerEvents = 'auto');
                     nextBtns.forEach(btn => btn.style.pointerEvents = 'auto');
+                    isNavigating = false;
                 }, 350);
                 
             }, 300);
