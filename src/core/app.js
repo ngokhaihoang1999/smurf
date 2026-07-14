@@ -1075,6 +1075,63 @@
             adjustControlsLayout();
         }
 
+        // Devtools adjustment panel state offsets
+        let devPopupOffset = { y: 0, scale: 1.0, controlsOffset: 0 };
+
+        function togglePopupDevtools() {
+            const panel = document.getElementById('popup-devtools-panel');
+            if (panel) {
+                panel.classList.toggle('hidden');
+            }
+        }
+
+        function applyDevtoolsOffset() {
+            const ySlider = document.getElementById('dev-slider-y');
+            const scaleSlider = document.getElementById('dev-slider-scale');
+            const ctrlSlider = document.getElementById('dev-slider-controls');
+
+            if (ySlider) {
+                devPopupOffset.y = parseInt(ySlider.value);
+                const valY = document.getElementById('dev-val-y');
+                if (valY) valY.textContent = devPopupOffset.y + 'px';
+            }
+            if (scaleSlider) {
+                devPopupOffset.scale = parseInt(scaleSlider.value) / 100;
+                const valScale = document.getElementById('dev-val-scale');
+                if (valScale) valScale.textContent = Math.round(devPopupOffset.scale * 100) + '%';
+            }
+            if (ctrlSlider) {
+                devPopupOffset.controlsOffset = parseInt(ctrlSlider.value);
+                const valCtrl = document.getElementById('dev-val-controls');
+                if (valCtrl) valCtrl.textContent = devPopupOffset.controlsOffset + 'px';
+            }
+
+            resizeModalCard();
+            adjustControlsLayout();
+        }
+
+        function resetDevtoolsOffset() {
+            const ySlider = document.getElementById('dev-slider-y');
+            const scaleSlider = document.getElementById('dev-slider-scale');
+            const ctrlSlider = document.getElementById('dev-slider-controls');
+
+            if (ySlider) ySlider.value = 0;
+            if (scaleSlider) scaleSlider.value = 100;
+            if (ctrlSlider) ctrlSlider.value = 0;
+
+            devPopupOffset = { y: 0, scale: 1.0, controlsOffset: 0 };
+            
+            const valY = document.getElementById('dev-val-y');
+            if (valY) valY.textContent = '0px';
+            const valScale = document.getElementById('dev-val-scale');
+            if (valScale) valScale.textContent = '100%';
+            const valCtrl = document.getElementById('dev-val-controls');
+            if (valCtrl) valCtrl.textContent = '0px';
+
+            resizeModalCard();
+            adjustControlsLayout();
+        }
+
         function getModalTargetDimensions(isFlippedState) {
             const viewportW = window.innerWidth;
             const viewportH = window.innerHeight;
@@ -1118,7 +1175,13 @@
                 targetW = targetH * (cardW / cardH);
             }
             
-            const top = (viewportH - targetH) / 2 - (isMobilePortrait() ? 40 : 10);
+            // Apply scale slider adjustment
+            targetW *= devPopupOffset.scale;
+            targetH *= devPopupOffset.scale;
+
+            const baseTop = (viewportH - targetH) / 2 - (isMobilePortrait() ? 40 : 10);
+            // Apply Y-offset slider adjustment
+            const top = baseTop + devPopupOffset.y;
             const left = (viewportW - targetW) / 2;
             
             return {
@@ -1192,6 +1255,7 @@
 
         function adjustControlsLayout() {
             const controls = document.getElementById('modal-controls');
+            const reactionBar = document.getElementById('modal-reaction-bar');
             const container = document.getElementById('modalCardContainer');
             if (!controls || !container) return;
             
@@ -1199,10 +1263,19 @@
             const viewportH = window.innerHeight;
             const spaceBelow = viewportH - rect.bottom;
 
+            // Apply baseline bottom positions
+            let baseControlsBottom = 24;
+            let baseReactionBottom = 86;
+
             if (spaceBelow < 90) {
-                controls.style.bottom = '12px';
-            } else {
-                controls.style.bottom = '24px';
+                baseControlsBottom = 12;
+                baseReactionBottom = 74;
+            }
+
+            // Apply devtools adjustments dynamically
+            controls.style.bottom = (baseControlsBottom + devPopupOffset.controlsOffset) + 'px';
+            if (reactionBar) {
+                reactionBar.style.bottom = (baseReactionBottom + devPopupOffset.controlsOffset) + 'px';
             }
         }
 

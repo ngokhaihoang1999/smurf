@@ -55,9 +55,9 @@
     <div class="bottom-sheet-overlay z-[110]" id="village-chat-overlay" onclick="closeVillageChat()" style="display: none; pointer-events: auto;"></div>
     
     <!-- Chat Slide-up Sheet -->
-    <div class="bottom-sheet z-[111]" id="village-chat-sheet" style="max-height: 80vh; display: none; pointer-events: auto;">
+    <div class="bottom-sheet z-[111] flex flex-col" id="village-chat-sheet" style="height: 80vh; max-height: 80vh; display: none; pointer-events: auto;">
         <div class="bottom-sheet-handle"></div>
-        <div class="px-4 pb-6 pt-2 flex flex-col h-full">
+        <div class="px-4 pb-6 pt-2 flex flex-col flex-1 min-h-0">
             <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
                 <h3 class="font-fredoka text-base text-slate-800 flex items-center gap-1.5">
                     💬 Bảng Tin Làng Xì Trum
@@ -66,7 +66,7 @@
             </div>
             
             <!-- Message Stream scrolling feed -->
-            <div id="chat-messages-feed" class="flex-1 min-h-[220px] max-h-[340px] overflow-y-auto bg-slate-50 rounded-2xl p-3 border border-slate-100 flex flex-col gap-2.5 text-xs" style="scroll-behavior: smooth;">
+            <div id="chat-messages-feed" class="flex-1 min-h-0 overflow-y-auto bg-slate-50 rounded-2xl p-3 border border-slate-100 flex flex-col gap-2.5 text-xs" style="scroll-behavior: smooth;">
                 <!-- Bubbles will be injected dynamically -->
                 <p class="text-slate-400 text-center py-8 italic" id="chat-empty-state">Chưa có lời rao nào. Hãy là người đầu tiên lên tiếng!</p>
             </div>

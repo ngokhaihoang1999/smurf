@@ -138,3 +138,48 @@
     <button onclick="navigateModal('next')" class="hidden lg:flex fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-[103] pointer-events-auto bg-white/90 hover:bg-white text-slate-800 p-3.5 rounded-full shadow-lg border border-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer items-center justify-center">
         <span class="material-symbols-outlined text-2xl font-bold">chevron_right</span>
     </button>
+
+    <!-- Devtools Toggle FAB (Fixed positioning for administrators/developers) -->
+    <button onclick="togglePopupDevtools()" class="fixed top-16 right-4 z-[102] w-9 h-9 bg-slate-900/80 hover:bg-slate-900 text-white rounded-full flex items-center justify-center active:scale-90 transition-transform pointer-events-auto shadow-md border border-white/20">
+        <span class="material-symbols-outlined text-base">tune</span>
+    </button>
+
+    <!-- Devtools Adjustment Panel -->
+    <div id="popup-devtools-panel" class="fixed top-28 right-4 z-[102] w-64 bg-slate-900/95 backdrop-blur-md border border-slate-700/50 text-slate-200 rounded-2xl p-4 flex flex-col gap-3 pointer-events-auto hidden font-sans text-xs">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+            <span class="font-fredoka text-sm text-blue-400 flex items-center gap-1">🛠️ Căn Chỉnh Popup</span>
+            <button onclick="togglePopupDevtools()" class="text-slate-400 hover:text-slate-200"><span class="material-symbols-outlined text-base">close</span></button>
+        </div>
+        
+        <!-- Y-Offset offset -->
+        <div class="flex flex-col gap-1">
+            <div class="flex justify-between font-bold text-[10px] text-slate-400">
+                <span>Vị trí theo chiều dọc (Y)</span>
+                <span id="dev-val-y" class="text-blue-400">0px</span>
+            </div>
+            <input type="range" id="dev-slider-y" min="-150" max="150" value="0" oninput="applyDevtoolsOffset()" class="w-full">
+        </div>
+
+        <!-- Scaling scale -->
+        <div class="flex flex-col gap-1">
+            <div class="flex justify-between font-bold text-[10px] text-slate-400">
+                <span>Kích thước Thẻ (Scale)</span>
+                <span id="dev-val-scale" class="text-blue-400">100%</span>
+            </div>
+            <input type="range" id="dev-slider-scale" min="50" max="150" value="100" oninput="applyDevtoolsOffset()" class="w-full">
+        </div>
+
+        <!-- Controls panel offset Y -->
+        <div class="flex flex-col gap-1">
+            <div class="flex justify-between font-bold text-[10px] text-slate-400">
+                <span>Vị trí Nút bấm / Emojis (Bottom Offset)</span>
+                <span id="dev-val-controls" class="text-blue-400">0px</span>
+            </div>
+            <input type="range" id="dev-slider-controls" min="-50" max="100" value="0" oninput="applyDevtoolsOffset()" class="w-full">
+        </div>
+
+        <button onclick="resetDevtoolsOffset()" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[10px] active:scale-95 transition-all">
+            Reset Mặc Định
+        </button>
+    </div>
+
