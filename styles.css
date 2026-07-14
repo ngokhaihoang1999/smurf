@@ -294,6 +294,7 @@ button,
     box-shadow: 0 -12px 40px rgba(0,0,0,0.15);
     transform: translateY(100%);
     transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    height: 80vh;
     max-height: 85vh;
     overflow-y: auto;
     overscroll-behavior: contain;

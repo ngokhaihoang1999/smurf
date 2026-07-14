@@ -2340,6 +2340,13 @@
             const overlay = document.getElementById('village-chat-overlay');
             const sheet = document.getElementById('village-chat-sheet');
             if (overlay && sheet) {
+                if (window.innerWidth < 768) {
+                    sheet.style.height = '100%';
+                    sheet.style.maxHeight = '100%';
+                } else {
+                    sheet.style.height = '80vh';
+                    sheet.style.maxHeight = '80vh';
+                }
                 overlay.style.display = 'block';
                 sheet.style.display = 'block';
                 setTimeout(() => {
@@ -2354,6 +2361,12 @@
             
             fetchChatMessages();
             initChatBgEffectsLoop();
+            
+            // Force message feed scrolling to bottom immediately on open
+            setTimeout(() => {
+                const feed = document.getElementById('chat-messages-feed');
+                if (feed) feed.scrollTop = feed.scrollHeight;
+            }, 100);
             
             // Start background polling loop (every 8 seconds)
             if (!chatPollingIntervalId) {
@@ -2645,58 +2658,8 @@
             }, 100);
         });
 
-        function setupTouchResponsiveObserver() {
-            const bindElement = (el) => {
-                const target = el.closest('button, .nav-item, .chat-mood-badge, .card-scene');
-                if (!target || target.dataset.touchBound) return;
-                target.dataset.touchBound = 'true';
-                
-                let touchStartX = 0;
-                let touchStartY = 0;
-                let touchTime = 0;
-
-                target.addEventListener('touchstart', (e) => {
-                    const touch = e.touches[0];
-                    touchStartX = touch.clientX;
-                    touchStartY = touch.clientY;
-                    touchTime = Date.now();
-                }, { passive: true });
-
-                target.addEventListener('touchend', (e) => {
-                    const touch = e.changedTouches[0];
-                    const dx = Math.abs(touch.clientX - touchStartX);
-                    const dy = Math.abs(touch.clientY - touchStartY);
-                    const dt = Date.now() - touchTime;
-
-                    if (dx < 10 && dy < 10 && dt < 250) {
-                        e.preventDefault();
-                        target.click();
-                    }
-                });
-            };
-
-            // Bind current items
-            document.querySelectorAll('button, .nav-item, .chat-mood-badge, .card-scene').forEach(bindElement);
-
-            // MutationObserver to automatically bind dynamically added elements
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach(mutation => {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.nodeType !== Node.ELEMENT_NODE) return;
-                        if (node.matches('button, .nav-item, .chat-mood-badge, .card-scene')) {
-                            bindElement(node);
-                        }
-                        node.querySelectorAll('button, .nav-item, .chat-mood-badge, .card-scene').forEach(bindElement);
-                    });
-                });
-            });
-
-            observer.observe(document.body, { childList: true, subtree: true });
-        }
-
         // Initialize drag and drop/scroll helpers
         setupDragToScroll();
         setupMapDragScroll();
         setupPopupDragToMove();
         setupChatKeyboardHandling();
-        setupTouchResponsiveObserver();
