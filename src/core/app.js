@@ -884,7 +884,7 @@
                 cardEl.className = 'card-scene smurf-card flex flex-col overflow-hidden';
                 cardEl.onclick = function() { openModal(item.smurfName, this); };
                 cardEl.innerHTML = `
-                    <div class="w-full relative overflow-hidden" style="aspect-ratio: 3/4;">
+                    <div class="w-full relative overflow-hidden" style="aspect-ratio: 9/16;">
                         <img src="${item.avatar}" alt="Avatar" class="w-full h-full object-cover" loading="lazy" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                         <span class="absolute top-3 left-3 bg-white/90 text-smurf-blue p-1 rounded-full text-[11px] font-bold shadow-md material-symbols-outlined">park</span>
                     </div>
@@ -959,8 +959,8 @@
             
             const isLandscapeMode = !isMobilePortrait() || manualRotateLandscape;
             
-            const cardW = isLandscapeMode ? 1516 : 1038;
-            const cardH = isLandscapeMode ? 1038 : 1516;
+            const cardW = isLandscapeMode ? 1516 : 1000;
+            const cardH = isLandscapeMode ? 1038 : 2200;
             
             let maxW = viewportW * 0.90;
             let maxH = viewportH * 0.70;
