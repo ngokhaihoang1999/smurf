@@ -402,6 +402,14 @@ button,
         border-radius: 0 !important;
         bottom: 0 !important;
     }
+    
+    /* Disable active scale-down on mobile to prevent layout shifts from cancelling touch events */
+    .active\:scale-95:active,
+    .active\:scale-90:active,
+    [class*="active:scale-"]:active {
+        transform: scale(1) !important;
+        opacity: 0.75 !important;
+    }
 }
 
 /* Force inner contents of buttons to pass clicks to their parent button */

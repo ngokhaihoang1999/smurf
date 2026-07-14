@@ -1968,15 +1968,44 @@
             }, 300);
         }
 
-        // ── DUAL DOWLOADS ──
+        // ── DUAL DOWNLOADS ──
+        function showImageForDownload(dataUrl, filename) {
+            const existing = document.getElementById('image-download-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'image-download-modal';
+            modal.className = 'fixed inset-0 z-[150] bg-slate-950/90 flex flex-col items-center justify-center p-6 transition-all duration-300';
+            modal.innerHTML = `
+                <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl flex flex-col items-center relative gap-4">
+                    <button onclick="document.getElementById('image-download-modal').remove()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1.5 bg-slate-100 rounded-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-base pointer-events-none">close</span>
+                    </button>
+                    
+                    <h3 class="font-fredoka text-base text-slate-800 mt-2">
+                        📥 Tải Ảnh Của Bạn
+                    </h3>
+                    
+                    <p class="text-[10px] text-slate-500 font-bold text-center px-2 leading-relaxed">
+                        Hãy <span class="text-smurf-blue">chạm và giữ (long-press)</span> vào ảnh bên dưới, sau đó chọn <span class="text-smurf-blue">"Lưu hình ảnh" (Save Image)</span> để tải về điện thoại nhé!
+                    </p>
+                    
+                    <div class="w-full border border-slate-100 rounded-2xl overflow-hidden shadow-inner max-h-[48vh] flex items-center justify-center bg-slate-50">
+                        <img src="${dataUrl}" class="max-w-full max-h-[46vh] object-contain select-text" style="-webkit-touch-callout: default !important; -webkit-user-select: auto !important;">
+                    </div>
+                    
+                    <button onclick="document.getElementById('image-download-modal').remove()" class="w-full py-2.5 bg-smurf-blue text-white rounded-xl text-xs font-bold shadow-md shadow-smurf-blue/20">
+                        Đóng
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
         function downloadPortraitAvatar() {
             if (!currentUser) return;
-            const link = document.createElement('a');
-            link.href = `avatars/avatar_${currentUser.telegramId}.png`;
-            link.download = `avatar_${currentUser.smurfName}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const avatarUrl = `avatars/avatar_${currentUser.telegramId}.png`;
+            showImageForDownload(avatarUrl, `avatar_${currentUser.smurfName}.png`);
         }
 
         function downloadResidentCard() {
@@ -2008,14 +2037,8 @@
                     scale: 2
                 }).then(canvas => {
                     document.body.removeChild(clone);
-                    
                     const dataUrl = canvas.toDataURL('image/png');
-                    const link = document.createElement('a');
-                    link.href = dataUrl;
-                    link.download = `the_cu_dan_${currentUser.smurfName || 'smurf'}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                    showImageForDownload(dataUrl, `the_cu_dan_${currentUser.smurfName || 'smurf'}.png`);
                 }).catch(err => {
                     console.error('Error generating card image:', err);
                     alert('⚠️ Lỗi khi xuất ảnh thẻ.');
