@@ -536,18 +536,21 @@
         // Adjust dimensions dynamically on screen resize
         function getModalTargetDimensions(isFlipped) {
             let targetWidth, targetHeight;
+            let targetLeft, targetTop;
             
             if (isMobilePortrait()) {
-                const paddingHeight = 120;
+                const headerHeight = 60;
+                const footerHeight = 145; // Space for nav row (bottom-24) and controls (bottom-6)
+                const availableHeight = window.innerHeight - headerHeight - footerHeight;
+                
                 if (isFlipped) {
                     if (manualRotateLandscape) {
                         // Non-rotated landscape mode (display horizontal)
                         targetWidth = Math.min(window.innerWidth * 0.92, 400);
                         targetHeight = targetWidth / 1.46;
                         
-                        const maxHeight = window.innerHeight - paddingHeight;
-                        if (targetHeight > maxHeight) {
-                            targetHeight = Math.max(200, maxHeight);
+                        if (targetHeight > availableHeight) {
+                            targetHeight = Math.max(200, availableHeight);
                             targetWidth = targetHeight * 1.46;
                         }
                     } else {
@@ -555,9 +558,8 @@
                         let vHeight = Math.min(window.innerWidth * 0.92, 400);
                         let vWidth = vHeight * 1.46;
                         
-                        const maxHeight = window.innerHeight - paddingHeight;
-                        if (vWidth > maxHeight) {
-                            vWidth = Math.max(280, maxHeight);
+                        if (vWidth > availableHeight) {
+                            vWidth = Math.max(280, availableHeight);
                             vHeight = vWidth / 1.46;
                         }
                         
@@ -569,12 +571,14 @@
                     targetWidth = Math.min(window.innerWidth * 0.92, 400);
                     targetHeight = targetWidth * (4/3) + 80;
                     
-                    const maxHeight = window.innerHeight - paddingHeight;
-                    if (targetHeight > maxHeight) {
-                        targetHeight = Math.max(280, maxHeight);
+                    if (targetHeight > availableHeight) {
+                        targetHeight = Math.max(280, availableHeight);
                         targetWidth = (targetHeight - 80) * (3/4);
                     }
                 }
+                
+                targetLeft = (window.innerWidth - targetWidth) / 2;
+                targetTop = headerHeight + (availableHeight - targetHeight) / 2;
             } else if (isMobileLandscape()) {
                 const paddingHeight = 40; // Side controls, so very small vertical padding
                 const maxCardWidth = window.innerWidth - 220; // 180px controls + 40px gap/padding
@@ -587,6 +591,11 @@
                     targetHeight = Math.min(maxCardHeight, (maxCardWidth * 4/3) + 80);
                     targetWidth = (targetHeight - 80) * (3/4);
                 }
+                
+                // Side-by-side layout: center the combination of card + controls
+                const combinedWidth = targetWidth + 20 + 180; // card + gap + controls
+                targetLeft = (window.innerWidth - combinedWidth) / 2;
+                targetTop = (window.innerHeight - targetHeight) / 2;
             } else {
                 // Desktop / normal landscape orientation
                 const paddingHeight = 120;
@@ -609,17 +618,7 @@
                         targetWidth = (targetHeight - 80) * (3/4);
                     }
                 }
-            }
-            
-            // Calculate placement
-            let targetLeft, targetTop;
-            if (isMobileLandscape()) {
-                // Side-by-side layout: center the combination of card + controls
-                const combinedWidth = targetWidth + 20 + 180; // card + gap + controls
-                targetLeft = (window.innerWidth - combinedWidth) / 2;
-                targetTop = (window.innerHeight - targetHeight) / 2;
-            } else {
-                // Centered card, controls below
+                
                 targetLeft = (window.innerWidth - targetWidth) / 2;
                 targetTop = (window.innerHeight - targetHeight - 65) / 2; // Shift up slightly for controls
             }
