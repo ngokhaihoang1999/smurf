@@ -1123,7 +1123,7 @@
                 targetW = targetH * (cardW / cardH);
             }
             
-            const top = (viewportH - targetH) / 2;
+            const top = (viewportH - targetH) / 2 - (isMobilePortrait() ? 40 : 10);
             const left = (viewportW - targetW) / 2;
             
             return {
@@ -1131,7 +1131,7 @@
                 height: targetH,
                 top: top,
                 left: left,
-                isLandscape: isLandscapeMode
+                isLandscape: cardW > cardH
             };
         }
 
