@@ -749,8 +749,8 @@
                 
                 <!-- Mặt sau: Thẻ Dọc 3:4 (Thẻ Thống kê) -->
                 <div class="card-face card-back flex flex-col justify-between p-0 overflow-hidden" style="background: #ffffff; border-radius: 28px;">
-                    <div class="w-full relative overflow-hidden" style="aspect-ratio: 3/4;">
-                        <img id="m-card-avatar" src="" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                    <div style="width: 100%; position: relative; overflow: hidden; aspect-ratio: 3 / 4;">
+                        <img id="m-card-avatar" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                         <!-- Group Badge Overlay -->
                         <span class="absolute top-4 right-4 bg-smurf-blue text-white px-3 py-1 rounded-full text-xs font-bold shadow-md uppercase" id="m-card-group">Nhóm</span>
                         <!-- Decorative icon -->
@@ -1901,9 +1901,15 @@
                     } else {
                         scale = dims.height / 1516;
                     }
+                    scaleWrapper.style.top = '50%';
+                    scaleWrapper.style.left = '50%';
+                    scaleWrapper.style.transformOrigin = 'center center';
                     scaleWrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
                 } else {
                     const scale = dims.width / 1516;
+                    scaleWrapper.style.top = '0';
+                    scaleWrapper.style.left = '50%';
+                    scaleWrapper.style.transformOrigin = 'top center';
                     scaleWrapper.style.transform = `translateX(-50%) scale(${scale})`;
                 }
             }
