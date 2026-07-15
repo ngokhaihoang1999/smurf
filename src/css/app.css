@@ -337,6 +337,13 @@
             -webkit-user-select: none !important;
         }
 
+        /* Specifically exempt hitbox-overlay from pointer-events: none */
+        [role="button"] .hitbox-overlay,
+        button .hitbox-overlay,
+        .hitbox-overlay {
+            pointer-events: auto !important;
+        }
+
         /* Touch-expanded overlay for Profile view action buttons to make them extremely responsive */
         .profile-action-btn {
             position: relative !important;

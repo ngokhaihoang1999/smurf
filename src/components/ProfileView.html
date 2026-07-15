@@ -89,19 +89,22 @@
             <div class="flex gap-2">
                 <!-- Download Card Button -->
                 <div onclick="downloadResidentCard()" class="flex-1 mushroom-btn profile-action-btn py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 relative overflow-hidden cursor-pointer" role="button">
+                    <div class="hitbox-overlay absolute inset-0 z-20 cursor-pointer" style="pointer-events: auto;"></div>
                     <div class="absolute inset-x-0 top-0 h-1/2 bg-white opacity-15 rounded-t-2xl pointer-events-none"></div>
                     <span class="material-symbols-outlined text-base">download</span>
                     <span>Tải Thẻ Ngang</span>
                 </div>
                 <!-- Download Avatar Button -->
-                <div onclick="downloadPortraitAvatar()" class="flex-1 bg-white border-2 border-slate-200 text-slate-700 profile-action-btn py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:opacity-75 shadow-sm cursor-pointer" role="button">
+                <div onclick="downloadPortraitAvatar()" class="flex-1 bg-white border-2 border-slate-200 text-slate-700 profile-action-btn py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:opacity-75 shadow-sm cursor-pointer relative" role="button">
+                    <div class="hitbox-overlay absolute -inset-2 z-20 cursor-pointer" style="pointer-events: auto;"></div>
                     <span class="material-symbols-outlined text-base">download</span>
                     <span>Tải Avatar</span>
                 </div>
             </div>
             
             <!-- Edit Button -->
-            <div onclick="openEditSheet()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 profile-action-btn edit-profile-btn py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:opacity-75 cursor-pointer" role="button">
+            <div onclick="openEditSheet()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 profile-action-btn edit-profile-btn py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:opacity-75 cursor-pointer relative" role="button">
+                <div class="hitbox-overlay absolute -inset-2 z-20 cursor-pointer" style="top: -16px; pointer-events: auto;"></div>
                 <span class="material-symbols-outlined text-base">edit</span>
                 <span>Chỉnh Sửa Thông Tin</span>
             </div>
