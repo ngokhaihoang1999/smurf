@@ -446,3 +446,18 @@ button,
     user-select: none !important;
     -webkit-user-select: none !important;
 }
+
+/* Touch-expanded overlay for Profile view action buttons to make them extremely responsive */
+.profile-action-btn {
+    position: relative !important;
+}
+.profile-action-btn::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    left: -6px;
+    right: -6px;
+    z-index: 10;
+    pointer-events: auto !important;
+}

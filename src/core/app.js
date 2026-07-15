@@ -2031,6 +2031,13 @@
             const item = currentUser;
             const avatarUrl = item.avatar || `avatars/avatar_${item.telegramId}.png`;
             
+            // Resolve fallbacks for property name formats (API vs cache)
+            const hobbiesText = item.hobbies || item.soThich || 'Cư dân';
+            const personalityText = item.personality || item.tinhCach || 'Vui vẻ';
+            const strengthText = item.strength || item.diemManh || '';
+            const weaknessText = item.weakness || item.diemYeu || '';
+            const bioText = item.bio || '';
+
             // Set image sources and text contents
             const avatarImgModal = document.getElementById('m-card-avatar');
             const avatarImgPreview = document.getElementById('m-preview-smurf-avatar');
@@ -2051,10 +2058,10 @@
             if (smurfNameModal) smurfNameModal.textContent = item.smurfName || '';
             
             const hobbyModal = document.getElementById('m-card-hobby');
-            if (hobbyModal) hobbyModal.textContent = '🏸 ' + (item.soThich || 'Cư dân');
+            if (hobbyModal) hobbyModal.textContent = '🏸 ' + hobbiesText;
             
             const personalityModal = document.getElementById('m-card-personality');
-            if (personalityModal) personalityModal.textContent = '🧠 ' + (item.tinhCach || 'Vui vẻ');
+            if (personalityModal) personalityModal.textContent = '🧠 ' + personalityText;
             
             const previewTinhCach = document.getElementById('m-preview-tinh-cach');
             const previewSoThich = document.getElementById('m-preview-so-thich');
@@ -2062,11 +2069,11 @@
             const previewDiemYeu = document.getElementById('m-preview-diem-yeu');
             const previewBio = document.getElementById('m-preview-bio');
             
-            if (previewTinhCach) previewTinhCach.textContent = item.tinhCach || '';
-            if (previewSoThich) previewSoThich.textContent = item.soThich || '';
-            if (previewDiemManh) previewDiemManh.textContent = item.diemManh || '';
-            if (previewDiemYeu) previewDiemYeu.textContent = item.diemYeu || '';
-            if (previewBio) previewBio.textContent = item.bio || '';
+            if (previewTinhCach) previewTinhCach.textContent = personalityText;
+            if (previewSoThich) previewSoThich.textContent = hobbiesText;
+            if (previewDiemManh) previewDiemManh.textContent = strengthText;
+            if (previewDiemYeu) previewDiemYeu.textContent = weaknessText;
+            if (previewBio) previewBio.textContent = bioText;
             
             adjustAllCardFonts('m-preview-');
             
@@ -2082,54 +2089,68 @@
             const originalParent = cardEl.parentNode;
             const originalSibling = cardEl.nextSibling;
             
-            // Temporarily move to body and reset positioning/transforms for layout resolution
-            document.body.appendChild(cardEl);
-            const originalStyle = cardEl.getAttribute('style') || '';
-            
-            cardEl.style.position = 'fixed';
-            cardEl.style.top = '0';
-            cardEl.style.left = '0';
-            cardEl.style.transform = 'none';
-            cardEl.style.zIndex = '999999';
-            
-            setTimeout(() => {
-                html2canvas(cardEl, {
-                    scale: 2,
-                    useCORS: true,
-                    backgroundColor: null,
-                    width: 1516,
-                    height: 1038,
-                    onclone: (clonedDoc) => {
-                        if (document.fonts) {
-                            document.fonts.forEach(font => {
-                                clonedDoc.fonts.add(font);
-                            });
+            const proceedToCapture = () => {
+                // Temporarily move to body and reset positioning/transforms for layout resolution
+                document.body.appendChild(cardEl);
+                const originalStyle = cardEl.getAttribute('style') || '';
+                
+                cardEl.style.position = 'fixed';
+                cardEl.style.top = '0';
+                cardEl.style.left = '0';
+                cardEl.style.transform = 'none';
+                cardEl.style.zIndex = '999999';
+                
+                setTimeout(() => {
+                    html2canvas(cardEl, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: null,
+                        width: 1516,
+                        height: 1038,
+                        onclone: (clonedDoc) => {
+                            if (document.fonts) {
+                                document.fonts.forEach(font => {
+                                    clonedDoc.fonts.add(font);
+                                });
+                            }
                         }
-                    }
-                }).then(canvas => {
-                    // Restore original placement
-                    cardEl.setAttribute('style', originalStyle);
-                    if (originalSibling) {
-                        originalParent.insertBefore(cardEl, originalSibling);
-                    } else {
-                        originalParent.appendChild(cardEl);
-                    }
-                    
-                    const dataUrl = canvas.toDataURL('image/png');
-                    showImageForDownload(dataUrl, `the_cu_dan_${currentUser.smurfName || 'smurf'}.png`);
-                }).catch(err => {
-                    console.error('Error generating card image:', err);
-                    alert('⚠️ Lỗi khi xuất ảnh thẻ: ' + err.message);
-                    
-                    // Restore original placement on error
-                    cardEl.setAttribute('style', originalStyle);
-                    if (originalSibling) {
-                        originalParent.insertBefore(cardEl, originalSibling);
-                    } else {
-                        originalParent.appendChild(cardEl);
-                    }
-                });
-            }, 100);
+                    }).then(canvas => {
+                        // Restore original placement
+                        cardEl.setAttribute('style', originalStyle);
+                        if (originalSibling) {
+                            originalParent.insertBefore(cardEl, originalSibling);
+                        } else {
+                            originalParent.appendChild(cardEl);
+                        }
+                        
+                        const dataUrl = canvas.toDataURL('image/png');
+                        showImageForDownload(dataUrl, `the_cu_dan_${currentUser.smurfName || 'smurf'}.png`);
+                    }).catch(err => {
+                        console.error('Error generating card image:', err);
+                        alert('⚠️ Lỗi khi xuất ảnh thẻ: ' + err.message);
+                        
+                        // Restore original placement on error
+                        cardEl.setAttribute('style', originalStyle);
+                        if (originalSibling) {
+                            originalParent.insertBefore(cardEl, originalSibling);
+                        } else {
+                            originalParent.appendChild(cardEl);
+                        }
+                    });
+                }, 100);
+            };
+
+            // Wait for image loading to finish before capturing canvas
+            if (avatarImgPreview) {
+                if (avatarImgPreview.complete) {
+                    proceedToCapture();
+                } else {
+                    avatarImgPreview.onload = proceedToCapture;
+                    avatarImgPreview.onerror = proceedToCapture; // Capture anyway if load fails
+                }
+            } else {
+                proceedToCapture();
+            }
         }
 
         function handleSignpostClick() {
