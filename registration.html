@@ -2962,21 +2962,23 @@
             const bottomNav = document.querySelector('.bottom-nav');
             if (bottomNav) bottomNav.style.display = 'none';
             
-            // Hide navigation row if own card
-            const isOwnCard = currentUser && (item.smurfName === currentUser.smurfName);
+            // Show navigation controls only if there are multiple residents in the list
+            const showNav = filteredResidentsList.length > 1;
             const navRow = document.getElementById('modal-nav-row');
             const desktopPrev = document.querySelector('button[onclick="navigateModal(\'prev\')"]');
             const desktopNext = document.querySelector('button[onclick="navigateModal(\'next\')"]');
-            if (isOwnCard) {
+            if (showNav) {
+                if (navRow) {
+                    navRow.style.display = 'flex';
+                    navRow.classList.add('opacity-100');
+                }
+                if (desktopPrev) desktopPrev.style.display = 'flex';
+                if (desktopNext) desktopNext.style.display = 'flex';
+                updatePageIndicator();
+            } else {
                 if (navRow) navRow.style.display = 'none';
                 if (desktopPrev) desktopPrev.style.display = 'none';
                 if (desktopNext) desktopNext.style.display = 'none';
-            } else {
-                if (navRow) navRow.style.display = 'flex';
-                if (desktopPrev) desktopPrev.style.display = 'flex';
-                if (desktopNext) desktopNext.style.display = 'flex';
-                if (navRow) navRow.classList.add('opacity-100');
-                updatePageIndicator();
             }
 
             // Show inline reaction bar
