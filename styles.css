@@ -180,46 +180,38 @@ body.dotted-bg {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 50;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    z-index: 90;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-top: 3px solid var(--smurf-blue-light);
     border-radius: 24px 24px 0 0;
-    height: 56px;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
     display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 0 16px;
-    box-shadow: 0 -4px 20px rgba(148,163,184,0.12);
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 6px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -6px 24px rgba(148,163,184,0.15);
 }
 
 .nav-item {
-    position: relative; /* For the ::after hit area expansion */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100px;
-    height: 44px;
+    flex: 1;
+    max-width: 110px;
+    height: 48px;
     border-radius: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
     color: #94a3b8;
     font-size: 10px;
     font-weight: 700;
-    gap: 2px;
-}
-
-/* Expand tap hitbox of tabs to meet each other and cover the bottom bar */
-.nav-item::after {
-    content: '';
-    position: absolute;
-    top: -6px;
-    bottom: -6px;
-    left: -16px;
-    right: -16px;
-    z-index: 2;
+    gap: 3px;
 }
 
 @media (hover: hover) {
@@ -403,12 +395,22 @@ button,
         bottom: 0 !important;
     }
     
-    /* Disable active scale-down and translation shifts on mobile to prevent layout shifts from cancelling touch events */
+    /* Disable active scale-down and translation shifts on mobile to prevent touch cancellations */
     .active\:scale-95:active,
     .active\:scale-90:active,
-    .mushroom-btn:active,
-    [class*="active:scale-"]:active,
+    [class*="active:scale-"]:active {
+        --tw-scale-x: 1 !important;
+        --tw-scale-y: 1 !important;
+        opacity: 0.75 !important;
+    }
+    
     [class*="active:translate-"]:active {
+        --tw-translate-x: 0 !important;
+        --tw-translate-y: 0 !important;
+        opacity: 0.75 !important;
+    }
+
+    .mushroom-btn:active {
         transform: none !important;
         border-bottom-width: 5px !important;
         opacity: 0.75 !important;
