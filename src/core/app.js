@@ -94,6 +94,16 @@
                             bio: r.bio || '',
                             telegramId: r.telegramId || '',
                             avatar: `avatars/avatar_${r.telegramId}.png`,
+                            gender: r.gender || '',
+                            hat: r.hat || '',
+                            hatcolor: r.hatcolor || '',
+                            hair: r.hair || '',
+                            faceacc: r.faceacc || '',
+                            outfit: r.outfit || '',
+                            prop: r.prop || '',
+                            expression: r.expression || '',
+                            pose: r.pose || '',
+                            background: r.background || '',
                             cardFront: ''
                         }));
 
@@ -2444,21 +2454,124 @@
                 return;
             }
             
+            // Helpers for Smart Semantic Matching
+            function cleanAndNormalize(str) {
+                if (!str) return '';
+                return str.normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+                    .replace(/\s+/g, " ")
+                    .trim()
+                    .toLowerCase();
+            }
+
+            const THEME_MAP = {
+                music: ["hat", "ca hat", "sing", "guitar", "piano", "rap", "dance", "am nhac", "nhac", "mnhac", "nghe nhac"],
+                gaming: ["game", "gaming", "playstation", "xbox", "lien quan", "lien minh", "lol", "pubg", "csgo", "fifa", "toc chien"],
+                coding: ["code", "lap trinh", "dev", "developer", "phan mem", "javascript", "python", "html", "css", "tech", "cong nghe", "website"],
+                sports: ["da bong", "da banh", "bong da", "soccer", "football", "gym", "the thao", "chay bo", "boi loi", "cau long", "badminton", "bong ro", "tennis", "vo thuat", "yoga", "fitness"],
+                art: ["ve", "drawing", "painting", "chup anh", "photography", "design", "thiet ke", "my thuat", "decor"],
+                movies: ["xem phim", "movie", "cinema", "netflix", "phim anh", "rap phim", "anime"],
+                reading: ["doc sach", "reading", "sach", "truyen tranh", "manga", "tieu thuyet", "truyen"],
+                travel: ["du lich", "travel", "phuot", "di choi", "da ngoai", "di phuot", "kham pha"],
+                food: ["an uong", "nau an", "cooking", "ca phe", "cafe", "tra sua", "am thuc", "an vat", "an ngon", "baking"],
+                introvert: ["it noi", "rut re", "ngai ngung", "lam li", "tram tinh", "noi tam", "huong noi", "quiet", "khep kin"],
+                extrovert: ["vui ve", "hai huoc", "nang dong", "hoat bat", "noi nhieu", "than thien", "hoa dong", "funny", "huong ngoai", "nhiet tinh", "cuoi nhieu"],
+                creative: ["sang tao", "mo mong", "bay bong", "nghe si", "doc dao", "y tuong"],
+                intellectual: ["thong minh", "to mo", "suy nghi", "can than", "kien nhan", "cham chi", "hoc tap", "nghien cuu"]
+            };
+
+            function getThemes(text) {
+                const normalized = cleanAndNormalize(text);
+                const matchedThemes = [];
+                for (const [theme, keywords] of Object.entries(THEME_MAP)) {
+                    for (const keyword of keywords) {
+                        if (normalized.includes(keyword)) {
+                            matchedThemes.push(theme);
+                            break;
+                        }
+                    }
+                }
+                return matchedThemes;
+            }
+
+            function getTokens(text) {
+                const normalized = cleanAndNormalize(text);
+                const stopWords = ["va", "thich", "ghet", "hay", "khong", "co", "nhieu", "it", "rat", "qua", "la", "de", "cho", "lam", "trong", "tren", "duoi"];
+                return normalized.split(/\s+/)
+                    .filter(token => token.length > 1 && !stopWords.includes(token));
+            }
+
             // Calculate scores for all other residents
             const matches = RESIDENTS_DATA.filter(r => String(r.telegramId) !== String(currentUser.telegramId))
                 .map(target => {
-                    let score = 50;
-                    if (target.group === currentUser.group) score += 20;
+                    let score = 15; // Baseline minimum vibe score
                     
-                    const myHobbies = (currentUser.hobbies || '').split(/[,·]/).map(s => s.trim().toLowerCase());
-                    const targetHobbies = (target.hobbies || '').split(/[,·]/).map(s => s.trim().toLowerCase());
-                    const commonHobbies = myHobbies.filter(h => h && targetHobbies.includes(h));
-                    score += commonHobbies.length * 15;
-                    
-                    const myTraits = (currentUser.personality || '').split(/[,·]/).map(s => s.trim().toLowerCase());
-                    const targetTraits = (target.personality || '').split(/[,·]/).map(s => s.trim().toLowerCase());
-                    const commonTraits = myTraits.filter(t => t && targetTraits.includes(t));
-                    score += commonTraits.length * 15;
+                    // ── 1. HOBBIES & PERSONALITY & DETAILS SEMANTIC MATCH ──
+                    const myHobbiesThemes = getThemes(currentUser.hobbies);
+                    const targetHobbiesThemes = getThemes(target.hobbies);
+                    const sharedHobbiesThemes = myHobbiesThemes.filter(t => targetHobbiesThemes.includes(t));
+                    score += sharedHobbiesThemes.length * 20;
+
+                    const myTraitsThemes = getThemes(currentUser.personality);
+                    const targetTraitsThemes = getThemes(target.personality);
+                    const sharedTraitsThemes = myTraitsThemes.filter(t => targetTraitsThemes.includes(t));
+                    score += sharedTraitsThemes.length * 20;
+
+                    // Direct token overlap on bio/strengths/weaknesses/hobbies/personality
+                    const myDetailTokens = [
+                        ...getTokens(currentUser.hobbies),
+                        ...getTokens(currentUser.personality),
+                        ...getTokens(currentUser.strength || currentUser.diemManh),
+                        ...getTokens(currentUser.weakness || currentUser.diemYeu),
+                        ...getTokens(currentUser.bio)
+                    ];
+                    const targetDetailTokens = [
+                        ...getTokens(target.hobbies),
+                        ...getTokens(target.personality),
+                        ...getTokens(target.strength || target.diemManh),
+                        ...getTokens(target.weakness || target.diemYeu),
+                        ...getTokens(target.bio)
+                    ];
+                    const uniqueMyTokens = [...new Set(myDetailTokens)];
+                    const uniqueTargetTokens = [...new Set(targetDetailTokens)];
+                    const sharedTokens = uniqueMyTokens.filter(t => uniqueTargetTokens.includes(t));
+                    score += sharedTokens.length * 10;
+
+                    // ── 2. AVATAR STYLE COMPATIBILITY ──
+                    // Hat color coordination
+                    if (currentUser.hatcolor && target.hatcolor && 
+                        currentUser.hatcolor !== 'Không' && target.hatcolor !== 'Không' &&
+                        currentUser.hatcolor === target.hatcolor) {
+                        score += 15; // Cùng màu mũ
+                    }
+                    // Background
+                    if (currentUser.background && target.background && 
+                        currentUser.background === target.background) {
+                        score += 15; // Cùng khung cảnh
+                    }
+                    // Accessories
+                    if (currentUser.faceacc && target.faceacc && 
+                        currentUser.faceacc !== 'Không' && target.faceacc !== 'Không' &&
+                        currentUser.faceacc === target.faceacc) {
+                        score += 10; // Cùng phụ kiện mặt
+                    }
+                    // Expression
+                    if (currentUser.expression && target.expression && 
+                        currentUser.expression === target.expression) {
+                        score += 10; // Đồng điệu cảm xúc
+                    }
+                    // Pose
+                    if (currentUser.pose && target.pose && 
+                        currentUser.pose === target.pose) {
+                        score += 10; // Ăn ý dáng đứng
+                    }
+                    // Prop
+                    if (currentUser.prop && target.prop && 
+                        currentUser.prop !== 'Không' && target.prop !== 'Không' &&
+                        currentUser.prop === target.prop) {
+                        score += 15; // Chung đạo cụ
+                    }
                     
                     score = Math.min(score, 99);
                     return {
