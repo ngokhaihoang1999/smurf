@@ -1144,7 +1144,7 @@
                 row.onclick = () => {
                     const item = RESIDENTS_DATA.find(r => r.telegramId === user.telegramId);
                     if (item) {
-                        openModal(item);
+                        openModal(item.smurfName, row);
                     }
                 };
                 
@@ -1701,7 +1701,10 @@
             backdrop.classList.add('opacity-100');
             
             const controls = document.getElementById('modal-controls');
-            controls.classList.add('opacity-100');
+            if (controls) {
+                controls.classList.remove('hidden');
+                controls.classList.add('opacity-100');
+            }
 
             // Hide bottom navigation bar when modal is open to prevent overlapping with modal controls
             const bottomNav = document.querySelector('.bottom-nav');
@@ -1714,6 +1717,7 @@
             const desktopNext = document.querySelector('button[onclick="navigateModal(\'next\')"]');
             if (showNav) {
                 if (navRow) {
+                    navRow.classList.remove('hidden');
                     navRow.style.display = 'flex';
                     navRow.classList.add('opacity-100');
                 }
@@ -1728,7 +1732,10 @@
 
             // Show inline reaction bar
             const reactionBar = document.getElementById('modal-reaction-bar');
-            if (reactionBar) reactionBar.classList.add('opacity-100');
+            if (reactionBar) {
+                reactionBar.classList.remove('hidden');
+                reactionBar.classList.add('opacity-100');
+            }
             loadSocialData();
 
             // Show devtools gear only if user is developer (ID: 1539535605) or running on localhost
@@ -1836,7 +1843,10 @@
             const controls = document.getElementById('modal-controls');
 
             backdrop.classList.remove('opacity-100');
-            controls.classList.remove('opacity-100');
+            if (controls) {
+                controls.classList.remove('opacity-100');
+                controls.classList.add('hidden');
+            }
             document.body.classList.remove('modal-open');
 
             // Show bottom navigation bar when modal is closed
@@ -1844,10 +1854,16 @@
             if (bottomNav) bottomNav.style.display = '';
             
             const reactionBar = document.getElementById('modal-reaction-bar');
-            if (reactionBar) reactionBar.classList.remove('opacity-100');
+            if (reactionBar) {
+                reactionBar.classList.remove('opacity-100');
+                reactionBar.classList.add('hidden');
+            }
 
             const navRow = document.getElementById('modal-nav-row');
-            if (navRow) navRow.classList.remove('opacity-100');
+            if (navRow) {
+                navRow.classList.remove('opacity-100');
+                navRow.classList.add('hidden');
+            }
             modal.classList.add('pointer-events-none');
 
             const desktopPrev = document.querySelector('button[onclick="navigateModal(\'prev\')"]');

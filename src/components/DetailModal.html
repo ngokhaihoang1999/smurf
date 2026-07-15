@@ -76,7 +76,7 @@
     </div>
         
     <!-- Emoji Reaction Counter Bar (positioned just above controls) -->
-    <div id="modal-reaction-bar" class="fixed bottom-[136px] left-4 right-4 z-[102] opacity-0 transition-opacity duration-300 max-w-[360px] mx-auto pointer-events-auto">
+    <div id="modal-reaction-bar" class="fixed bottom-[136px] left-4 right-4 z-[102] opacity-0 transition-opacity duration-300 max-w-[360px] mx-auto pointer-events-auto hidden">
         <div class="flex justify-around bg-white/95 backdrop-blur-md px-2.5 py-2.5 rounded-2xl border border-slate-200/50 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
             <button onclick="reactToResident('like')" id="react-btn-like" class="flex flex-col items-center gap-0.5 active:scale-90 transition-transform flex-1 text-center">
                 <span class="text-2xl">❤️</span>
@@ -102,7 +102,7 @@
     </div>
 
     <!-- Controls below modal card -->
-    <div id="modal-controls" class="fixed bottom-[74px] left-4 right-4 flex gap-2 z-[102] opacity-0 transition-opacity duration-300 max-w-[360px] mx-auto justify-center items-stretch">
+    <div id="modal-controls" class="fixed bottom-[74px] left-4 right-4 flex gap-2 z-[102] opacity-0 transition-opacity duration-300 max-w-[360px] mx-auto justify-center items-stretch hidden">
         <button onclick="toggleModalFlip()" class="mushroom-btn flex-1 py-2.5 px-2 rounded-xl font-bold flex items-center justify-center gap-1 shadow-[0px_8px_24px_rgba(239,68,68,0.25)] text-xs whitespace-nowrap min-w-0">
             <span class="material-symbols-outlined text-base">flip</span>
             Lật Thẻ
@@ -121,7 +121,7 @@
     </div>
 
     <!-- Page Indicator & Navigation Row (mobile-only) -->
-    <div id="modal-nav-row" class="fixed bottom-[20px] left-0 right-0 flex lg:hidden justify-center items-center gap-4 z-[102] opacity-0 transition-opacity duration-300 pointer-events-auto">
+    <div id="modal-nav-row" class="fixed bottom-[20px] left-0 right-0 flex lg:hidden justify-center items-center gap-4 z-[102] opacity-0 transition-opacity duration-300 pointer-events-auto hidden">
         <button onclick="navigateModal('prev')" class="w-8 h-8 bg-white/95 hover:bg-white text-slate-800 rounded-full shadow-md border border-slate-100 flex items-center justify-center active:scale-90 transition-transform">
             <span class="material-symbols-outlined text-lg font-bold">chevron_left</span>
         </button>
