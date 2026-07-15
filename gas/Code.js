@@ -324,6 +324,12 @@ function doPost(e) {
       case "getChat":
         result = handleGetChat();
         break;
+      case "getReactions":
+        result = handleGetReactions();
+        break;
+      case "updateReaction":
+        result = handleUpdateReaction(data);
+        break;
       default:
         result = { status: "error", message: "Unknown action: " + action };
     }
@@ -358,6 +364,17 @@ function doGet(e) {
           smurfName: e.parameter.smurfName || "",
           message: e.parameter.message || "",
           mood: e.parameter.mood || ""
+        });
+        break;
+      case "getReactions":
+        result = handleGetReactions();
+        break;
+      case "updateReaction":
+        result = handleUpdateReaction({
+          telegramId: e.parameter.telegramId || "",
+          smurfName: e.parameter.smurfName || "",
+          type: e.parameter.type || "",
+          isAdd: e.parameter.isAdd === "true"
         });
         break;
       default:
@@ -439,6 +456,96 @@ function handleGetChat() {
     };
   });
   return { status: "success", messages: messages };
+}
+
+// ═══════════════════════════════════════
+// REACTION / SOCIAL INTERACTIONS ONLINE STORAGE
+// ═══════════════════════════════════════
+function getReactionsSheet() {
+  var ss;
+  try {
+    ss = SpreadsheetApp.openById(SHEET_ID);
+  } catch (err) {
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  }
+  var sheet = ss.getSheetByName("Reactions");
+  if (!sheet) {
+    sheet = ss.insertSheet("Reactions");
+    sheet.appendRow(["Telegram ID", "Tên Xì Trum", "Likes", "Funnys", "Stars", "Cools", "Last Updated"]);
+  }
+  return sheet;
+}
+
+function handleGetReactions() {
+  var sheet = getReactionsSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return { status: "success", reactions: {} };
+  
+  var data = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
+  var reactions = {};
+  data.forEach(function(row) {
+    var tid = String(row[0]).trim();
+    reactions[tid] = {
+      likes: Number(row[2]) || 0,
+      funnys: Number(row[3]) || 0,
+      stars: Number(row[4]) || 0,
+      cools: Number(row[5]) || 0
+    };
+  });
+  return { status: "success", reactions: reactions };
+}
+
+function handleUpdateReaction(data) {
+  var sheet = getReactionsSheet();
+  var telegramId = String(data.telegramId).trim();
+  var smurfName = String(data.smurfName || "").trim();
+  var type = data.type; // "like", "funny", "star", "cool"
+  var isAdd = !!data.isAdd;
+  
+  var colIndex = -1;
+  if (type === 'like') colIndex = 3; // Col C
+  else if (type === 'funny') colIndex = 4; // Col D
+  else if (type === 'star') colIndex = 5; // Col E
+  else if (type === 'cool') colIndex = 6; // Col F
+  
+  if (colIndex === -1) return { status: "error", message: "Invalid reaction type: " + type };
+  
+  // Find existing row
+  var lastRow = sheet.getLastRow();
+  var rowNum = -1;
+  if (lastRow > 1) {
+    var idCol = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < idCol.length; i++) {
+      if (String(idCol[i][0]).trim() === telegramId) {
+        rowNum = i + 2;
+        break;
+      }
+    }
+  }
+  
+  if (rowNum === -1) {
+    // Append new row
+    var newRow = [telegramId, smurfName, 0, 0, 0, 0, new Date()];
+    if (isAdd) newRow[colIndex - 1] = 1;
+    sheet.appendRow(newRow);
+    rowNum = sheet.getLastRow();
+  } else {
+    var currentVal = Number(sheet.getRange(rowNum, colIndex).getValue()) || 0;
+    var newVal = isAdd ? currentVal + 1 : Math.max(0, currentVal - 1);
+    sheet.getRange(rowNum, colIndex).setValue(newVal);
+    sheet.getRange(rowNum, 7).setValue(new Date()); // Update timestamp
+  }
+  
+  // Read and return updated values
+  var updatedVals = sheet.getRange(rowNum, 1, 1, 7).getValues()[0];
+  return {
+    status: "success",
+    telegramId: telegramId,
+    likes: Number(updatedVals[2]) || 0,
+    funnys: Number(updatedVals[3]) || 0,
+    stars: Number(updatedVals[4]) || 0,
+    cools: Number(updatedVals[5]) || 0
+  };
 }
 
 // Hàm test permission (chạy 1 lần trên GAS web UI để kích hoạt cấp quyền)

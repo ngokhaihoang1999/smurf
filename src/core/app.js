@@ -100,6 +100,34 @@
                     // Save to local cache
                     localStorage.setItem('smurf_residents_cache', JSON.stringify(RESIDENTS_DATA));
 
+                    // Fetch reaction counts from the Google Sheet and merge
+                    gasRequestJsonp({ action: 'getReactions' }, (reactResp) => {
+                        if (reactResp && reactResp.status === 'success' && reactResp.reactions) {
+                            let db = {};
+                            try {
+                                const cached = localStorage.getItem('smurf_social_db');
+                                if (cached) db = JSON.parse(cached);
+                            } catch(e) {}
+                            
+                            for (const tid in reactResp.reactions) {
+                                if (!db[tid]) {
+                                    db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
+                                }
+                                db[tid].likes = reactResp.reactions[tid].likes || 0;
+                                db[tid].funnys = reactResp.reactions[tid].funnys || 0;
+                                db[tid].stars = reactResp.reactions[tid].stars || 0;
+                                db[tid].cools = reactResp.reactions[tid].cools || 0;
+                            }
+                            
+                            localStorage.setItem('smurf_social_db', JSON.stringify(db));
+                            loadSocialData();
+                            updateLeaderboard();
+                        }
+                    });
+                    
+                    // Initial render from local cache
+                    updateLeaderboard();
+
                     // Lookup current user in fresh data
                     if (telegramId) {
                         const foundUser = RESIDENTS_DATA.find(r => String(r.telegramId) === String(telegramId));
@@ -1018,6 +1046,8 @@
             if (!grid) return;
             grid.innerHTML = '';
             
+            updateLeaderboard();
+            
             const filtered = RESIDENTS_DATA.filter(item => {
                 const matchesSearch = item.smurfName.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                       item.realName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -1069,6 +1099,57 @@
         function filterResidents() {
             searchQuery = document.getElementById('search-input').value;
             renderGrid();
+        }
+
+        function updateLeaderboard() {
+            const container = document.getElementById('leaderboard-list');
+            if (!container) return;
+            
+            // Calculate total reactions for each resident
+            const scored = RESIDENTS_DATA.map(r => {
+                const social = getSocialData(r.telegramId);
+                const score = (social.likes || 0) + (social.funnys || 0) + (social.stars || 0) + (social.cools || 0);
+                return { ...r, score };
+            });
+            
+            // Sort descending
+            scored.sort((a, b) => b.score - a.score);
+            
+            // Take top 5
+            const top5 = scored.slice(0, 5);
+            
+            // Ranks
+            const rankEmojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+            
+            container.innerHTML = '';
+            top5.forEach((user, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between text-xs font-bold py-1 px-1 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer';
+                
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm w-5 text-center">${rankEmojis[idx]}</span>
+                        <img src="${user.avatar}" class="w-8 h-8 rounded-full border border-slate-200 object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                        <div class="flex flex-col">
+                            <span class="text-slate-700 font-fredoka">${user.smurfName}</span>
+                            <span class="text-[9px] text-slate-400">${user.group || 'Cư dân'}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full text-[10px]">
+                        <span>✨</span>
+                        <span>${user.score}</span>
+                    </div>
+                `;
+                
+                row.onclick = () => {
+                    const item = RESIDENTS_DATA.find(r => r.telegramId === user.telegramId);
+                    if (item) {
+                        openModal(item);
+                    }
+                };
+                
+                container.appendChild(row);
+            });
         }
 
         // ── 3D DETAIL CARD FLIP & ASPECT MORPH LOGIC ──
@@ -2291,6 +2372,27 @@
             localStorage.setItem('smurf_my_reactions', JSON.stringify(myReactions));
             saveSocialData(targetId, data);
             loadSocialData();
+            updateLeaderboard();
+            
+            // Dispatch update to online spreadsheet
+            gasRequestJsonp({
+                action: 'updateReaction',
+                telegramId: targetId,
+                smurfName: activeModalItem?.smurfName || '',
+                type: type,
+                isAdd: !isAlreadyReacted
+            }, (reactResp) => {
+                if (reactResp && reactResp.status === 'success') {
+                    const latestData = getSocialData(targetId);
+                    latestData.likes = reactResp.likes || 0;
+                    latestData.funnys = reactResp.funnys || 0;
+                    latestData.stars = reactResp.stars || 0;
+                    latestData.cools = reactResp.cools || 0;
+                    saveSocialData(targetId, latestData);
+                    loadSocialData();
+                    updateLeaderboard();
+                }
+            });
             
             if (tg?.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
@@ -2404,6 +2506,7 @@
         let chatPollingIntervalId = null;
         let selectedChatMood = 'normal';
         let lastChatCount = 0;
+        let lastReadChatCount = 0;
         let chatBgLoopId = null;
         let effectTimeoutId = null;
 
@@ -2525,7 +2628,11 @@
             
             // Hide badge when chat is opened
             const badge = document.getElementById('chat-badge');
-            if (badge) badge.style.display = 'none';
+            if (badge) {
+                badge.style.display = 'none';
+                badge.textContent = '0';
+            }
+            lastReadChatCount = lastChatCount;
             
             fetchChatMessages();
             initChatBgEffectsLoop();
