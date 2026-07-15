@@ -1588,6 +1588,10 @@
             
             const controls = document.getElementById('modal-controls');
             controls.classList.add('opacity-100');
+
+            // Hide bottom navigation bar when modal is open to prevent overlapping with modal controls
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = 'none';
             
             // Hide navigation row if own card
             const isOwnCard = currentUser && (item.smurfName === currentUser.smurfName);
@@ -1717,6 +1721,10 @@
 
             backdrop.classList.remove('opacity-100');
             controls.classList.remove('opacity-100');
+
+            // Show bottom navigation bar when modal is closed
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = '';
             
             const reactionBar = document.getElementById('modal-reaction-bar');
             if (reactionBar) reactionBar.classList.remove('opacity-100');
