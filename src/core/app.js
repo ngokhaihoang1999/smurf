@@ -2086,7 +2086,6 @@
                 html2canvas(cardEl, {
                     scale: 2,
                     useCORS: true,
-                    allowTaint: true,
                     backgroundColor: null,
                     width: 1516,
                     height: 1038,
