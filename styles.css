@@ -505,6 +505,7 @@ div.fab-click-expand::after {
 
 /* Auto-hide bottom nav bar whenever any sheet (edit form/chat sheet) or modal (card popup) is active */
 body.modal-open #main-bottom-nav,
+body.modal-open #chat-fab-container,
 body.sheet-open #main-bottom-nav {
     display: none !important;
 }
