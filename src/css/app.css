@@ -376,10 +376,10 @@
         div.fab-click-expand::after {
             content: '' !important;
             position: absolute !important;
-            top: -28px !important;
-            left: -28px !important;
-            right: -28px !important;
-            bottom: -28px !important;
+            top: -56px !important;
+            left: -56px !important;
+            right: -56px !important;
+            bottom: -56px !important;
             z-index: 10 !important;
             pointer-events: auto !important;
         }
