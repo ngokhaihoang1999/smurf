@@ -461,3 +461,18 @@ button,
     z-index: 10;
     pointer-events: auto !important;
 }
+
+/* Even larger touch overlay targeting the Edit Profile button, extending significantly higher */
+.edit-profile-btn {
+    position: relative !important;
+}
+.edit-profile-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -16px !important; /* Expand 16px higher to cover spacing gap */
+    bottom: -8px !important;
+    left: -8px !important;
+    right: -8px !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+}

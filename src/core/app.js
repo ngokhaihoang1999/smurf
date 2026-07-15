@@ -718,12 +718,20 @@
             document.getElementById('edit-sheet-overlay').classList.add('active');
             document.getElementById('edit-sheet').classList.add('active');
             updateNavActive('nav-item-profile');
+
+            // Hide bottom navigation bar to prevent overlap with sheet buttons
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = 'none';
         }
 
         function closeEditSheet() {
             document.getElementById('edit-sheet-overlay').classList.remove('active');
             document.getElementById('edit-sheet').classList.remove('active');
             updateNavActive('nav-item-home');
+
+            // Show bottom navigation bar when sheet is closed
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = '';
         }
 
         // ── GAS REQUEST POST ──
@@ -2483,6 +2491,10 @@
                     sheet.classList.add('active');
                 }, 10);
             }
+
+            // Hide bottom navigation bar when chat sheet is open
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = 'none';
             
             // Hide badge when chat is opened
             const badge = document.getElementById('chat-badge');
@@ -2520,6 +2532,10 @@
                     sheet.style.maxHeight = '';
                 }, 300);
             }
+
+            // Show bottom navigation bar when chat sheet is closed
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = '';
             
             // Stop polling
             if (chatPollingIntervalId) {

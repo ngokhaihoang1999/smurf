@@ -317,3 +317,51 @@
             will-change: transform, opacity;
         }
 
+        /* Touch-expanded overlay for Profile view action buttons to make them extremely responsive */
+        .profile-action-btn {
+            position: relative !important;
+        }
+        .profile-action-btn::after {
+            content: '';
+            position: absolute;
+            top: -6px;
+            bottom: -6px;
+            left: -6px;
+            right: -6px;
+            z-index: 10;
+            pointer-events: auto !important;
+        }
+
+        /* Even larger touch overlay targeting the Edit Profile button, extending significantly higher */
+        .edit-profile-btn {
+            position: relative !important;
+        }
+        .edit-profile-btn::after {
+            content: '' !important;
+            position: absolute !important;
+            top: -16px !important; /* Expand 16px higher to cover spacing gap */
+            bottom: -8px !important;
+            left: -8px !important;
+            right: -8px !important;
+            z-index: 10 !important;
+            pointer-events: auto !important;
+        }
+
+        /* Force inner contents of buttons and custom clickable divs to pass clicks directly to parent */
+        button *,
+        .nav-item *,
+        .chat-mood-badge *,
+        .card-scene * {
+            pointer-events: none !important;
+        }
+
+        /* Disable selection highlighting on touch interactions */
+        button, 
+        .nav-item, 
+        .chat-mood-badge, 
+        .card-scene {
+            -webkit-tap-highlight-color: transparent !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+        }
+
