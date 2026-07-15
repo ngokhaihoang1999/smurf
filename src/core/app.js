@@ -2505,20 +2505,25 @@
             // Calculate scores for all other residents
             const matches = RESIDENTS_DATA.filter(r => String(r.telegramId) !== String(currentUser.telegramId))
                 .map(target => {
-                    let score = 15; // Baseline minimum vibe score
+                    let score = 10; // Baseline vibe is 10%
                     
-                    // ── 1. HOBBIES & PERSONALITY & DETAILS SEMANTIC MATCH ──
+                    // ── 1. HOBBIES SEMANTIC MATCH (Max 25%) ──
                     const myHobbiesThemes = getThemes(currentUser.hobbies);
                     const targetHobbiesThemes = getThemes(target.hobbies);
                     const sharedHobbiesThemes = myHobbiesThemes.filter(t => targetHobbiesThemes.includes(t));
-                    score += sharedHobbiesThemes.length * 20;
+                    if (sharedHobbiesThemes.length > 0) {
+                        score += 15 + (sharedHobbiesThemes.length - 1) * 10;
+                    }
 
+                    // ── 2. PERSONALITY SEMANTIC MATCH (Max 25%) ──
                     const myTraitsThemes = getThemes(currentUser.personality);
                     const targetTraitsThemes = getThemes(target.personality);
                     const sharedTraitsThemes = myTraitsThemes.filter(t => targetTraitsThemes.includes(t));
-                    score += sharedTraitsThemes.length * 20;
+                    if (sharedTraitsThemes.length > 0) {
+                        score += 15 + (sharedTraitsThemes.length - 1) * 10;
+                    }
 
-                    // Direct token overlap on bio/strengths/weaknesses/hobbies/personality
+                    // ── 3. DIRECT TOKEN OVERLAP (Max 24%) ──
                     const myDetailTokens = [
                         ...getTokens(currentUser.hobbies),
                         ...getTokens(currentUser.personality),
@@ -2536,42 +2541,44 @@
                     const uniqueMyTokens = [...new Set(myDetailTokens)];
                     const uniqueTargetTokens = [...new Set(targetDetailTokens)];
                     const sharedTokens = uniqueMyTokens.filter(t => uniqueTargetTokens.includes(t));
-                    score += sharedTokens.length * 10;
+                    if (sharedTokens.length === 1) {
+                        score += 10;
+                    } else if (sharedTokens.length === 2) {
+                        score += 18;
+                    } else if (sharedTokens.length >= 3) {
+                        score += 24;
+                    }
 
-                    // ── 2. AVATAR STYLE COMPATIBILITY ──
-                    // Hat color coordination
+                    // ── 4. AVATAR STYLE COMPATIBILITY (Max 15%) ──
+                    let avatarScore = 0;
                     if (currentUser.hatcolor && target.hatcolor && 
                         currentUser.hatcolor !== 'Không' && target.hatcolor !== 'Không' &&
                         currentUser.hatcolor === target.hatcolor) {
-                        score += 15; // Cùng màu mũ
+                        avatarScore += 4;
                     }
-                    // Background
                     if (currentUser.background && target.background && 
                         currentUser.background === target.background) {
-                        score += 15; // Cùng khung cảnh
+                        avatarScore += 4;
                     }
-                    // Accessories
-                    if (currentUser.faceacc && target.faceacc && 
-                        currentUser.faceacc !== 'Không' && target.faceacc !== 'Không' &&
-                        currentUser.faceacc === target.faceacc) {
-                        score += 10; // Cùng phụ kiện mặt
-                    }
-                    // Expression
-                    if (currentUser.expression && target.expression && 
-                        currentUser.expression === target.expression) {
-                        score += 10; // Đồng điệu cảm xúc
-                    }
-                    // Pose
-                    if (currentUser.pose && target.pose && 
-                        currentUser.pose === target.pose) {
-                        score += 10; // Ăn ý dáng đứng
-                    }
-                    // Prop
                     if (currentUser.prop && target.prop && 
                         currentUser.prop !== 'Không' && target.prop !== 'Không' &&
                         currentUser.prop === target.prop) {
-                        score += 15; // Chung đạo cụ
+                        avatarScore += 4;
                     }
+                    if (currentUser.faceacc && target.faceacc && 
+                        currentUser.faceacc !== 'Không' && target.faceacc !== 'Không' &&
+                        currentUser.faceacc === target.faceacc) {
+                        avatarScore += 1;
+                    }
+                    if (currentUser.expression && target.expression && 
+                        currentUser.expression === target.expression) {
+                        avatarScore += 1;
+                    }
+                    if (currentUser.pose && target.pose && 
+                        currentUser.pose === target.pose) {
+                        avatarScore += 1;
+                    }
+                    score += avatarScore;
                     
                     score = Math.min(score, 99);
                     return {
@@ -2597,12 +2604,9 @@
                         row.innerHTML = `
                             <div class="flex items-center gap-3">
                                 <img src="${match.avatar}" class="w-10 h-10 rounded-full border border-purple-200 object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
-                                <div class="flex flex-col">
-                                    <span class="font-fredoka text-xs text-slate-700">${match.smurfName}</span>
-                                    <span class="text-[9px] font-bold text-slate-400">Hợp tính: ${match.score}%</span>
-                                </div>
+                                <span class="font-fredoka text-xs text-slate-700">${match.smurfName}</span>
                             </div>
-                            <span class="text-[9px] bg-purple-600 text-white px-2 py-0.5 rounded-full font-bold uppercase">${match.score > 80 ? 'Tri Kỷ' : 'Rất Hợp'}</span>
+                            <span class="font-fredoka text-xs font-bold text-purple-700 bg-purple-100/60 px-2.5 py-1 rounded-xl">Hợp tính: ${match.score}%</span>
                         `;
                         listContainer.appendChild(row);
                     });
