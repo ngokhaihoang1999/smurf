@@ -275,7 +275,7 @@
             if (document.getElementById('profile-card-real-name')) document.getElementById('profile-card-real-name').textContent = d.realName || '';
             if (document.getElementById('profile-card-smurf-name')) document.getElementById('profile-card-smurf-name').textContent = d.smurfName || '';
             if (document.getElementById('profile-card-hobby')) document.getElementById('profile-card-hobby').textContent = d.hobbies ? '🏸 ' + d.hobbies : '🏸 Sở thích';
-            if (document.getElementById('profile-card-personality')) document.getElementById('profile-card-personality').textContent = d.personality ? '🧠 ' + d.personality : '🧠 Tính cách';
+            if (document.getElementById('profile-card-personality')) document.getElementById('profile-card-personality').textContent = d.personality ? d.personality : 'Tính cách';
 
             // Re-render elements for the horizontal card face (front)
             const hAvatar = document.getElementById('profile-card-horizontal-avatar');
@@ -1566,7 +1566,7 @@
             document.getElementById('m-preview-real-name').textContent = item.realName;
             document.getElementById('m-card-name').textContent = item.smurfName;
             document.getElementById('m-card-hobby').textContent = '🏸 ' + (item.soThich || 'Cư dân');
-            document.getElementById('m-card-personality').textContent = '🧠 ' + (item.tinhCach || 'Vui vẻ');
+            document.getElementById('m-card-personality').textContent = item.tinhCach || 'Vui vẻ';
             document.getElementById('m-preview-tinh-cach').textContent = item.tinhCach || '';
             document.getElementById('m-preview-so-thich').textContent = item.soThich || '';
             document.getElementById('m-preview-diem-manh').textContent = item.diemManh || '';
@@ -1875,7 +1875,7 @@
                 document.getElementById('m-preview-real-name').textContent = nextItem.realName;
                 document.getElementById('m-card-name').textContent = nextItem.smurfName;
                 document.getElementById('m-card-hobby').textContent = '🏸 ' + (nextItem.soThich || 'Cư dân');
-                document.getElementById('m-card-personality').textContent = '🧠 ' + (nextItem.tinhCach || 'Vui vẻ');
+                document.getElementById('m-card-personality').textContent = nextItem.tinhCach || 'Vui vẻ';
                 document.getElementById('m-preview-tinh-cach').textContent = nextItem.tinhCach || '';
                 document.getElementById('m-preview-so-thich').textContent = nextItem.soThich || '';
                 document.getElementById('m-preview-diem-manh').textContent = nextItem.diemManh || '';
@@ -2095,7 +2095,7 @@
             if (hobbyModal) hobbyModal.textContent = '🏸 ' + hobbiesText;
             
             const personalityModal = document.getElementById('m-card-personality');
-            if (personalityModal) personalityModal.textContent = '🧠 ' + personalityText;
+            if (personalityModal) personalityModal.textContent = personalityText;
             
             const previewTinhCach = document.getElementById('m-preview-tinh-cach');
             const previewSoThich = document.getElementById('m-preview-so-thich');

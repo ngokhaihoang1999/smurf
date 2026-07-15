@@ -1081,7 +1081,7 @@
 
         <!-- Chat Drawer FAB (mobile-friendly floating trigger) - Only visible inside Village View -->
         <div id="chat-fab-container">
-            <div onclick="openVillageChat()" class="fab-click-expand fixed bottom-24 right-4 w-12 h-12 bg-smurf-blue hover:bg-smurf-blue/90 text-white rounded-full shadow-[0_8px_24px_rgba(30,144,255,0.3)] flex items-center justify-center active:opacity-75 z-[70] border-2 border-white cursor-pointer relative" role="button">
+            <div onclick="openVillageChat()" class="fab-click-expand fixed bottom-24 right-4 w-12 h-12 bg-smurf-blue hover:bg-smurf-blue/90 text-white rounded-full shadow-[0_8px_24px_rgba(30,144,255,0.3)] flex items-center justify-center active:opacity-75 z-[70] border-2 border-white cursor-pointer" role="button">
                 <div class="hitbox-overlay absolute -inset-14 z-20 cursor-pointer" style="pointer-events: auto;"></div>
                 <span class="material-symbols-outlined text-2xl pointer-events-none">forum</span>
                 <span id="chat-badge" class="absolute -top-1 -right-1 bg-smurf-red text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-white pointer-events-none" style="display: none;">NEW</span>
@@ -1258,7 +1258,7 @@
                     </div>
                     
                     <!-- Compact info below avatar in modal vertical card -->
-                    <div class="w-full py-2 px-4.5 flex flex-col justify-center bg-white border-t border-slate-100">
+                    <div class="w-full pt-2 pb-5 px-6 flex flex-col justify-center bg-white border-t border-slate-100">
                         <div class="flex justify-between items-center w-full">
                             <span class="font-bold text-[13px] text-slate-700 truncate mr-2" style="max-width: 170px;" id="m-card-real-name">Tên thật</span>
                             <span class="text-[10px] text-slate-400 font-bold truncate" style="max-width: 110px;" id="m-card-name">Tí...</span>
@@ -1267,7 +1267,7 @@
                         <div class="flex justify-between w-full mt-1.5 pt-1.5 border-t border-slate-100 text-[10px] text-smurf-red font-bold">
                             <span id="m-card-hobby" class="truncate" style="max-width: 130px;">🏸 Cầu lông</span>
                             <span class="text-slate-300">•</span>
-                            <span id="m-card-personality" class="truncate" style="max-width: 130px;">🧠 Kiên nhẫn</span>
+                            <span id="m-card-personality" class="truncate" style="max-width: 130px;">Kiên nhẫn</span>
                         </div>
                     </div>
                 </div>
@@ -1728,7 +1728,7 @@
             if (document.getElementById('profile-card-real-name')) document.getElementById('profile-card-real-name').textContent = d.realName || '';
             if (document.getElementById('profile-card-smurf-name')) document.getElementById('profile-card-smurf-name').textContent = d.smurfName || '';
             if (document.getElementById('profile-card-hobby')) document.getElementById('profile-card-hobby').textContent = d.hobbies ? '🏸 ' + d.hobbies : '🏸 Sở thích';
-            if (document.getElementById('profile-card-personality')) document.getElementById('profile-card-personality').textContent = d.personality ? '🧠 ' + d.personality : '🧠 Tính cách';
+            if (document.getElementById('profile-card-personality')) document.getElementById('profile-card-personality').textContent = d.personality ? d.personality : 'Tính cách';
 
             // Re-render elements for the horizontal card face (front)
             const hAvatar = document.getElementById('profile-card-horizontal-avatar');
@@ -3019,7 +3019,7 @@
             document.getElementById('m-preview-real-name').textContent = item.realName;
             document.getElementById('m-card-name').textContent = item.smurfName;
             document.getElementById('m-card-hobby').textContent = '🏸 ' + (item.soThich || 'Cư dân');
-            document.getElementById('m-card-personality').textContent = '🧠 ' + (item.tinhCach || 'Vui vẻ');
+            document.getElementById('m-card-personality').textContent = item.tinhCach || 'Vui vẻ';
             document.getElementById('m-preview-tinh-cach').textContent = item.tinhCach || '';
             document.getElementById('m-preview-so-thich').textContent = item.soThich || '';
             document.getElementById('m-preview-diem-manh').textContent = item.diemManh || '';
@@ -3328,7 +3328,7 @@
                 document.getElementById('m-preview-real-name').textContent = nextItem.realName;
                 document.getElementById('m-card-name').textContent = nextItem.smurfName;
                 document.getElementById('m-card-hobby').textContent = '🏸 ' + (nextItem.soThich || 'Cư dân');
-                document.getElementById('m-card-personality').textContent = '🧠 ' + (nextItem.tinhCach || 'Vui vẻ');
+                document.getElementById('m-card-personality').textContent = nextItem.tinhCach || 'Vui vẻ';
                 document.getElementById('m-preview-tinh-cach').textContent = nextItem.tinhCach || '';
                 document.getElementById('m-preview-so-thich').textContent = nextItem.soThich || '';
                 document.getElementById('m-preview-diem-manh').textContent = nextItem.diemManh || '';
@@ -3548,7 +3548,7 @@
             if (hobbyModal) hobbyModal.textContent = '🏸 ' + hobbiesText;
             
             const personalityModal = document.getElementById('m-card-personality');
-            if (personalityModal) personalityModal.textContent = '🧠 ' + personalityText;
+            if (personalityModal) personalityModal.textContent = personalityText;
             
             const previewTinhCach = document.getElementById('m-preview-tinh-cach');
             const previewSoThich = document.getElementById('m-preview-so-thich');
