@@ -367,6 +367,26 @@
             will-change: transform, opacity;
         }
 
+        /* Force inner contents of buttons, custom buttons, and custom clickable divs to pass clicks directly to parent */
+        button *,
+        [role="button"] *,
+        .nav-item *,
+        .chat-mood-badge *,
+        .card-scene * {
+            pointer-events: none !important;
+        }
+
+        /* Disable selection highlighting on touch interactions */
+        button, 
+        [role="button"],
+        .nav-item, 
+        .chat-mood-badge, 
+        .card-scene {
+            -webkit-tap-highlight-color: transparent !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+        }
+
         /* Touch-expanded overlay for Profile view action buttons to make them extremely responsive */
         .profile-action-btn {
             position: relative !important;
@@ -412,26 +432,6 @@
             bottom: -12px !important;
             z-index: 10 !important;
             pointer-events: auto !important;
-        }
-
-        /* Force inner contents of buttons, custom buttons, and custom clickable divs to pass clicks directly to parent */
-        button *,
-        [role="button"] *,
-        .nav-item *,
-        .chat-mood-badge *,
-        .card-scene * {
-            pointer-events: none !important;
-        }
-
-        /* Disable selection highlighting on touch interactions */
-        button, 
-        [role="button"],
-        .nav-item, 
-        .chat-mood-badge, 
-        .card-scene {
-            -webkit-tap-highlight-color: transparent !important;
-            user-select: none !important;
-            -webkit-user-select: none !important;
         }
 
         /* Auto-hide bottom nav bar whenever any sheet (edit form/chat sheet) or modal (card popup) is active */
@@ -986,14 +986,14 @@
                     <span>Tải Thẻ Ngang</span>
                 </div>
                 <!-- Download Avatar Button -->
-                <div onclick="downloadPortraitAvatar()" class="flex-1 bg-white border-2 border-slate-200 text-slate-700 profile-action-btn py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm cursor-pointer" role="button">
+                <div onclick="downloadPortraitAvatar()" class="flex-1 bg-white border-2 border-slate-200 text-slate-700 profile-action-btn py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:opacity-75 shadow-sm cursor-pointer" role="button">
                     <span class="material-symbols-outlined text-base">download</span>
                     <span>Tải Avatar</span>
                 </div>
             </div>
             
             <!-- Edit Button -->
-            <div onclick="openEditSheet()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 profile-action-btn edit-profile-btn py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer" role="button">
+            <div onclick="openEditSheet()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 profile-action-btn edit-profile-btn py-3.5 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:opacity-75 cursor-pointer" role="button">
                 <span class="material-symbols-outlined text-base">edit</span>
                 <span>Chỉnh Sửa Thông Tin</span>
             </div>
@@ -1071,7 +1071,7 @@
 
         <!-- Chat Drawer FAB (mobile-friendly floating trigger) - Only visible inside Village View -->
         <div id="chat-fab-container">
-            <div onclick="openVillageChat()" class="fab-click-expand fixed bottom-24 right-4 w-12 h-12 bg-smurf-blue hover:bg-smurf-blue/90 text-white rounded-full shadow-[0_8px_24px_rgba(30,144,255,0.3)] flex items-center justify-center active:scale-95 transition-all z-40 border-2 border-white cursor-pointer" role="button">
+            <div onclick="openVillageChat()" class="fab-click-expand fixed bottom-24 right-4 w-12 h-12 bg-smurf-blue hover:bg-smurf-blue/90 text-white rounded-full shadow-[0_8px_24px_rgba(30,144,255,0.3)] flex items-center justify-center active:opacity-75 z-40 border-2 border-white cursor-pointer" role="button">
                 <span class="material-symbols-outlined text-2xl pointer-events-none">forum</span>
                 <span id="chat-badge" class="absolute -top-1 -right-1 bg-smurf-red text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-white pointer-events-none" style="display: none;">NEW</span>
             </div>
