@@ -2486,7 +2486,7 @@
                                 <img src="${match.avatar}" class="w-10 h-10 rounded-full border border-purple-200 object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 <div class="flex flex-col">
                                     <span class="font-fredoka text-xs text-slate-700">${match.smurfName}</span>
-                                    <span class="text-[9px] font-bold text-slate-400">Hợp cạ: ${match.score}%</span>
+                                    <span class="text-[9px] font-bold text-slate-400">Hợp tính: ${match.score}%</span>
                                 </div>
                             </div>
                             <span class="text-[9px] bg-purple-600 text-white px-2 py-0.5 rounded-full font-bold uppercase">${match.score > 80 ? 'Tri Kỷ' : 'Rất Hợp'}</span>
