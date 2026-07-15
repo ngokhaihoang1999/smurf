@@ -180,7 +180,7 @@ body.dotted-bg {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 90;
+    z-index: 9999;
     background: rgba(255,255,255,0.96);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -189,8 +189,7 @@ body.dotted-bg {
     height: calc(64px + env(safe-area-inset-bottom, 0px));
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    padding-top: 6px;
+    align-items: stretch;
     padding-left: 16px;
     padding-right: 16px;
     padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -204,14 +203,14 @@ body.dotted-bg {
     justify-content: center;
     flex: 1;
     max-width: 110px;
-    height: 48px;
-    border-radius: 16px;
+    height: 100%;
     cursor: pointer;
     transition: all 0.2s ease;
     color: #94a3b8;
     font-size: 10px;
     font-weight: 700;
     gap: 3px;
+    padding-top: 6px;
 }
 
 @media (hover: hover) {
