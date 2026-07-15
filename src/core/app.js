@@ -722,6 +722,7 @@
             // Hide bottom navigation bar to prevent overlap with sheet buttons
             const bottomNav = document.querySelector('.bottom-nav');
             if (bottomNav) bottomNav.style.display = 'none';
+            document.body.classList.add('sheet-open');
         }
 
         function closeEditSheet() {
@@ -732,6 +733,7 @@
             // Show bottom navigation bar when sheet is closed
             const bottomNav = document.querySelector('.bottom-nav');
             if (bottomNav) bottomNav.style.display = '';
+            document.body.classList.remove('sheet-open');
         }
 
         // ── GAS REQUEST POST ──
@@ -1585,6 +1587,7 @@
             const modal = document.getElementById('detail-modal');
             modal.classList.remove('hidden');
             modal.classList.remove('pointer-events-none');
+            document.body.classList.add('modal-open');
             
             container.style.willChange = 'transform';
             card3d.style.willChange = 'transform';
@@ -1731,6 +1734,7 @@
 
             backdrop.classList.remove('opacity-100');
             controls.classList.remove('opacity-100');
+            document.body.classList.remove('modal-open');
 
             // Show bottom navigation bar when modal is closed
             const bottomNav = document.querySelector('.bottom-nav');
@@ -2495,6 +2499,7 @@
             // Hide bottom navigation bar when chat sheet is open
             const bottomNav = document.querySelector('.bottom-nav');
             if (bottomNav) bottomNav.style.display = 'none';
+            document.body.classList.add('sheet-open');
             
             // Hide badge when chat is opened
             const badge = document.getElementById('chat-badge');
@@ -2536,6 +2541,7 @@
             // Show bottom navigation bar when chat sheet is closed
             const bottomNav = document.querySelector('.bottom-nav');
             if (bottomNav) bottomNav.style.display = '';
+            document.body.classList.remove('sheet-open');
             
             // Stop polling
             if (chatPollingIntervalId) {

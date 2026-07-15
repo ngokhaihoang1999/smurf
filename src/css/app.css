@@ -321,25 +321,12 @@
         .profile-action-btn {
             position: relative !important;
         }
-        .profile-action-btn::after {
-            content: '';
-            position: absolute;
-            top: -6px;
-            bottom: -6px;
-            left: -6px;
-            right: -6px;
-            z-index: 10;
-            pointer-events: auto !important;
-        }
-
-        /* Even larger touch overlay targeting the Edit Profile button, extending significantly higher */
-        .edit-profile-btn {
-            position: relative !important;
-        }
-        .edit-profile-btn::after {
+        /* Increased specificity to ensure pointer-events always wins over wildcard reset */
+        button.profile-action-btn::after,
+        div.profile-action-btn::after {
             content: '' !important;
             position: absolute !important;
-            top: -16px !important; /* Expand 16px higher to cover spacing gap */
+            top: -8px !important;
             bottom: -8px !important;
             left: -8px !important;
             right: -8px !important;
@@ -347,8 +334,39 @@
             pointer-events: auto !important;
         }
 
-        /* Force inner contents of buttons and custom clickable divs to pass clicks directly to parent */
+        /* Even larger touch overlay targeting the Edit Profile button, extending significantly higher */
+        .edit-profile-btn {
+            position: relative !important;
+        }
+        /* Increased specificity to ensure pointer-events always wins over wildcard reset */
+        button.edit-profile-btn::after,
+        div.edit-profile-btn::after {
+            content: '' !important;
+            position: absolute !important;
+            top: -16px !important; /* Expand 16px higher to cover spacing gap */
+            bottom: -10px !important;
+            left: -10px !important;
+            right: -10px !important;
+            z-index: 10 !important;
+            pointer-events: auto !important;
+        }
+
+        /* Hitbox overlay for Chat FAB button with high specificity pointer-events */
+        button.fab-click-expand::after,
+        div.fab-click-expand::after {
+            content: '' !important;
+            position: absolute !important;
+            top: -12px !important;
+            left: -12px !important;
+            right: -12px !important;
+            bottom: -12px !important;
+            z-index: 10 !important;
+            pointer-events: auto !important;
+        }
+
+        /* Force inner contents of buttons, custom buttons, and custom clickable divs to pass clicks directly to parent */
         button *,
+        [role="button"] *,
         .nav-item *,
         .chat-mood-badge *,
         .card-scene * {
@@ -357,11 +375,18 @@
 
         /* Disable selection highlighting on touch interactions */
         button, 
+        [role="button"],
         .nav-item, 
         .chat-mood-badge, 
         .card-scene {
             -webkit-tap-highlight-color: transparent !important;
             user-select: none !important;
             -webkit-user-select: none !important;
+        }
+
+        /* Auto-hide bottom nav bar whenever any sheet (edit form/chat sheet) or modal (card popup) is active */
+        body.modal-open #main-bottom-nav,
+        body.sheet-open #main-bottom-nav {
+            display: none !important;
         }
 
