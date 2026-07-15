@@ -1071,7 +1071,7 @@
 
         <!-- Chat Drawer FAB (mobile-friendly floating trigger) - Only visible inside Village View -->
         <div id="chat-fab-container">
-            <div onclick="openVillageChat()" class="fab-click-expand fixed bottom-24 right-4 w-12 h-12 bg-smurf-blue hover:bg-smurf-blue/90 text-white rounded-full shadow-[0_8px_24px_rgba(30,144,255,0.3)] flex items-center justify-center active:opacity-75 z-40 border-2 border-white cursor-pointer" role="button">
+            <div onclick="openVillageChat()" class="fab-click-expand fixed bottom-24 right-4 w-12 h-12 bg-smurf-blue hover:bg-smurf-blue/90 text-white rounded-full shadow-[0_8px_24px_rgba(30,144,255,0.3)] flex items-center justify-center active:opacity-75 z-[70] border-2 border-white cursor-pointer" role="button">
                 <span class="material-symbols-outlined text-2xl pointer-events-none">forum</span>
                 <span id="chat-badge" class="absolute -top-1 -right-1 bg-smurf-red text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-white pointer-events-none" style="display: none;">NEW</span>
             </div>
@@ -1159,8 +1159,8 @@
     <!-- ═══════════════════════════════════════ -->
     <!-- BOTTOM SHEET: Edit Info                 -->
     <!-- ═══════════════════════════════════════ -->
-    <div class="bottom-sheet-overlay" id="edit-sheet-overlay" onclick="closeEditSheet()"></div>
-    <div class="bottom-sheet" id="edit-sheet" style="max-height: 85vh;">
+    <div class="bottom-sheet-overlay" id="edit-sheet-overlay" onclick="closeEditSheet()" style="display: none;"></div>
+    <div class="bottom-sheet" id="edit-sheet" style="max-height: 85vh; display: none;">
         <div class="bottom-sheet-handle"></div>
         <div class="px-4 pb-6 pt-2">
             <div class="flex items-center justify-between mb-3">
@@ -2143,8 +2143,13 @@
             adjustAllCardFonts('profile-card-horizontal-');
         }
 
+        let editSheetCloseTimeoutId = null;
         function openEditSheet() {
             if (!currentUser) return;
+            if (editSheetCloseTimeoutId) {
+                clearTimeout(editSheetCloseTimeoutId);
+                editSheetCloseTimeoutId = null;
+            }
             // Pre-fill edit form
             document.getElementById('edit-smurf-name').value = currentUser.smurfName || '';
             document.getElementById('edit-real-name').value = currentUser.realName || '';
@@ -2157,8 +2162,16 @@
             document.getElementById('edit-weakness').value = currentUser.weakness || '';
             document.getElementById('edit-bio').value = currentUser.bio || '';
 
-            document.getElementById('edit-sheet-overlay').classList.add('active');
-            document.getElementById('edit-sheet').classList.add('active');
+            const overlay = document.getElementById('edit-sheet-overlay');
+            const sheet = document.getElementById('edit-sheet');
+            if (overlay && sheet) {
+                overlay.style.display = 'block';
+                sheet.style.display = 'block';
+                // Trigger reflow
+                void overlay.offsetWidth;
+                overlay.classList.add('active');
+                sheet.classList.add('active');
+            }
             updateNavActive('nav-item-profile');
 
             // Hide bottom navigation bar to prevent overlap with sheet buttons
@@ -2168,8 +2181,17 @@
         }
 
         function closeEditSheet() {
-            document.getElementById('edit-sheet-overlay').classList.remove('active');
-            document.getElementById('edit-sheet').classList.remove('active');
+            const overlay = document.getElementById('edit-sheet-overlay');
+            const sheet = document.getElementById('edit-sheet');
+            if (overlay && sheet) {
+                overlay.classList.remove('active');
+                sheet.classList.remove('active');
+                editSheetCloseTimeoutId = setTimeout(() => {
+                    overlay.style.display = 'none';
+                    sheet.style.display = 'none';
+                    editSheetCloseTimeoutId = null;
+                }, 350);
+            }
             updateNavActive('nav-item-home');
 
             // Show bottom navigation bar when sheet is closed

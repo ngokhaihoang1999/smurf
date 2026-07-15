@@ -701,8 +701,13 @@
             adjustAllCardFonts('profile-card-horizontal-');
         }
 
+        let editSheetCloseTimeoutId = null;
         function openEditSheet() {
             if (!currentUser) return;
+            if (editSheetCloseTimeoutId) {
+                clearTimeout(editSheetCloseTimeoutId);
+                editSheetCloseTimeoutId = null;
+            }
             // Pre-fill edit form
             document.getElementById('edit-smurf-name').value = currentUser.smurfName || '';
             document.getElementById('edit-real-name').value = currentUser.realName || '';
@@ -715,8 +720,16 @@
             document.getElementById('edit-weakness').value = currentUser.weakness || '';
             document.getElementById('edit-bio').value = currentUser.bio || '';
 
-            document.getElementById('edit-sheet-overlay').classList.add('active');
-            document.getElementById('edit-sheet').classList.add('active');
+            const overlay = document.getElementById('edit-sheet-overlay');
+            const sheet = document.getElementById('edit-sheet');
+            if (overlay && sheet) {
+                overlay.style.display = 'block';
+                sheet.style.display = 'block';
+                // Trigger reflow
+                void overlay.offsetWidth;
+                overlay.classList.add('active');
+                sheet.classList.add('active');
+            }
             updateNavActive('nav-item-profile');
 
             // Hide bottom navigation bar to prevent overlap with sheet buttons
@@ -726,8 +739,17 @@
         }
 
         function closeEditSheet() {
-            document.getElementById('edit-sheet-overlay').classList.remove('active');
-            document.getElementById('edit-sheet').classList.remove('active');
+            const overlay = document.getElementById('edit-sheet-overlay');
+            const sheet = document.getElementById('edit-sheet');
+            if (overlay && sheet) {
+                overlay.classList.remove('active');
+                sheet.classList.remove('active');
+                editSheetCloseTimeoutId = setTimeout(() => {
+                    overlay.style.display = 'none';
+                    sheet.style.display = 'none';
+                    editSheetCloseTimeoutId = null;
+                }, 350);
+            }
             updateNavActive('nav-item-home');
 
             // Show bottom navigation bar when sheet is closed
