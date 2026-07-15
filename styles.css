@@ -197,6 +197,7 @@ body.dotted-bg {
 }
 
 .nav-item {
+    position: relative; /* Crucial for overlay bounding box */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -211,6 +212,18 @@ body.dotted-bg {
     font-weight: 700;
     gap: 3px;
     padding-top: 6px;
+}
+
+/* Full-coverage transparent overlay layer to capture touches over the entire icon and text */
+.nav-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    pointer-events: auto !important;
 }
 
 @media (hover: hover) {
