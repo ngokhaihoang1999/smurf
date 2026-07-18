@@ -595,3 +595,53 @@ body.sheet-open #main-bottom-nav {
 .animate-fluid-exit {
     animation: fluid-slide-up 1.0s cubic-bezier(0.25, 1, 0.50, 1) forwards !important;
 }
+
+/* ── INTERACTIVE SMURF SPEECH BUBBLES ── */
+.speech-bubble {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%) scale(0.85);
+    background: white;
+    color: #1e293b;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 6px 10px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+    border: 2px solid #3b82f6;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0;
+    transition: all 0.30s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.speech-bubble.show {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+}
+
+/* Triangle bubble pointer */
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #3b82f6 transparent transparent transparent;
+}
+
+.speech-bubble::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 4px;
+    border-style: solid;
+    border-color: white transparent transparent transparent;
+    z-index: 1;
+}

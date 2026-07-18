@@ -2310,6 +2310,43 @@
             });
         }
 
+        const SMURF_QUOTES = {
+            1: "Đi bộ rèn luyện sức khoẻ nào! 🚶‍♂️🌿",
+            2: "Chào đằng ấy nha! Chúc một ngày tốt lành! 👋💙",
+            3: "Sách dạy rằng... à mà thôi tớ đọc tiếp đây! 📚🤓",
+            4: "Nước giếng ngọt lắm, tớ đi xách thêm gầu nữa! 🪣💧",
+            5: "Lalala~ Nhạc lên là tớ phải quẩy thôi! 🎶🕺",
+            6: "Khò khò... Đừng đánh thức tớ nhé... 😴💤",
+            7: "Làng sạch đẹp thì ai cũng vui! Quét quét... 🧹✨",
+            8: "Để tớ ngẫm nghĩ xem có nên đi ngủ không... 🤔💭",
+            9: "Hỏng hóc gì cứ để tớ sửa cho! Búa đe kìm kéo! 🛠️🔨",
+            10: "Có ai có bánh nấm không? Tớ đói bụng quá! 🍄🎂"
+        };
+
+        function spawnEmojiParticles(parentElement) {
+            const emojis = ['✨', '🌟', '❤️', '💙', '🍄', '🎉'];
+            for (let i = 0; i < 4; i++) {
+                const particle = document.createElement('span');
+                particle.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                particle.className = 'absolute pointer-events-none text-xs z-30 transition-all duration-1000';
+                particle.style.left = '50%';
+                particle.style.top = '20%';
+                particle.style.transform = 'translate(-50%, -50%)';
+                parentElement.appendChild(particle);
+                
+                const targetX = (Math.random() - 0.5) * 60;
+                const targetY = -40 - Math.random() * 30;
+                const rotate = (Math.random() - 0.5) * 180;
+                
+                void particle.offsetWidth;
+                
+                particle.style.transform = `translate(calc(-50% + ${targetX}px), calc(-50% + ${targetY}px)) scale(1.5) rotate(${rotate}deg)`;
+                particle.style.opacity = '0';
+                
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
         function renderVillageCharacters() {
             const container = document.getElementById('map-landmarks-layer');
             if (!container) return;
@@ -2325,11 +2362,32 @@
                 el.onclick = (e) => {
                     e.stopPropagation();
                     
+                    // 1. Jump animation
                     el.classList.add('-translate-y-4');
                     setTimeout(() => {
                         el.classList.remove('-translate-y-4');
                     }, 300);
                     
+                    // 2. Spawn emoji particles
+                    spawnEmojiParticles(el);
+                    
+                    // 3. Show dialog speech bubble
+                    let bubble = el.querySelector('.speech-bubble');
+                    if (!bubble) {
+                        bubble = document.createElement('div');
+                        bubble.className = 'speech-bubble';
+                        el.appendChild(bubble);
+                    }
+                    bubble.innerText = SMURF_QUOTES[char.id] || "Bấm tớ nữa đi! 💙";
+                    bubble.classList.add('show');
+                    
+                    if (el.bubbleTimeout) clearTimeout(el.bubbleTimeout);
+                    el.bubbleTimeout = setTimeout(() => {
+                        bubble.classList.remove('show');
+                        setTimeout(() => bubble.remove(), 300);
+                    }, 2500);
+                    
+                    // 4. Haptic Feedback
                     if (tg?.HapticFeedback) {
                         tg.HapticFeedback.impactOccurred('medium');
                     }
