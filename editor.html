@@ -215,7 +215,7 @@
     <!-- WORKSPACE CANVAS -->
     <div class="workspace">
         <div class="map-viewport" id="map-viewport">
-            <img src="src/assets/smurf_village_base_map_vertical.png" alt="Map" class="map-background">
+            <img src="src/assets/smurf_village_base_map_vertical.png" alt="Map" class="map-background" id="map-bg-img">
             <div class="editor-layer" id="editor-layer"></div>
         </div>
     </div>
@@ -295,6 +295,13 @@
         // Initialize Rendering of all Draggables
         function initElements() {
             editorLayer.innerHTML = '';
+            const cacheBuster = `?t=${Date.now()}`;
+            
+            // Bypass background map caching
+            const bgImg = document.getElementById('map-bg-img');
+            if (bgImg) {
+                bgImg.src = `src/assets/smurf_village_base_map_vertical.png${cacheBuster}`;
+            }
             
             // Render landmarks
             landmarks.forEach(lm => {
@@ -306,7 +313,7 @@
                 div.style.opacity = lm.numericOpacity;
                 div.style.zIndex = 20;
                 div.id = `lm-${lm.id}`;
-                div.innerHTML = `<img src="${lm.image}" alt="${lm.name}">`;
+                div.innerHTML = `<img src="${lm.image}${cacheBuster}" alt="${lm.name}">`;
                 
                 div.addEventListener('mousedown', (e) => startDrag(e, div, lm, 'Landmark'));
                 editorLayer.appendChild(div);
@@ -335,7 +342,7 @@
                 div.style.opacity = char.numericOpacity;
                 div.style.zIndex = 30;
                 div.id = `char-${char.id}`;
-                div.innerHTML = `<img src="${char.image}" alt="${char.name}">`;
+                div.innerHTML = `<img src="${char.image}${cacheBuster}" alt="${char.name}">`;
                 
                 div.addEventListener('mousedown', (e) => startDrag(e, div, char, 'Character'));
                 editorLayer.appendChild(div);
