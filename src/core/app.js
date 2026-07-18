@@ -665,7 +665,7 @@
         const MAP_LANDMARKS = [
             {
                 id: 'my-house',
-                name: '🍄 Nhà Của Bạn (Hồ Sơ)',
+                name: '🍄 Nhà Của Bạn',
                 image: 'src/assets/smurf_papa_house.png',
                 style: 'top: 20%; left: 16%; width: 28%;',
                 opacity: 1,
