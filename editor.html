@@ -199,7 +199,7 @@
             
             <div class="control-row">
                 <label>Kích thước (Chiều rộng %): <span id="val-width">20%</span></label>
-                <input type="range" id="slider-width" min="4" max="60" step="0.5" value="20">
+                <input type="range" id="slider-width" min="2" max="100" step="0.5" value="20">
             </div>
             
             <div class="control-row">
@@ -245,6 +245,7 @@
 
         let selectedElement = null;
         let selectedData = null; // Reference to original object in array
+        let selectedType = null; // Landmark, Character, Tooltip
         let isDragging = false;
         let startX, startY;
         let startLeft, startTop;
@@ -255,6 +256,7 @@
         // Helper to parse coordinate percentages
         function getCoordsFromStyle(styleStr) {
             let top = 0, left = 0, width = 0;
+            if (!styleStr) return { top, left, width };
             styleStr.split(';').forEach(part => {
                 let [key, val] = part.split(':');
                 if (!key || !val) return;
@@ -267,34 +269,54 @@
             return { top, left, width };
         }
 
+        // Initialize state objects with numeric coordinates
+        landmarks.forEach(lm => {
+            let coords = getCoordsFromStyle(lm.style);
+            lm.numericTop = coords.top;
+            lm.numericLeft = coords.left;
+            lm.numericWidth = coords.width;
+            lm.numericOpacity = lm.opacity !== undefined ? lm.opacity : 1;
+            
+            if (lm.hasTooltip !== false) {
+                let tipCoords = getCoordsFromStyle(lm.tooltipStyle || `top: ${(coords.top - 5)}%; left: ${coords.left}%;`);
+                lm.numericTooltipTop = tipCoords.top;
+                lm.numericTooltipLeft = tipCoords.left;
+            }
+        });
+
+        characters.forEach(char => {
+            let coords = getCoordsFromStyle(char.style);
+            char.numericTop = coords.top;
+            char.numericLeft = coords.left;
+            char.numericWidth = coords.width;
+            char.numericOpacity = char.opacity !== undefined ? char.opacity : 1;
+        });
+
         // Initialize Rendering of all Draggables
         function initElements() {
             editorLayer.innerHTML = '';
             
             // Render landmarks
             landmarks.forEach(lm => {
-                const coords = getCoordsFromStyle(lm.style);
                 const div = document.createElement('div');
                 div.className = 'draggable';
-                div.style.top = coords.top + '%';
-                div.style.left = coords.left + '%';
-                div.style.width = coords.width + '%';
-                div.style.opacity = lm.opacity !== undefined ? lm.opacity : 1;
+                div.style.top = lm.numericTop + '%';
+                div.style.left = lm.numericLeft + '%';
+                div.style.width = lm.numericWidth + '%';
+                div.style.opacity = lm.numericOpacity;
                 div.style.zIndex = 20;
                 div.id = `lm-${lm.id}`;
                 div.innerHTML = `<img src="${lm.image}" alt="${lm.name}">`;
                 
-                // Clicking selects it
                 div.addEventListener('mousedown', (e) => startDrag(e, div, lm, 'Landmark'));
                 editorLayer.appendChild(div);
 
                 // Render tooltip if required
                 if (lm.hasTooltip !== false) {
-                    const tipCoords = getCoordsFromStyle(lm.tooltipStyle || `top: ${(coords.top - 5)}%; left: ${coords.left}%;`);
                     const tipDiv = document.createElement('div');
                     tipDiv.className = `draggable-tooltip ${lm.badgeColor}`;
-                    tipDiv.style.top = tipCoords.top + '%';
-                    tipDiv.style.left = tipCoords.left + '%';
+                    tipDiv.style.top = lm.numericTooltipTop + '%';
+                    tipDiv.style.left = lm.numericTooltipLeft + '%';
                     tipDiv.id = `tip-${lm.id}`;
                     tipDiv.innerText = lm.name;
                     
@@ -305,13 +327,12 @@
 
             // Render characters
             characters.forEach(char => {
-                const coords = getCoordsFromStyle(char.style);
                 const div = document.createElement('div');
                 div.className = 'draggable';
-                div.style.top = coords.top + '%';
-                div.style.left = coords.left + '%';
-                div.style.width = coords.width + '%';
-                div.style.opacity = char.opacity !== undefined ? char.opacity : 1;
+                div.style.top = char.numericTop + '%';
+                div.style.left = char.numericLeft + '%';
+                div.style.width = char.numericWidth + '%';
+                div.style.opacity = char.numericOpacity;
                 div.style.zIndex = 30;
                 div.id = `char-${char.id}`;
                 div.innerHTML = `<img src="${char.image}" alt="${char.name}">`;
@@ -326,11 +347,11 @@
             e.preventDefault();
             e.stopPropagation();
             
-            // Clear previous selection
             if (selectedElement) selectedElement.classList.remove('selected');
             
             selectedElement = element;
             selectedData = dataObj;
+            selectedType = type;
             selectedElement.classList.add('selected');
 
             // Open control panel
@@ -339,28 +360,29 @@
             document.getElementById('selected-name').innerText = dataObj.name;
             document.getElementById('selected-type').innerText = type;
 
-            const coords = getCoordsFromStyle(element.style.cssText);
-            document.getElementById('slider-width').value = coords.width || 10;
-            document.getElementById('val-width').innerText = (coords.width || 10) + '%';
-            
-            // Tooltips don't have size slider active/useful
-            if (type === 'Tooltip') {
-                document.getElementById('slider-width').disabled = true;
-            } else {
+            if (type === 'Landmark' || type === 'Character') {
+                document.getElementById('slider-width').value = dataObj.numericWidth;
+                document.getElementById('val-width').innerText = dataObj.numericWidth + '%';
                 document.getElementById('slider-width').disabled = false;
+                document.getElementById('slider-opacity').value = dataObj.numericOpacity;
+                document.getElementById('val-opacity').innerText = dataObj.numericOpacity;
+            } else if (type === 'Tooltip') {
+                document.getElementById('slider-width').disabled = true;
+                document.getElementById('slider-opacity').value = 1;
+                document.getElementById('val-opacity').innerText = '1.0';
             }
-
-            document.getElementById('slider-opacity').value = element.style.opacity || 1;
-            document.getElementById('val-opacity').innerText = element.style.opacity || 1;
 
             isDragging = true;
             startX = e.clientX;
             startY = e.clientY;
             
-            const rect = mapViewport.getBoundingClientRect();
-            const elemRect = element.getBoundingClientRect();
-            startLeft = ((elemRect.left - rect.left) / rect.width) * 100;
-            startTop = ((elemRect.top - rect.top) / rect.height) * 100;
+            if (type === 'Landmark' || type === 'Character') {
+                startLeft = dataObj.numericLeft;
+                startTop = dataObj.numericTop;
+            } else if (type === 'Tooltip') {
+                startLeft = dataObj.numericTooltipLeft;
+                startTop = dataObj.numericTooltipTop;
+            }
 
             document.addEventListener('mousemove', dragMove);
             document.addEventListener('mouseup', stopDrag);
@@ -383,12 +405,14 @@
             selectedElement.style.top = newTop.toFixed(1) + '%';
 
             // Sync back to our array data models
-            const type = document.getElementById('selected-type').innerText;
-            if (type === 'Landmark' || type === 'Character') {
-                const currentWidth = getCoordsFromStyle(selectedElement.style.cssText).width;
-                selectedData.style = `top: ${newTop.toFixed(1)}%; left: ${newLeft.toFixed(1)}%; width: ${currentWidth}%;`;
-            } else if (type === 'Tooltip') {
-                selectedData.tooltipStyle = `top: ${newTop.toFixed(1)}%; left: ${newLeft.toFixed(1)}%;`;
+            if (selectedType === 'Landmark' || selectedType === 'Character') {
+                selectedData.numericTop = parseFloat(newTop.toFixed(1));
+                selectedData.numericLeft = parseFloat(newLeft.toFixed(1));
+                selectedData.style = `top: ${selectedData.numericTop}%; left: ${selectedData.numericLeft}%; width: ${selectedData.numericWidth}%;`;
+            } else if (selectedType === 'Tooltip') {
+                selectedData.numericTooltipTop = parseFloat(newTop.toFixed(1));
+                selectedData.numericTooltipLeft = parseFloat(newLeft.toFixed(1));
+                selectedData.tooltipStyle = `top: ${selectedData.numericTooltipTop}%; left: ${selectedData.numericTooltipLeft}%;`;
             }
         }
 
@@ -406,10 +430,9 @@
             document.getElementById('val-width').innerText = val + '%';
             selectedElement.style.width = val + '%';
             
-            const type = document.getElementById('selected-type').innerText;
-            const coords = getCoordsFromStyle(selectedElement.style.cssText);
-            if (type === 'Landmark' || type === 'Character') {
-                selectedData.style = `top: ${coords.top}%; left: ${coords.left}%; width: ${val}%;`;
+            if (selectedType === 'Landmark' || selectedType === 'Character') {
+                selectedData.numericWidth = val;
+                selectedData.style = `top: ${selectedData.numericTop}%; left: ${selectedData.numericLeft}%; width: ${val}%;`;
                 exportConfig();
             }
         });
@@ -419,8 +442,12 @@
             const val = parseFloat(e.target.value);
             document.getElementById('val-opacity').innerText = val;
             selectedElement.style.opacity = val;
-            selectedData.opacity = val;
-            exportConfig();
+            
+            if (selectedType === 'Landmark' || selectedType === 'Character') {
+                selectedData.numericOpacity = val;
+                selectedData.opacity = val;
+                exportConfig();
+            }
         });
 
         // Export coordinates helper
@@ -431,7 +458,7 @@
                     name: lm.name,
                     image: lm.image,
                     style: lm.style,
-                    opacity: lm.opacity,
+                    opacity: lm.numericOpacity,
                     badgeColor: lm.badgeColor,
                     onClick: lm.id === 'my-house' ? 'showProfileTab' : 
                              lm.id === 'village-plaza' ? 'showVillageTab' : 
@@ -439,7 +466,7 @@
                              lm.id === 'wishing-well' ? 'showWishingWellMessage' : 'showGateMessage'
                 };
                 if (lm.hasTooltip !== false) {
-                    obj.tooltipStyle = lm.tooltipStyle || `top: ${(parseFloat(lm.style.split('top:')[1]) - 5).toFixed(1)}%; left: ${lm.style.split('left:')[1].split(';')[0].trim()};`;
+                    obj.tooltipStyle = lm.tooltipStyle || `top: ${(lm.numericTop - 5).toFixed(1)}%; left: ${lm.numericLeft}%;`;
                 } else {
                     obj.hasTooltip = false;
                 }
@@ -451,7 +478,7 @@
                 name: char.name,
                 image: char.image,
                 style: char.style,
-                opacity: char.opacity
+                opacity: char.numericOpacity
             }));
 
             let exportText = `// Copy hai mảng này thay vào app.js:\n\n`;
