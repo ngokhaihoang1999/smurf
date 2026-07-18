@@ -662,6 +662,62 @@
         }
 
         // ── SPA NAV HANDLERS ──
+        const MAP_LANDMARKS = [
+            {
+                id: 'my-house',
+                name: '🍄 Nhà Của Bạn (Hồ Sơ)',
+                image: 'src/assets/smurf_papa_house.png',
+                style: 'top: 21.5%; left: 15.6%; width: 27.3%;',
+                badgeColor: 'bg-smurf-blue',
+                onClick: 'showProfileTab'
+            },
+            {
+                id: 'village-plaza',
+                name: '🏘️ Quảng Trường Cư Dân',
+                image: 'src/assets/smurf_blue_house.png',
+                style: 'top: 44%; left: 54.7%; width: 24.4%;',
+                badgeColor: 'bg-smurf-green',
+                onClick: 'showVillageTab'
+            },
+            {
+                id: 'bulletin-board',
+                name: '📋 Bảng Tin Papa Smurf',
+                image: 'src/assets/smurf_bulletin_board.png',
+                style: 'top: 66.4%; left: 17.6%; width: 16.6%;',
+                badgeColor: 'bg-smurf-yellow',
+                onClick: 'rollMagicMushroom'
+            }
+        ];
+
+        function renderMapLandmarks() {
+            const container = document.getElementById('map-landmarks-layer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            MAP_LANDMARKS.forEach(lm => {
+                const el = document.createElement('div');
+                el.className = 'absolute group cursor-pointer pointer-events-auto hover-bounce';
+                el.style.cssText = lm.style;
+                el.id = `landmark-${lm.id}`;
+                
+                el.onclick = () => {
+                    if (lm.onClick === 'showProfileTab') showProfileTab();
+                    else if (lm.onClick === 'showVillageTab') showVillageTab();
+                    else if (lm.onClick === 'rollMagicMushroom') rollMagicMushroom();
+                };
+                
+                el.innerHTML = `
+                    <img src="${lm.image}" alt="${lm.name}" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
+                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 ${lm.badgeColor} text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border border-white transition-all scale-95 group-hover:scale-100 z-20 pointer-events-none">
+                        ${lm.name}
+                    </div>
+                `;
+                
+                container.appendChild(el);
+            });
+        }
+
         function showHomeTab() {
             closeEditSheet();
             const detailModal = document.getElementById('detail-modal');
@@ -682,14 +738,8 @@
                 countSpan.textContent = RESIDENTS_DATA.length;
             }
             
-            // Auto center the map scroll position (512x1024 vertical layout)
-            setTimeout(() => {
-                const container = document.getElementById('map-scroll-container');
-                if (container) {
-                    container.scrollLeft = (512 - container.clientWidth) / 2;
-                    container.scrollTop = (1024 - container.clientHeight) / 2;
-                }
-            }, 50);
+            // Render landmarks
+            renderMapLandmarks();
         }
 
         function showProfileTab() {
@@ -2009,32 +2059,70 @@
             }, 300);
         }
 
-        // ── MAGIC MUSHROOM FORTUNE & QUEST ROLLER ──
-        const SMURF_FORTUNES = [
-            { text: "Hôm nay bạn gặp may mắn như Tí Cô Nương, mọi việc suôn sẻ!", quest: "Nhiệm vụ: Hãy cười thật tươi khi gặp mọi người nhé!" },
-            { text: "Tí Cận khuyên bạn hôm nay hãy cẩn thận khi code, đừng để dính bug lạ.", quest: "Nhiệm vụ: Xem lại code dòng gần nhất bạn viết." },
-            { text: "Tí Quạu khuyên bạn hôm nay nên từ chối khéo các lời rủ rê họp hành để tập trung.", quest: "Nhiệm vụ: Hãy tắt thông báo Telegram trong 30 phút." },
-            { text: "Tí Vua dự báo hôm nay bạn sẽ có một buổi làm việc cực kỳ năng suất!", quest: "Nhiệm vụ: Uống một cốc nước ấm trước khi bắt đầu." },
-            { text: "Tí Tham Ăn khuyên bạn hôm nay nên tự thưởng một bữa ăn thật ngon.", quest: "Nhiệm vụ: Đi mua một món bánh ngọt bạn thích." },
-            { text: "Tí Điệu chúc bạn có một ngày rực rỡ và luôn là tâm điểm của sự chú ý.", quest: "Nhiệm vụ: Hãy chỉnh sửa bộ trang phục Smurf của bạn thật đẹp nhé!" }
+        // ── PAPA SMURF BIBLE TEACHINGS DATABASE (1925 VERSION) ──
+        const PAPA_SMURF_TEACHINGS = [
+            {
+                bibleRef: "CN 17:22",
+                text: "Lòng vui vẻ vốn là một phương thuốc hay; Còn trí buồn thảm làm xương cốt khô héo.",
+                teaching: "Con thấy đó, niềm vui trong lòng chính là phương thuốc diệu kỳ nhất của mỗi Xì Trum. Đừng để những nỗi lo buồn làm con mệt mỏi. Hãy luôn vui tươi lên con nhé!",
+                quest: "Hãy ghé thăm Quảng Trường cư dân và gửi 1 reaction dễ thương khích lệ tinh thần bạn bè!"
+            },
+            {
+                bibleRef: "1Cô 13:4",
+                text: "Lòng yêu thương hay nhịn nhục; lòng yêu thương nhân từ, không ghen ghét, không khoe mình, không kiêu ngạo.",
+                teaching: "Tình yêu thương giữa cư dân trong làng là điều quý giá nhất. Hãy luôn nhường nhịn, nhân từ và chia sẻ với nhau, chớ ghen tị hay khoe khoang con nhé!",
+                quest: "Tặng 1 lượt Like ❤️ cho người bạn mới đăng ký gần nhất trong Làng."
+            },
+            {
+                bibleRef: "Gc 1:19",
+                text: "Người nào cũng phải mau nghe mà chậm nói, chậm giận.",
+                teaching: "Lắng nghe là khởi đầu của sự khôn ngoan. Khi trò chuyện với mọi người, con hãy chăm chú lắng nghe, suy nghĩ kỹ trước khi nói và luôn giữ lòng mình ôn hòa.",
+                quest: "Vào Bảng Tin Làng chia sẻ một câu nói tích cực hoặc trò chuyện chân thành cùng một cư dân khác."
+            },
+            {
+                bibleRef: "Mt 7:12",
+                text: "Hễ điều chi mà các ngươi muốn người ta làm cho mình, thì cũng hãy làm điều đó cho họ.",
+                teaching: "Nếu con muốn mọi người đối xử với mình dịu dàng và tôn trọng, hãy là người chủ động trao đi sự tôn trọng và chân thành đó trước nhé!",
+                quest: "Ghé thăm Quảng Trường và gửi phản ứng 🌟 (Sáng Tạo) cho một Xì Trum mà con ấn tượng."
+            },
+            {
+                bibleRef: "Pl 4:6",
+                text: "Chớ lo phiền chi hết, song trong mọi sự hãy dùng lời cầu nguyện, nài xin, và sự tạ ơn mà trình các sự cầu xin của mình cho Đức Chúa Trời.",
+                teaching: "Đừng để những lo toan của ngày hôm nay đè nặng đôi vai con. Hãy trút bỏ mọi lo âu, giữ lòng bình an và luôn sống với lòng biết ơn nhé!",
+                quest: "Dành 1 phút tĩnh lặng để mỉm cười và nghĩ về một điều tốt đẹp vừa xảy ra trong ngày."
+            }
         ];
 
-        function getDynamicFortune() {
-            const base = SMURF_FORTUNES[Math.floor(Math.random() * SMURF_FORTUNES.length)];
-            if (RESIDENTS_DATA.length > 1 && currentUser) {
+        function getDailyTeaching() {
+            let seed = Date.now();
+            if (telegramId) {
+                const today = new Date().toDateString();
+                const str = today + String(telegramId);
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                seed = Math.abs(hash);
+            } else {
+                seed = Math.floor(Math.random() * 100000);
+            }
+            
+            const index = seed % PAPA_SMURF_TEACHINGS.length;
+            const teaching = PAPA_SMURF_TEACHINGS[index];
+            
+            // 40% chance of adding a dynamic networking target if there are other residents
+            if (RESIDENTS_DATA.length > 1 && currentUser && (seed % 10) < 4) {
                 const others = RESIDENTS_DATA.filter(r => String(r.telegramId) !== String(currentUser.telegramId));
                 if (others.length > 0) {
-                    const targetSmurf = others[Math.floor(Math.random() * others.length)];
-                    // 40% chance to roll a networking quest!
-                    if (Math.random() < 0.4) {
-                        return {
-                            text: "Hôm nay bạn là Tí Thân Thiện, hãy kết nối với mọi người trong Làng!",
-                            quest: `Nhiệm vụ: Hãy ghé thăm Quảng Trường, tìm thẻ của **${targetSmurf.smurfName}** và gửi cho bạn ấy một lời chúc tốt lành!`
-                        };
-                    }
+                    const targetSmurf = others[seed % others.length];
+                    return {
+                        ...teaching,
+                        quest: `Hãy ghé thăm Quảng Trường cư dân, tìm thẻ của **${targetSmurf.smurfName}** và gửi cho bạn ấy một phản ứng ngọt ngào!`
+                    };
                 }
             }
-            return base;
+            
+            return teaching;
         }
 
         let confettiActive = false;
@@ -2098,8 +2186,10 @@
         }
 
         function rollMagicMushroom() {
-            const fortune = getDynamicFortune();
-            document.getElementById('fortune-text').textContent = fortune.text;
+            const fortune = getDailyTeaching();
+            document.getElementById('fortune-ref').textContent = fortune.bibleRef;
+            document.getElementById('fortune-text').textContent = `"${fortune.text}"`;
+            document.getElementById('fortune-teaching').textContent = fortune.teaching;
             document.getElementById('fortune-quest').textContent = fortune.quest;
             
             const modal = document.getElementById('fortune-modal');

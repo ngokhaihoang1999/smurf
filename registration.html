@@ -505,77 +505,61 @@
             </div>
         </div>
 
-        <!-- 2D Pannable Map Viewport -->
-        <div id="map-scroll-container" class="w-full h-[calc(100vh-216px)] overflow-auto scroll-smooth relative cursor-grab active:cursor-grabbing select-none" style="scrollbar-width: none; -ms-overflow-style: none;">
+        <!-- 2D Fixed Map Viewport -->
+        <div id="map-viewport" class="w-full h-[calc(100vh-216px)] relative overflow-hidden select-none flex items-center justify-center bg-[#87CEEB] rounded-b-[24px]">
             
-            <!-- Map Ground Layer (512x1024 center crop of 1024x1024 vertical map) -->
-            <div style="width: 512px; height: 1024px; min-width: 512px; min-height: 1024px; position: relative; background-image: url('src/assets/smurf_village_base_map_vertical.png'); background-size: 1024px 1024px; background-position: -256px 0px; background-repeat: no-repeat; overflow: hidden;">
+            <!-- Map Board: Aspect Ratio Locked (512x1024) -->
+            <div id="map-board" class="relative max-w-full max-h-full aspect-[512/1024] bg-no-repeat bg-cover shadow-inner" style="height: 100%; background-image: url('src/assets/smurf_village_base_map_vertical.png'); background-position: center;">
                 
                 <!-- Floating Clouds -->
-                <div class="absolute top-10 left-[50px] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
-                <div class="absolute top-32 left-[250px] text-4xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 28s linear infinite 5s;">☁️</div>
-                <div class="absolute top-20 left-[400px] text-5xl opacity-15 pointer-events-none float-cloud" style="animation: floatSlow 24s linear infinite 10s;">☁️</div>
+                <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
+                <div class="absolute top-32 left-[40%] text-4xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 28s linear infinite 5s;">☁️</div>
+                <div class="absolute top-20 left-[75%] text-5xl opacity-15 pointer-events-none float-cloud" style="animation: floatSlow 24s linear infinite 10s;">☁️</div>
 
-                <!-- 1. LANDMARK: Papa Smurf's House (Link to Tab 2: Profile/My Card) -->
-                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 220px; left: 80px; width: 140px;" onclick="showProfileTab()">
-                    <img src="src/assets/smurf_papa_house.png" alt="Nhà Tí Vua" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
-                    <!-- Tooltip label -->
-                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-smurf-blue text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
-                        🍄 Nhà Của Bạn (Hồ Sơ)
-                    </div>
-                </div>
-
-                <!-- 2. LANDMARK: Village Plaza (Link to Tab 3: Village Square) -->
-                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 450px; left: 280px; width: 125px;" onclick="showVillageTab()">
-                    <img src="src/assets/smurf_blue_house.png" alt="Quảng Trường" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
-                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-smurf-green text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
-                        🏘️ Quảng Trường Cư Dân
-                    </div>
-                </div>
-
-                <!-- 3. LANDMARK: Signpost (Link to Registration / Guest Info) -->
-                <div class="absolute group cursor-pointer z-10 hover-bounce" style="top: 680px; left: 90px; width: 85px;" onclick="handleSignpostClick()">
-                    <img src="src/assets/smurf_signpost.png" alt="Biển Chỉ Đường" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
-                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-smurf-yellow text-slate-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
-                        📋 <span id="signpost-text">Đăng Ký Cư Dân</span>
-                    </div>
-                </div>
-
-                <!-- 4. LANDMARK: Magic Mushroom (Roll Fortune) -->
-                <div class="absolute group cursor-pointer z-20 hover-bounce" style="top: 580px; left: 300px; width: 80px;" onclick="rollMagicMushroom()">
-                    <img src="src/assets/smurf_magic_mushroom.png" alt="Nấm Thần Kỳ" class="w-full h-auto drop-shadow-[0_0_15px_rgba(168,85,247,0.6)] animate-pulse">
-                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border-2 border-white transition-all scale-95 group-hover:scale-100">
-                        🔮 Hái Nấm May Mắn
-                    </div>
-                </div>
-
+                <!-- Landmarks Layer (Rendered dynamically via JS) -->
+                <div id="map-landmarks-layer" class="absolute inset-0 z-10 w-full h-full pointer-events-none"></div>
+                
             </div>
         </div>
 
         <!-- Confetti Canvas overlay -->
         <canvas id="confetti-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-30"></canvas>
 
-        <!-- Fortune Modal (Popup) -->
-        <div id="fortune-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
-            <div class="bg-white rounded-3xl w-full max-w-xs p-6 shadow-2xl border-4 border-purple-300 flex flex-col items-center text-center transform scale-95 transition-transform duration-300 relative overflow-hidden">
+        <!-- Bảng Tin Papa Smurf Modal (Popup Lời Dạy) -->
+        <div id="fortune-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[150] flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-[#faf5e6] rounded-3xl w-full max-w-sm p-6 shadow-[0_16px_40px_rgba(0,0,0,0.4)] border-4 border-amber-900 flex flex-col items-center text-center transform scale-95 transition-transform duration-300 relative overflow-hidden">
                 
-                <!-- Glowing backdrop -->
-                <div class="absolute -top-20 -left-20 w-40 h-40 bg-purple-200 rounded-full filter blur-3xl opacity-55"></div>
-                <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-pink-200 rounded-full filter blur-3xl opacity-55"></div>
+                <!-- Decorative wood top bar -->
+                <div class="absolute top-0 left-0 right-0 h-3 bg-amber-950"></div>
                 
-                <span class="text-5xl mb-2 z-10 animate-bounce">🍄</span>
-                <h3 class="font-fredoka text-xl text-purple-600 mb-1 z-10">Lộc Nấm Thần Kỳ</h3>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-4 z-10">Papa Smurf Gửi Lời</p>
+                <span class="text-4xl mt-2 mb-1 z-10 animate-bounce">📜</span>
+                <h3 class="font-fredoka text-lg text-amber-900 mb-1 z-10 uppercase tracking-wide">Lời Dạy Từ Papa Smurf</h3>
+                <p id="fortune-ref" class="text-[9px] font-extrabold text-amber-600 bg-amber-100 px-3 py-0.5 rounded-full uppercase tracking-wider mb-3.5 z-10">CN 17:22</p>
                 
-                <!-- Fortune Result Container -->
-                <div class="bg-purple-50 border-2 border-purple-100 p-4 rounded-2xl w-full mb-5 z-10 min-h-[100px] flex flex-col justify-center items-center">
-                    <p id="fortune-text" class="text-sm font-bold text-slate-700 leading-relaxed"></p>
-                    <p id="fortune-quest" class="text-xs font-bold text-purple-600 mt-2 italic leading-relaxed"></p>
+                <!-- Scroll Content Container -->
+                <div class="w-full flex flex-col gap-3.5 z-10">
+                    <!-- Bible Verse (Bản 1925) -->
+                    <div class="bg-white/80 border border-amber-200/40 p-4.5 rounded-2xl shadow-sm relative">
+                        <span class="absolute -top-3 left-4 bg-[#faf5e6] px-2 text-[9px] font-bold text-amber-800/80">Kinh Thánh (1925)</span>
+                        <p id="fortune-text" class="text-xs font-bold italic text-slate-700 leading-relaxed font-quicksand">"Lòng vui vẻ vốn là một phương thuốc hay; Còn trí buồn thảm làm xương cốt khô héo."</p>
+                    </div>
+                    
+                    <!-- Papa Smurf's Teaching -->
+                    <div class="text-left px-1.5">
+                        <span class="text-[10px] font-extrabold text-amber-800 uppercase block mb-1">Papa Smurf dạy con:</span>
+                        <p id="fortune-teaching" class="text-[11px] font-bold text-slate-600 leading-relaxed">Con thấy đó, niềm vui trong lòng chính là phương thuốc diệu kỳ nhất của mỗi Xì Trum. Đừng để những nỗi lo buồn làm con mệt mỏi. Hãy luôn vui tươi lên con nhé!</p>
+                    </div>
+                    
+                    <!-- Quest / Mission -->
+                    <div class="bg-amber-50/70 border border-amber-200/50 p-3.5 rounded-2xl text-center">
+                        <span class="text-[10px] font-extrabold text-amber-800 uppercase block mb-1">⚡ Nhiệm vụ Xì Trum:</span>
+                        <p id="fortune-quest" class="text-xs font-bold text-slate-700 leading-relaxed">Hãy ghé thăm Quảng Trường cư dân và gửi 1 reaction dễ thương khích lệ tinh thần bạn bè!</p>
+                    </div>
                 </div>
                 
                 <!-- Close Button -->
-                <button onclick="closeFortuneModal()" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-fredoka font-bold text-sm transition-all active:scale-95 shadow-lg shadow-purple-500/25 z-10">
-                    Nhận Lộc Làng Xì Trum
+                <button onclick="closeFortuneModal()" class="w-full mt-5 py-3 bg-amber-900 hover:bg-amber-950 text-white rounded-2xl font-fredoka font-bold text-sm transition-all active:scale-95 shadow-lg shadow-amber-900/25 z-10">
+                    Nhận Lời Khuyên & Tiếp Tục
                 </button>
             </div>
         </div>
@@ -2134,6 +2118,62 @@
         }
 
         // ── SPA NAV HANDLERS ──
+        const MAP_LANDMARKS = [
+            {
+                id: 'my-house',
+                name: '🍄 Nhà Của Bạn (Hồ Sơ)',
+                image: 'src/assets/smurf_papa_house.png',
+                style: 'top: 21.5%; left: 15.6%; width: 27.3%;',
+                badgeColor: 'bg-smurf-blue',
+                onClick: 'showProfileTab'
+            },
+            {
+                id: 'village-plaza',
+                name: '🏘️ Quảng Trường Cư Dân',
+                image: 'src/assets/smurf_blue_house.png',
+                style: 'top: 44%; left: 54.7%; width: 24.4%;',
+                badgeColor: 'bg-smurf-green',
+                onClick: 'showVillageTab'
+            },
+            {
+                id: 'bulletin-board',
+                name: '📋 Bảng Tin Papa Smurf',
+                image: 'src/assets/smurf_bulletin_board.png',
+                style: 'top: 66.4%; left: 17.6%; width: 16.6%;',
+                badgeColor: 'bg-smurf-yellow',
+                onClick: 'rollMagicMushroom'
+            }
+        ];
+
+        function renderMapLandmarks() {
+            const container = document.getElementById('map-landmarks-layer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            MAP_LANDMARKS.forEach(lm => {
+                const el = document.createElement('div');
+                el.className = 'absolute group cursor-pointer pointer-events-auto hover-bounce';
+                el.style.cssText = lm.style;
+                el.id = `landmark-${lm.id}`;
+                
+                el.onclick = () => {
+                    if (lm.onClick === 'showProfileTab') showProfileTab();
+                    else if (lm.onClick === 'showVillageTab') showVillageTab();
+                    else if (lm.onClick === 'rollMagicMushroom') rollMagicMushroom();
+                };
+                
+                el.innerHTML = `
+                    <img src="${lm.image}" alt="${lm.name}" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
+                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 ${lm.badgeColor} text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border border-white transition-all scale-95 group-hover:scale-100 z-20 pointer-events-none">
+                        ${lm.name}
+                    </div>
+                `;
+                
+                container.appendChild(el);
+            });
+        }
+
         function showHomeTab() {
             closeEditSheet();
             const detailModal = document.getElementById('detail-modal');
@@ -2154,14 +2194,8 @@
                 countSpan.textContent = RESIDENTS_DATA.length;
             }
             
-            // Auto center the map scroll position (512x1024 vertical layout)
-            setTimeout(() => {
-                const container = document.getElementById('map-scroll-container');
-                if (container) {
-                    container.scrollLeft = (512 - container.clientWidth) / 2;
-                    container.scrollTop = (1024 - container.clientHeight) / 2;
-                }
-            }, 50);
+            // Render landmarks
+            renderMapLandmarks();
         }
 
         function showProfileTab() {
@@ -3481,32 +3515,70 @@
             }, 300);
         }
 
-        // ── MAGIC MUSHROOM FORTUNE & QUEST ROLLER ──
-        const SMURF_FORTUNES = [
-            { text: "Hôm nay bạn gặp may mắn như Tí Cô Nương, mọi việc suôn sẻ!", quest: "Nhiệm vụ: Hãy cười thật tươi khi gặp mọi người nhé!" },
-            { text: "Tí Cận khuyên bạn hôm nay hãy cẩn thận khi code, đừng để dính bug lạ.", quest: "Nhiệm vụ: Xem lại code dòng gần nhất bạn viết." },
-            { text: "Tí Quạu khuyên bạn hôm nay nên từ chối khéo các lời rủ rê họp hành để tập trung.", quest: "Nhiệm vụ: Hãy tắt thông báo Telegram trong 30 phút." },
-            { text: "Tí Vua dự báo hôm nay bạn sẽ có một buổi làm việc cực kỳ năng suất!", quest: "Nhiệm vụ: Uống một cốc nước ấm trước khi bắt đầu." },
-            { text: "Tí Tham Ăn khuyên bạn hôm nay nên tự thưởng một bữa ăn thật ngon.", quest: "Nhiệm vụ: Đi mua một món bánh ngọt bạn thích." },
-            { text: "Tí Điệu chúc bạn có một ngày rực rỡ và luôn là tâm điểm của sự chú ý.", quest: "Nhiệm vụ: Hãy chỉnh sửa bộ trang phục Smurf của bạn thật đẹp nhé!" }
+        // ── PAPA SMURF BIBLE TEACHINGS DATABASE (1925 VERSION) ──
+        const PAPA_SMURF_TEACHINGS = [
+            {
+                bibleRef: "CN 17:22",
+                text: "Lòng vui vẻ vốn là một phương thuốc hay; Còn trí buồn thảm làm xương cốt khô héo.",
+                teaching: "Con thấy đó, niềm vui trong lòng chính là phương thuốc diệu kỳ nhất của mỗi Xì Trum. Đừng để những nỗi lo buồn làm con mệt mỏi. Hãy luôn vui tươi lên con nhé!",
+                quest: "Hãy ghé thăm Quảng Trường cư dân và gửi 1 reaction dễ thương khích lệ tinh thần bạn bè!"
+            },
+            {
+                bibleRef: "1Cô 13:4",
+                text: "Lòng yêu thương hay nhịn nhục; lòng yêu thương nhân từ, không ghen ghét, không khoe mình, không kiêu ngạo.",
+                teaching: "Tình yêu thương giữa cư dân trong làng là điều quý giá nhất. Hãy luôn nhường nhịn, nhân từ và chia sẻ với nhau, chớ ghen tị hay khoe khoang con nhé!",
+                quest: "Tặng 1 lượt Like ❤️ cho người bạn mới đăng ký gần nhất trong Làng."
+            },
+            {
+                bibleRef: "Gc 1:19",
+                text: "Người nào cũng phải mau nghe mà chậm nói, chậm giận.",
+                teaching: "Lắng nghe là khởi đầu của sự khôn ngoan. Khi trò chuyện với mọi người, con hãy chăm chú lắng nghe, suy nghĩ kỹ trước khi nói và luôn giữ lòng mình ôn hòa.",
+                quest: "Vào Bảng Tin Làng chia sẻ một câu nói tích cực hoặc trò chuyện chân thành cùng một cư dân khác."
+            },
+            {
+                bibleRef: "Mt 7:12",
+                text: "Hễ điều chi mà các ngươi muốn người ta làm cho mình, thì cũng hãy làm điều đó cho họ.",
+                teaching: "Nếu con muốn mọi người đối xử với mình dịu dàng và tôn trọng, hãy là người chủ động trao đi sự tôn trọng và chân thành đó trước nhé!",
+                quest: "Ghé thăm Quảng Trường và gửi phản ứng 🌟 (Sáng Tạo) cho một Xì Trum mà con ấn tượng."
+            },
+            {
+                bibleRef: "Pl 4:6",
+                text: "Chớ lo phiền chi hết, song trong mọi sự hãy dùng lời cầu nguyện, nài xin, và sự tạ ơn mà trình các sự cầu xin của mình cho Đức Chúa Trời.",
+                teaching: "Đừng để những lo toan của ngày hôm nay đè nặng đôi vai con. Hãy trút bỏ mọi lo âu, giữ lòng bình an và luôn sống với lòng biết ơn nhé!",
+                quest: "Dành 1 phút tĩnh lặng để mỉm cười và nghĩ về một điều tốt đẹp vừa xảy ra trong ngày."
+            }
         ];
 
-        function getDynamicFortune() {
-            const base = SMURF_FORTUNES[Math.floor(Math.random() * SMURF_FORTUNES.length)];
-            if (RESIDENTS_DATA.length > 1 && currentUser) {
+        function getDailyTeaching() {
+            let seed = Date.now();
+            if (telegramId) {
+                const today = new Date().toDateString();
+                const str = today + String(telegramId);
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                seed = Math.abs(hash);
+            } else {
+                seed = Math.floor(Math.random() * 100000);
+            }
+            
+            const index = seed % PAPA_SMURF_TEACHINGS.length;
+            const teaching = PAPA_SMURF_TEACHINGS[index];
+            
+            // 40% chance of adding a dynamic networking target if there are other residents
+            if (RESIDENTS_DATA.length > 1 && currentUser && (seed % 10) < 4) {
                 const others = RESIDENTS_DATA.filter(r => String(r.telegramId) !== String(currentUser.telegramId));
                 if (others.length > 0) {
-                    const targetSmurf = others[Math.floor(Math.random() * others.length)];
-                    // 40% chance to roll a networking quest!
-                    if (Math.random() < 0.4) {
-                        return {
-                            text: "Hôm nay bạn là Tí Thân Thiện, hãy kết nối với mọi người trong Làng!",
-                            quest: `Nhiệm vụ: Hãy ghé thăm Quảng Trường, tìm thẻ của **${targetSmurf.smurfName}** và gửi cho bạn ấy một lời chúc tốt lành!`
-                        };
-                    }
+                    const targetSmurf = others[seed % others.length];
+                    return {
+                        ...teaching,
+                        quest: `Hãy ghé thăm Quảng Trường cư dân, tìm thẻ của **${targetSmurf.smurfName}** và gửi cho bạn ấy một phản ứng ngọt ngào!`
+                    };
                 }
             }
-            return base;
+            
+            return teaching;
         }
 
         let confettiActive = false;
@@ -3570,8 +3642,10 @@
         }
 
         function rollMagicMushroom() {
-            const fortune = getDynamicFortune();
-            document.getElementById('fortune-text').textContent = fortune.text;
+            const fortune = getDailyTeaching();
+            document.getElementById('fortune-ref').textContent = fortune.bibleRef;
+            document.getElementById('fortune-text').textContent = `"${fortune.text}"`;
+            document.getElementById('fortune-teaching').textContent = fortune.teaching;
             document.getElementById('fortune-quest').textContent = fortune.quest;
             
             const modal = document.getElementById('fortune-modal');
