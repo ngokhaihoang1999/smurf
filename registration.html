@@ -548,7 +548,9 @@
             border-radius: 12px;
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
             border: 2px solid #3b82f6;
-            white-space: nowrap;
+            white-space: normal;
+            max-width: 150px;
+            text-align: center;
             pointer-events: none;
             z-index: 50;
             opacity: 0;
@@ -582,6 +584,35 @@
             border-style: solid;
             border-color: white transparent transparent transparent;
             z-index: 1;
+        }
+
+        /* Alignments for screen boundary safety */
+        .speech-bubble.align-left {
+            left: 0 !important;
+            transform: scale(0.85) !important;
+        }
+        .speech-bubble.align-left.show {
+            transform: scale(1) !important;
+        }
+        .speech-bubble.align-left::after,
+        .speech-bubble.align-left::before {
+            left: 20px !important;
+            transform: none !important;
+        }
+
+        .speech-bubble.align-right {
+            left: auto !important;
+            right: 0 !important;
+            transform: scale(0.85) !important;
+        }
+        .speech-bubble.align-right.show {
+            transform: scale(1) !important;
+        }
+        .speech-bubble.align-right::after,
+        .speech-bubble.align-right::before {
+            left: auto !important;
+            right: 20px !important;
+            transform: none !important;
         }
 
 
@@ -2512,6 +2543,19 @@
                     if (!bubble) {
                         bubble = document.createElement('div');
                         bubble.className = 'speech-bubble';
+                        
+                        // Parse left percentage to safely handle screen boundaries
+                        let leftVal = 50;
+                        const match = char.style.match(/left:\s*([\d.]+)%/);
+                        if (match) {
+                            leftVal = parseFloat(match[1]);
+                        }
+                        if (leftVal < 25) {
+                            bubble.classList.add('align-left');
+                        } else if (leftVal > 75) {
+                            bubble.classList.add('align-right');
+                        }
+                        
                         el.appendChild(bubble);
                     }
                     bubble.innerText = SMURF_QUOTES[char.id] || "Bấm tớ nữa đi! 💙";

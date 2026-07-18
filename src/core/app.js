@@ -921,6 +921,19 @@
                     if (!bubble) {
                         bubble = document.createElement('div');
                         bubble.className = 'speech-bubble';
+                        
+                        // Parse left percentage to safely handle screen boundaries
+                        let leftVal = 50;
+                        const match = char.style.match(/left:\s*([\d.]+)%/);
+                        if (match) {
+                            leftVal = parseFloat(match[1]);
+                        }
+                        if (leftVal < 25) {
+                            bubble.classList.add('align-left');
+                        } else if (leftVal > 75) {
+                            bubble.classList.add('align-right');
+                        }
+                        
                         el.appendChild(bubble);
                     }
                     bubble.innerText = SMURF_QUOTES[char.id] || "Bấm tớ nữa đi! 💙";
