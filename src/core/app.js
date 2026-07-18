@@ -939,10 +939,16 @@
                     bubble.innerText = SMURF_QUOTES[char.id] || "Bấm tớ nữa đi! 💙";
                     bubble.classList.add('show');
                     
+                    // Lift z-index of the character element so its speech bubble overlays all other siblings
+                    el.style.zIndex = '999';
+                    
                     if (el.bubbleTimeout) clearTimeout(el.bubbleTimeout);
                     el.bubbleTimeout = setTimeout(() => {
                         bubble.classList.remove('show');
-                        setTimeout(() => bubble.remove(), 300);
+                        setTimeout(() => {
+                            bubble.remove();
+                            el.style.zIndex = ''; // Restore normal stacking order
+                        }, 300);
                     }, 2500);
                     
                     // 4. Haptic Feedback
