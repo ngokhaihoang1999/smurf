@@ -662,6 +662,8 @@
         }
 
         // ── SPA NAV HANDLERS ──
+        const MAP_BG_CONFIG = { yOffset: 0, brightness: 100, saturate: 100 };
+
         const MAP_LANDMARKS = [
             {
                 id: 'my-house',
@@ -835,6 +837,16 @@
             });
         }
 
+        function applyMapBackgroundConfig() {
+            const mapBoard = document.getElementById('map-board');
+            if (mapBoard) {
+                // Apply Y panning offset
+                mapBoard.style.transform = `translate(-50%, calc(-50% + ${MAP_BG_CONFIG.yOffset}%))`;
+                // Apply filters (brightness and saturate)
+                mapBoard.style.filter = `brightness(${MAP_BG_CONFIG.brightness}%) saturate(${MAP_BG_CONFIG.saturate}%)`;
+            }
+        }
+
         function showHomeTab() {
             closeEditSheet();
             const detailModal = document.getElementById('detail-modal');
@@ -858,6 +870,7 @@
             // Render landmarks and characters
             renderMapLandmarks();
             renderVillageCharacters();
+            applyMapBackgroundConfig();
         }
 
         function showProfileTab() {

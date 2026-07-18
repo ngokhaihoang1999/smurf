@@ -206,6 +206,24 @@
                 <label>Độ trong suốt (Opacity): <span id="val-opacity">1.0</span></label>
                 <input type="range" id="slider-opacity" min="0.1" max="1.0" step="0.05" value="1.0">
             </div>
+        <!-- BACKGROUND SETTINGS -->
+        <div class="control-group">
+            <div class="control-title">Cài Đặt Bản Đồ Nền</div>
+            
+            <div class="control-row">
+                <label>Dịch chuyển dọc (Pan Y %): <span id="val-bg-y">0%</span></label>
+                <input type="range" id="slider-bg-y" min="-30" max="30" step="0.5" value="0">
+            </div>
+            
+            <div class="control-row">
+                <label>Độ sáng (Brightness): <span id="val-bg-brightness">100%</span></label>
+                <input type="range" id="slider-bg-brightness" min="40" max="100" step="1" value="100">
+            </div>
+            
+            <div class="control-row">
+                <label>Độ bão hòa (Saturate): <span id="val-bg-saturate">100%</span></label>
+                <input type="range" id="slider-bg-saturate" min="50" max="150" step="5" value="100">
+            </div>
         </div>
 
         <button class="export-btn" onclick="exportConfig()">Xuất Code Cấu Hình</button>
@@ -215,8 +233,10 @@
     <!-- WORKSPACE CANVAS -->
     <div class="workspace">
         <div class="map-viewport" id="map-viewport">
-            <img src="src/assets/smurf_village_base_map_vertical.png" alt="Map" class="map-background" id="map-bg-img">
-            <div class="editor-layer" id="editor-layer"></div>
+            <div id="map-board-wrapper" style="position: absolute; inset: 0; width: 100%; height: 100%; transform: translateY(0%); transition: transform 0.1s ease-out;">
+                <img src="src/assets/smurf_village_base_map_vertical.png" alt="Map" class="map-background" id="map-bg-img" style="width: 100%; height: 100%; object-fit: cover;">
+                <div class="editor-layer" id="editor-layer"></div>
+            </div>
         </div>
     </div>
 
@@ -456,6 +476,43 @@
             }
         });
 
+        // Background Settings Handlers
+        let bgYOffset = 0;
+        let bgBrightness = 100;
+        let bgSaturate = 100;
+
+        function updateBackgroundStyle() {
+            const wrapper = document.getElementById('map-board-wrapper');
+            const bgImg = document.getElementById('map-bg-img');
+            if (wrapper) {
+                wrapper.style.transform = `translateY(${bgYOffset}%)`;
+            }
+            if (bgImg) {
+                bgImg.style.filter = `brightness(${bgBrightness}%) saturate(${bgSaturate}%)`;
+            }
+        }
+
+        document.getElementById('slider-bg-y').addEventListener('input', (e) => {
+            bgYOffset = parseFloat(e.target.value);
+            document.getElementById('val-bg-y').innerText = bgYOffset + '%';
+            updateBackgroundStyle();
+            exportConfig();
+        });
+
+        document.getElementById('slider-bg-brightness').addEventListener('input', (e) => {
+            bgBrightness = parseInt(e.target.value);
+            document.getElementById('val-bg-brightness').innerText = bgBrightness + '%';
+            updateBackgroundStyle();
+            exportConfig();
+        });
+
+        document.getElementById('slider-bg-saturate').addEventListener('input', (e) => {
+            bgSaturate = parseInt(e.target.value);
+            document.getElementById('val-bg-saturate').innerText = bgSaturate + '%';
+            updateBackgroundStyle();
+            exportConfig();
+        });
+
         // Export coordinates helper
         function exportConfig() {
             const cleanLandmarks = landmarks.map(lm => {
@@ -487,7 +544,8 @@
                 opacity: char.numericOpacity
             }));
 
-            let exportText = `// Copy hai mảng này thay vào app.js:\n\n`;
+            let exportText = `// Copy hai mảng này và cấu hình nền thay vào app.js:\n\n`;
+            exportText += `const MAP_BG_CONFIG = { yOffset: ${bgYOffset}, brightness: ${bgBrightness}, saturate: ${bgSaturate} };\n\n`;
             exportText += `const MAP_LANDMARKS = ${JSON.stringify(cleanLandmarks, null, 4)};\n\n`;
             exportText += `const VILLAGE_CHARACTERS = ${JSON.stringify(cleanCharacters, null, 4)};`;
             
