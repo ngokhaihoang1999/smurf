@@ -11,7 +11,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <link href="styles.css?v=7" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
@@ -39,7 +39,7 @@
                         }
                     },
                     fontFamily: {
-                        fredoka: ['Fredoka', 'sans-serif'],
+                        fredoka: ['Nunito', 'sans-serif'],
                         quicksand: ['Quicksand', 'sans-serif'],
                         baloo: ['"Baloo 2"', 'cursive'],
                     }
@@ -973,14 +973,14 @@
         <div class="bg-gradient-to-r from-pink-50/60 via-purple-50/60 to-indigo-50/60 border border-purple-100 rounded-3xl p-4.5 flex flex-col gap-2.5 shadow-sm text-center">
             <div class="flex items-center justify-center gap-1.5 text-purple-700 font-bold text-sm">
                 <span class="material-symbols-outlined text-base">handshake</span>
-                <span class="font-fredoka">Đo Trum Vibe</span>
+                <span class="font-fredoka">Đo Vibe Xì Trum</span>
             </div>
             <p class="text-[10px] text-slate-500 font-medium px-2 leading-relaxed">
-                Khám phá mức độ đồng điệu giữa bạn và các cư dân khác trong làng dựa trên sự giao thoa về tính cách và sở thích!
+                Khám phá xem bạn bắt sóng (vibe) chuẩn nhất với cư dân nào trong làng dựa trên sở thích và tính cách tương đồng nhé! 🔍
             </p>
             <button onclick="triggerTrumVibe()" class="mx-auto w-full py-3 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:to-indigo-600 text-white rounded-2xl font-fredoka font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md">
                 <span class="material-symbols-outlined text-sm">handshake</span>
-                <span>Bắt Đầu Đo Trum Vibe</span>
+                <span>Tìm Bạn Vibe Trum</span>
             </button>
         </div>
 
@@ -1017,13 +1017,13 @@
         <div class="bg-white rounded-3xl w-full max-w-sm border-2 border-purple-200 shadow-2xl p-5 flex flex-col gap-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
                 <h3 class="font-fredoka text-base text-purple-700 flex items-center gap-1.5">
-                    🤝 Kết Quả Trum Vibe
+                    🤝 Kết Quả Đo Vibe Xì Trum
                 </h3>
                 <button onclick="closeTrumVibeModal()" class="text-slate-400 hover:text-slate-600 p-1"><span class="material-symbols-outlined">close</span></button>
             </div>
             
             <p class="text-[11px] text-slate-500 font-bold text-center leading-relaxed">
-                Dựa vào sở thích & tính cách của bạn, đây là những người bạn đồng hành hợp vibe nhất trong Làng:
+                Dựa trên sở thích & tính cách, đây là những cư dân hợp cạ nhất với bạn trong Làng Xì Trum:
             </p>
             
             <!-- Match Results Feed -->
@@ -3944,7 +3944,7 @@
         // Trum Vibe (Matchmaking) Result Handlers
         function triggerTrumVibe() {
             if (!currentUser) {
-                alert("⚠️ Bạn cần đăng ký cư dân để đo Trum Vibe!");
+                alert("⚠️ Bạn cần đăng ký cư dân trước để bắt đầu đo Vibe Xì Trum nhé!");
                 return;
             }
             

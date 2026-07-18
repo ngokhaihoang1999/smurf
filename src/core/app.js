@@ -2472,7 +2472,7 @@
         // Trum Vibe (Matchmaking) Result Handlers
         function triggerTrumVibe() {
             if (!currentUser) {
-                alert("⚠️ Bạn cần đăng ký cư dân để đo Trum Vibe!");
+                alert("⚠️ Bạn cần đăng ký cư dân trước để bắt đầu đo Vibe Xì Trum nhé!");
                 return;
             }
             
