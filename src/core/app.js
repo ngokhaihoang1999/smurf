@@ -662,61 +662,112 @@
         }
 
         // ── SPA NAV HANDLERS ──
-        const MAP_BG_CONFIG = { yOffset: 0, brightness: 100, saturate: 100 };
+        const MAP_BG_CONFIG = { yOffset: -3, brightness: 100, saturate: 95 };
 
         const MAP_LANDMARKS = [
             {
-                id: 'my-house',
-                name: '🍄 Nhà Của Bạn',
-                image: 'src/assets/smurf_papa_house.png',
-                style: 'top: 20%; left: 16%; width: 28%;',
-                opacity: 1,
-                badgeColor: 'bg-smurf-blue',
-                tooltipStyle: 'top: 15%; left: 20%;',
-                onClick: 'showProfileTab'
+                "id": "my-house",
+                "name": "🍄 Nhà Của Bạn",
+                "image": "src/assets/smurf_papa_house.png",
+                "style": "top: 63.5%; left: 58.5%; width: 41.5%;",
+                "opacity": 1,
+                "badgeColor": "bg-smurf-blue",
+                "onClick": "showProfileTab",
+                "tooltipStyle": "top: 62.5%; left: 69.4%;"
             },
             {
-                id: 'village-plaza',
-                name: '🏘️ Quảng Trường Cư Dân',
-                image: 'src/assets/smurf_blue_house.png',
-                style: 'top: 42%; left: 54%; width: 28%;',
-                opacity: 1,
-                badgeColor: 'bg-smurf-green',
-                tooltipStyle: 'top: 37%; left: 58%;',
-                onClick: 'showVillageTab'
+                "id": "village-plaza",
+                "name": "🏘️ Quảng Trường Cư Dân",
+                "image": "src/assets/smurf_blue_house.png",
+                "style": "top: 17%; left: 30.1%; width: 60%;",
+                "opacity": 1,
+                "badgeColor": "bg-smurf-green",
+                "onClick": "showVillageTab",
+                "tooltipStyle": "top: 15.4%; left: 35.5%;"
             },
             {
-                id: 'bulletin-board',
-                name: '📋 Bảng Tin Papa Smurf',
-                image: 'src/assets/smurf_bulletin_board.png',
-                style: 'top: 66%; left: 18%; width: 16%;',
-                opacity: 1,
-                badgeColor: 'bg-smurf-yellow',
-                tooltipStyle: 'top: 61%; left: 22%;',
-                onClick: 'rollMagicMushroom'
-            },
-            {
-                id: 'wishing-well',
-                name: '⛲ Giếng Ước Nguyện',
-                image: 'src/assets/smurf_wishing_well.png',
-                style: 'top: 52%; left: 12%; width: 18%;',
-                opacity: 1,
-                hasTooltip: false,
-                onClick: 'showWishingWellMessage'
+                "id": "bulletin-board",
+                "name": "📋 Bảng Tin Papa Smurf",
+                "image": "src/assets/smurf_bulletin_board.png",
+                "style": "top: 60.2%; left: 29.4%; width: 16%;",
+                "opacity": 1,
+                "badgeColor": "bg-smurf-yellow",
+                "onClick": "rollMagicMushroom",
+                "tooltipStyle": "top: 57.6%; left: 18.3%;"
             }
         ];
 
         const VILLAGE_CHARACTERS = [
-            { id: 1, name: "Tí Đi Bộ", image: "src/assets/characters/smurf_char_1.png", style: "top: 36%; left: 35%; width: 9%;", opacity: 1 },
-            { id: 2, name: "Tí Vẫy Tay", image: "src/assets/characters/smurf_char_2.png", style: "top: 25%; left: 52%; width: 9%;", opacity: 1 },
-            { id: 3, name: "Tí Đọc Sách", image: "src/assets/characters/smurf_char_3.png", style: "top: 15%; left: 75%; width: 9%;", opacity: 1 },
-            { id: 4, name: "Tí Xách Nước", image: "src/assets/characters/smurf_char_4.png", style: "top: 50%; left: 32%; width: 9%;", opacity: 1 },
-            { id: 5, name: "Tí Nhảy Múa", image: "src/assets/characters/smurf_char_5.png", style: "top: 48%; left: 18%; width: 9%;", opacity: 1 },
-            { id: 6, name: "Tí Ngủ Gật", image: "src/assets/characters/smurf_char_6.png", style: "top: 62%; left: 45%; width: 9%;", opacity: 1 },
-            { id: 7, name: "Tí Quét Dọn", image: "src/assets/characters/smurf_char_7.png", style: "top: 75%; left: 32%; width: 9%;", opacity: 1 },
-            { id: 8, name: "Tí Suy Nghĩ", image: "src/assets/characters/smurf_char_8.png", style: "top: 32%; left: 82%; width: 9%;", opacity: 1 },
-            { id: 9, name: "Tí Khéo Tay", image: "src/assets/characters/smurf_char_9.png", style: "top: 78%; left: 72%; width: 9%;", opacity: 1 },
-            { id: 10, name: "Tí Tham Ăn", image: "src/assets/characters/smurf_char_10.png", style: "top: 58%; left: 75%; width: 9%;", opacity: 1 }
+            {
+                "id": 1,
+                "name": "Tí Đi Bộ",
+                "image": "src/assets/characters/smurf_char_1.png",
+                "style": "top: 79.3%; left: 15.8%; width: 20%;",
+                "opacity": 1
+            },
+            {
+                "id": 2,
+                "name": "Tí Vẫy Tay",
+                "image": "src/assets/characters/smurf_char_2.png",
+                "style": "top: 57%; left: 76.7%; width: 9%;",
+                "opacity": 1
+            },
+            {
+                "id": 3,
+                "name": "Tí Đọc Sách",
+                "image": "src/assets/characters/smurf_char_3.png",
+                "style": "top: 36.6%; left: 46.3%; width: 11%;",
+                "opacity": 1
+            },
+            {
+                "id": 4,
+                "name": "Tí Xách Nước",
+                "image": "src/assets/characters/smurf_char_4.png",
+                "style": "top: 51.1%; left: 30.4%; width: 14%;",
+                "opacity": 1
+            },
+            {
+                "id": 5,
+                "name": "Tí Nhảy Múa",
+                "image": "src/assets/characters/smurf_char_5.png",
+                "style": "top: 41.1%; left: 70.9%; width: 15%;",
+                "opacity": 1
+            },
+            {
+                "id": 6,
+                "name": "Tí Ngủ Gật",
+                "image": "src/assets/characters/smurf_char_6.png",
+                "style": "top: 24.2%; left: 12.3%; width: 15.5%;",
+                "opacity": 1
+            },
+            {
+                "id": 7,
+                "name": "Tí Quét Dọn",
+                "image": "src/assets/characters/smurf_char_7.png",
+                "style": "top: 36.4%; left: 62%; width: 13%;",
+                "opacity": 1
+            },
+            {
+                "id": 8,
+                "name": "Tí Suy Nghĩ",
+                "image": "src/assets/characters/smurf_char_8.png",
+                "style": "top: 47.7%; left: 64.9%; width: 14.5%;",
+                "opacity": 1
+            },
+            {
+                "id": 9,
+                "name": "Tí Khéo Tay",
+                "image": "src/assets/characters/smurf_char_9.png",
+                "style": "top: 81.1%; left: 79.9%; width: 17%;",
+                "opacity": 1
+            },
+            {
+                "id": 10,
+                "name": "Tí Tham Ăn",
+                "image": "src/assets/characters/smurf_char_10.png",
+                "style": "top: 59.3%; left: 47.2%; width: 15.5%;",
+                "opacity": 1
+            }
         ];
 
         function showWishingWellMessage() {
