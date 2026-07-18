@@ -668,9 +668,9 @@
                 name: '🍄 Nhà Của Bạn (Hồ Sơ)',
                 image: 'src/assets/smurf_papa_house.png',
                 style: 'top: 20%; left: 16%; width: 28%;',
+                opacity: 1,
                 badgeColor: 'bg-smurf-blue',
-                pulseColor: 'bg-blue-400',
-                pulseClass: 'bg-blue-500',
+                tooltipStyle: 'top: 15%; left: 20%;',
                 onClick: 'showProfileTab'
             },
             {
@@ -678,9 +678,9 @@
                 name: '🏘️ Quảng Trường Cư Dân',
                 image: 'src/assets/smurf_blue_house.png',
                 style: 'top: 42%; left: 54%; width: 28%;',
+                opacity: 1,
                 badgeColor: 'bg-smurf-green',
-                pulseColor: 'bg-emerald-400',
-                pulseClass: 'bg-emerald-500',
+                tooltipStyle: 'top: 37%; left: 58%;',
                 onClick: 'showVillageTab'
             },
             {
@@ -688,9 +688,9 @@
                 name: '📋 Bảng Tin Papa Smurf',
                 image: 'src/assets/smurf_bulletin_board.png',
                 style: 'top: 66%; left: 18%; width: 16%;',
+                opacity: 1,
                 badgeColor: 'bg-smurf-yellow',
-                pulseColor: 'bg-amber-400',
-                pulseClass: 'bg-amber-500',
+                tooltipStyle: 'top: 61%; left: 22%;',
                 onClick: 'rollMagicMushroom'
             },
             {
@@ -698,9 +698,8 @@
                 name: '⛲ Giếng Ước Nguyện',
                 image: 'src/assets/smurf_wishing_well.png',
                 style: 'top: 52%; left: 12%; width: 18%;',
-                badgeColor: 'bg-purple-600',
-                pulseColor: 'bg-purple-400',
-                pulseClass: 'bg-purple-500',
+                opacity: 1,
+                hasTooltip: false,
                 onClick: 'showWishingWellMessage'
             },
             {
@@ -708,24 +707,23 @@
                 name: '🚧 Cổng Chào Làng',
                 image: 'src/assets/smurf_village_gate.png',
                 style: 'top: 80%; left: 42%; width: 25%;',
-                badgeColor: 'bg-orange-600',
-                pulseColor: 'bg-orange-400',
-                pulseClass: 'bg-orange-500',
+                opacity: 1,
+                hasTooltip: false,
                 onClick: 'showGateMessage'
             }
         ];
 
         const VILLAGE_CHARACTERS = [
-            { id: 1, name: "Tí Đi Bộ", image: "src/assets/characters/smurf_char_1.png", style: "top: 36%; left: 35%; width: 9%;" },
-            { id: 2, name: "Tí Vẫy Tay", image: "src/assets/characters/smurf_char_2.png", style: "top: 25%; left: 52%; width: 9%;" },
-            { id: 3, name: "Tí Đọc Sách", image: "src/assets/characters/smurf_char_3.png", style: "top: 15%; left: 75%; width: 9%;" },
-            { id: 4, name: "Tí Xách Nước", image: "src/assets/characters/smurf_char_4.png", style: "top: 50%; left: 32%; width: 9%;" },
-            { id: 5, name: "Tí Nhảy Múa", image: "src/assets/characters/smurf_char_5.png", style: "top: 48%; left: 18%; width: 9%;" },
-            { id: 6, name: "Tí Ngủ Gật", image: "src/assets/characters/smurf_char_6.png", style: "top: 62%; left: 45%; width: 9%;" },
-            { id: 7, name: "Tí Quét Dọn", image: "src/assets/characters/smurf_char_7.png", style: "top: 75%; left: 32%; width: 9%;" },
-            { id: 8, name: "Tí Suy Nghĩ", image: "src/assets/characters/smurf_char_8.png", style: "top: 32%; left: 82%; width: 9%;" },
-            { id: 9, name: "Tí Khéo Tay", image: "src/assets/characters/smurf_char_9.png", style: "top: 78%; left: 72%; width: 9%;" },
-            { id: 10, name: "Tí Tham Ăn", image: "src/assets/characters/smurf_char_10.png", style: "top: 58%; left: 75%; width: 9%;" }
+            { id: 1, name: "Tí Đi Bộ", image: "src/assets/characters/smurf_char_1.png", style: "top: 36%; left: 35%; width: 9%;", opacity: 1 },
+            { id: 2, name: "Tí Vẫy Tay", image: "src/assets/characters/smurf_char_2.png", style: "top: 25%; left: 52%; width: 9%;", opacity: 1 },
+            { id: 3, name: "Tí Đọc Sách", image: "src/assets/characters/smurf_char_3.png", style: "top: 15%; left: 75%; width: 9%;", opacity: 1 },
+            { id: 4, name: "Tí Xách Nước", image: "src/assets/characters/smurf_char_4.png", style: "top: 50%; left: 32%; width: 9%;", opacity: 1 },
+            { id: 5, name: "Tí Nhảy Múa", image: "src/assets/characters/smurf_char_5.png", style: "top: 48%; left: 18%; width: 9%;", opacity: 1 },
+            { id: 6, name: "Tí Ngủ Gật", image: "src/assets/characters/smurf_char_6.png", style: "top: 62%; left: 45%; width: 9%;", opacity: 1 },
+            { id: 7, name: "Tí Quét Dọn", image: "src/assets/characters/smurf_char_7.png", style: "top: 75%; left: 32%; width: 9%;", opacity: 1 },
+            { id: 8, name: "Tí Suy Nghĩ", image: "src/assets/characters/smurf_char_8.png", style: "top: 32%; left: 82%; width: 9%;", opacity: 1 },
+            { id: 9, name: "Tí Khéo Tay", image: "src/assets/characters/smurf_char_9.png", style: "top: 78%; left: 72%; width: 9%;", opacity: 1 },
+            { id: 10, name: "Tí Tham Ăn", image: "src/assets/characters/smurf_char_10.png", style: "top: 58%; left: 75%; width: 9%;", opacity: 1 }
         ];
 
         function showWishingWellMessage() {
@@ -762,6 +760,7 @@
                 const el = document.createElement('div');
                 el.className = 'absolute group cursor-pointer pointer-events-auto hover-bounce';
                 el.style.cssText = lm.style;
+                el.style.opacity = lm.opacity !== undefined ? lm.opacity : 1;
                 el.id = `landmark-${lm.id}`;
                 
                 el.onclick = () => {
@@ -774,18 +773,41 @@
                 
                 el.innerHTML = `
                     <img src="${lm.image}" alt="${lm.name}" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
-                    <!-- Tooltip label -->
-                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 ${lm.badgeColor} text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap opacity-90 group-hover:opacity-100 shadow-md border border-white transition-all scale-95 group-hover:scale-100 z-20 pointer-events-none">
-                        ${lm.name}
-                    </div>
-                    <!-- Pulsing Beacon -->
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex h-4 w-4 pointer-events-none z-30">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${lm.pulseColor} opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-4 w-4 ${lm.pulseClass} border border-white shadow-md"></span>
-                    </div>
                 `;
                 
                 container.appendChild(el);
+
+                // Render Tooltip / Tag Name as separate element if hasTooltip is not false
+                if (lm.hasTooltip !== false) {
+                    const tip = document.createElement('div');
+                    let tStyle = lm.tooltipStyle;
+                    if (!tStyle) {
+                        let topVal = 15;
+                        let leftVal = 20;
+                        lm.style.split(';').forEach(p => {
+                            let [k, v] = p.split(':');
+                            if (k && v) {
+                                k = k.trim(); v = v.trim();
+                                if (k === 'top') topVal = parseFloat(v) - 5;
+                                if (k === 'left') leftVal = parseFloat(v);
+                            }
+                        });
+                        tStyle = `top: ${topVal}%; left: ${leftVal}%;`;
+                    }
+                    
+                    tip.className = `absolute ${lm.badgeColor} text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-md border border-white pointer-events-auto cursor-pointer z-20 transition-all hover:scale-105`;
+                    tip.style.cssText = tStyle;
+                    
+                    tip.onclick = (e) => {
+                        e.stopPropagation();
+                        if (lm.onClick === 'showProfileTab') showProfileTab();
+                        else if (lm.onClick === 'showVillageTab') showVillageTab();
+                        else if (lm.onClick === 'rollMagicMushroom') rollMagicMushroom();
+                    };
+                    
+                    container.appendChild(tip);
+                    tip.innerText = lm.name;
+                }
             });
         }
 
@@ -797,6 +819,7 @@
                 const el = document.createElement('div');
                 el.className = 'absolute pointer-events-auto hover-bounce z-10 transition-transform duration-300 active:scale-125';
                 el.style.cssText = char.style;
+                el.style.opacity = char.opacity !== undefined ? char.opacity : 1;
                 el.id = `character-${char.id}`;
                 el.title = char.name;
                 

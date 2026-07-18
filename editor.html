@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xì Trum Map Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: #1e1e24;
+            color: #f5f5f7;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Sidebar Controls */
+        .sidebar {
+            width: 360px;
+            background: #121214;
+            border-right: 2px solid #2d2d35;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .sidebar h2 {
+            font-family: 'Fredoka One', cursive;
+            color: #f59e0b;
+            font-size: 20px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .instructions {
+            font-size: 11px;
+            color: #a1a1aa;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .control-group {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+        .control-title {
+            font-weight: 700;
+            font-size: 13px;
+            color: #e4e4e7;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .control-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .control-row label {
+            font-size: 11px;
+            color: #a1a1aa;
+        }
+        .control-row input[type="range"] {
+            width: 100%;
+            accent-color: #f59e0b;
+            cursor: pointer;
+        }
+        .export-btn {
+            font-family: 'Fredoka One', cursive;
+            background: #f59e0b;
+            color: #121214;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            margin-top: auto;
+        }
+        .export-btn:hover {
+            background: #d97706;
+            transform: scale(1.02);
+        }
+        .export-area {
+            width: 100%;
+            height: 120px;
+            background: #09090b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            color: #10b981;
+            font-family: monospace;
+            font-size: 9px;
+            padding: 8px;
+            margin-top: 10px;
+            resize: none;
+        }
+
+        /* Map Canvas Container */
+        .workspace {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            background: #18181b;
+        }
+        .map-viewport {
+            width: 380px;
+            height: 760px;
+            background: #1e293b;
+            border: 4px solid #f59e0b;
+            border-radius: 24px;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+        .map-background {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+            user-select: none;
+        }
+        .editor-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: auto;
+        }
+
+        /* Draggable Entities */
+        .draggable {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+        }
+        .draggable img {
+            width: 100%;
+            height: auto;
+            display: block;
+            pointer-events: none;
+        }
+        .draggable.selected {
+            outline: 2px dashed #f59e0b;
+            outline-offset: 2px;
+            filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
+            z-index: 100 !important;
+        }
+
+        /* Draggable Tooltips (Labels) */
+        .draggable-tooltip {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            color: #ffffff;
+            font-size: 9px;
+            font-weight: 700;
+            border: 1px solid #ffffff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            white-space: nowrap;
+            z-index: 50;
+        }
+        .draggable-tooltip.selected {
+            outline: 2px dashed #f59e0b;
+            outline-offset: 2px;
+            z-index: 100 !important;
+        }
+
+        /* Colors for tooltips */
+        .bg-smurf-blue { background: #3b82f6; }
+        .bg-smurf-green { background: #10b981; }
+        .bg-smurf-yellow { background: #eab308; color: #1e1e24; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR CONTROLS -->
+    <div class="sidebar">
+        <h2>Bản Đồ Editor</h2>
+        <p class="instructions">Nhấp vào bất kỳ ngôi nhà, Xì Trum hoặc Nhãn tên trên bản đồ để bắt đầu chỉnh vị trí (kéo thả), đổi kích thước và độ trong suốt.</p>
+        
+        <div class="control-group" id="editor-panel" style="display: none;">
+            <div class="control-title">
+                <span id="selected-name">Chưa chọn</span>
+                <span style="font-size: 10px; color: #a1a1aa;" id="selected-type">Loại</span>
+            </div>
+            
+            <div class="control-row">
+                <label>Kích thước (Chiều rộng %): <span id="val-width">20%</span></label>
+                <input type="range" id="slider-width" min="4" max="60" step="0.5" value="20">
+            </div>
+            
+            <div class="control-row">
+                <label>Độ trong suốt (Opacity): <span id="val-opacity">1.0</span></label>
+                <input type="range" id="slider-opacity" min="0.1" max="1.0" step="0.05" value="1.0">
+            </div>
+        </div>
+
+        <button class="export-btn" onclick="exportConfig()">Xuất Code Cấu Hình</button>
+        <textarea class="export-area" id="export-code" readonly placeholder="Mã nguồn JS xuất ra ở đây..."></textarea>
+    </div>
+
+    <!-- WORKSPACE CANVAS -->
+    <div class="workspace">
+        <div class="map-viewport" id="map-viewport">
+            <img src="src/assets/smurf_village_base_map_vertical.png" alt="Map" class="map-background">
+            <div class="editor-layer" id="editor-layer"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initial configuration taken from app.js
+        let landmarks = [
+            { id: 'my-house', name: '🍄 Nhà Của Bạn (Hồ Sơ)', image: 'src/assets/smurf_papa_house.png', style: 'top: 20%; left: 16%; width: 28%;', opacity: 1, badgeColor: 'bg-smurf-blue', tooltipStyle: 'top: 15%; left: 20%;' },
+            { id: 'village-plaza', name: '🏘️ Quảng Trường Cư Dân', image: 'src/assets/smurf_blue_house.png', style: 'top: 42%; left: 54%; width: 28%;', opacity: 1, badgeColor: 'bg-smurf-green', tooltipStyle: 'top: 37%; left: 58%;' },
+            { id: 'bulletin-board', name: '📋 Bảng Tin Papa Smurf', image: 'src/assets/smurf_bulletin_board.png', style: 'top: 66%; left: 18%; width: 16%;', opacity: 1, badgeColor: 'bg-smurf-yellow', tooltipStyle: 'top: 61%; left: 22%;' },
+            { id: 'wishing-well', name: '⛲ Giếng Ước Nguyện', image: 'src/assets/smurf_wishing_well.png', style: 'top: 52%; left: 12%; width: 18%;', opacity: 1, hasTooltip: false },
+            { id: 'village-gate', name: '🚧 Cổng Chào Làng', image: 'src/assets/smurf_village_gate.png', style: 'top: 80%; left: 42%; width: 25%;', opacity: 1, hasTooltip: false }
+        ];
+
+        let characters = [
+            { id: 1, name: "Tí Đi Bộ", image: "src/assets/characters/smurf_char_1.png", style: "top: 36%; left: 35%; width: 9%;", opacity: 1 },
+            { id: 2, name: "Tí Vẫy Tay", image: "src/assets/characters/smurf_char_2.png", style: "top: 25%; left: 52%; width: 9%;", opacity: 1 },
+            { id: 3, name: "Tí Đọc Sách", image: "src/assets/characters/smurf_char_3.png", style: "top: 15%; left: 75%; width: 9%;", opacity: 1 },
+            { id: 4, name: "Tí Xách Nước", image: "src/assets/characters/smurf_char_4.png", style: "top: 50%; left: 32%; width: 9%;", opacity: 1 },
+            { id: 5, name: "Tí Nhảy Múa", image: "src/assets/characters/smurf_char_5.png", style: "top: 48%; left: 18%; width: 9%;", opacity: 1 },
+            { id: 6, name: "Tí Ngủ Gật", image: "src/assets/characters/smurf_char_6.png", style: "top: 62%; left: 45%; width: 9%;", opacity: 1 },
+            { id: 7, name: "Tí Quét Dọn", image: "src/assets/characters/smurf_char_7.png", style: "top: 75%; left: 32%; width: 9%;", opacity: 1 },
+            { id: 8, name: "Tí Suy Nghĩ", image: "src/assets/characters/smurf_char_8.png", style: "top: 32%; left: 82%; width: 9%;", opacity: 1 },
+            { id: 9, name: "Tí Khéo Tay", image: "src/assets/characters/smurf_char_9.png", style: "top: 78%; left: 72%; width: 9%;", opacity: 1 },
+            { id: 10, name: "Tí Tham Ăn", image: "src/assets/characters/smurf_char_10.png", style: "top: 58%; left: 75%; width: 9%;", opacity: 1 }
+        ];
+
+        let selectedElement = null;
+        let selectedData = null; // Reference to original object in array
+        let isDragging = false;
+        let startX, startY;
+        let startLeft, startTop;
+
+        const editorLayer = document.getElementById('editor-layer');
+        const mapViewport = document.getElementById('map-viewport');
+        
+        // Helper to parse coordinate percentages
+        function getCoordsFromStyle(styleStr) {
+            let top = 0, left = 0, width = 0;
+            styleStr.split(';').forEach(part => {
+                let [key, val] = part.split(':');
+                if (!key || !val) return;
+                key = key.trim();
+                val = val.trim();
+                if (key === 'top') top = parseFloat(val);
+                if (key === 'left') left = parseFloat(val);
+                if (key === 'width') width = parseFloat(val);
+            });
+            return { top, left, width };
+        }
+
+        // Initialize Rendering of all Draggables
+        function initElements() {
+            editorLayer.innerHTML = '';
+            
+            // Render landmarks
+            landmarks.forEach(lm => {
+                const coords = getCoordsFromStyle(lm.style);
+                const div = document.createElement('div');
+                div.className = 'draggable';
+                div.style.top = coords.top + '%';
+                div.style.left = coords.left + '%';
+                div.style.width = coords.width + '%';
+                div.style.opacity = lm.opacity !== undefined ? lm.opacity : 1;
+                div.style.zIndex = 20;
+                div.id = `lm-${lm.id}`;
+                div.innerHTML = `<img src="${lm.image}" alt="${lm.name}">`;
+                
+                // Clicking selects it
+                div.addEventListener('mousedown', (e) => startDrag(e, div, lm, 'Landmark'));
+                editorLayer.appendChild(div);
+
+                // Render tooltip if required
+                if (lm.hasTooltip !== false) {
+                    const tipCoords = getCoordsFromStyle(lm.tooltipStyle || `top: ${(coords.top - 5)}%; left: ${coords.left}%;`);
+                    const tipDiv = document.createElement('div');
+                    tipDiv.className = `draggable-tooltip ${lm.badgeColor}`;
+                    tipDiv.style.top = tipCoords.top + '%';
+                    tipDiv.style.left = tipCoords.left + '%';
+                    tipDiv.id = `tip-${lm.id}`;
+                    tipDiv.innerText = lm.name;
+                    
+                    tipDiv.addEventListener('mousedown', (e) => startDrag(e, tipDiv, lm, 'Tooltip'));
+                    editorLayer.appendChild(tipDiv);
+                }
+            });
+
+            // Render characters
+            characters.forEach(char => {
+                const coords = getCoordsFromStyle(char.style);
+                const div = document.createElement('div');
+                div.className = 'draggable';
+                div.style.top = coords.top + '%';
+                div.style.left = coords.left + '%';
+                div.style.width = coords.width + '%';
+                div.style.opacity = char.opacity !== undefined ? char.opacity : 1;
+                div.style.zIndex = 30;
+                div.id = `char-${char.id}`;
+                div.innerHTML = `<img src="${char.image}" alt="${char.name}">`;
+                
+                div.addEventListener('mousedown', (e) => startDrag(e, div, char, 'Character'));
+                editorLayer.appendChild(div);
+            });
+        }
+
+        // Drag and Drop Management
+        function startDrag(e, element, dataObj, type) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Clear previous selection
+            if (selectedElement) selectedElement.classList.remove('selected');
+            
+            selectedElement = element;
+            selectedData = dataObj;
+            selectedElement.classList.add('selected');
+
+            // Open control panel
+            const panel = document.getElementById('editor-panel');
+            panel.style.display = 'block';
+            document.getElementById('selected-name').innerText = dataObj.name;
+            document.getElementById('selected-type').innerText = type;
+
+            const coords = getCoordsFromStyle(element.style.cssText);
+            document.getElementById('slider-width').value = coords.width || 10;
+            document.getElementById('val-width').innerText = (coords.width || 10) + '%';
+            
+            // Tooltips don't have size slider active/useful
+            if (type === 'Tooltip') {
+                document.getElementById('slider-width').disabled = true;
+            } else {
+                document.getElementById('slider-width').disabled = false;
+            }
+
+            document.getElementById('slider-opacity').value = element.style.opacity || 1;
+            document.getElementById('val-opacity').innerText = element.style.opacity || 1;
+
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            const rect = mapViewport.getBoundingClientRect();
+            const elemRect = element.getBoundingClientRect();
+            startLeft = ((elemRect.left - rect.left) / rect.width) * 100;
+            startTop = ((elemRect.top - rect.top) / rect.height) * 100;
+
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        function dragMove(e) {
+            if (!isDragging || !selectedElement) return;
+            
+            const rect = mapViewport.getBoundingClientRect();
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            let deltaLeftPercent = (deltaX / rect.width) * 100;
+            let deltaTopPercent = (deltaY / rect.height) * 100;
+
+            let newLeft = Math.max(0, Math.min(100, startLeft + deltaLeftPercent));
+            let newTop = Math.max(0, Math.min(100, startTop + deltaTopPercent));
+
+            selectedElement.style.left = newLeft.toFixed(1) + '%';
+            selectedElement.style.top = newTop.toFixed(1) + '%';
+
+            // Sync back to our array data models
+            const type = document.getElementById('selected-type').innerText;
+            if (type === 'Landmark' || type === 'Character') {
+                const currentWidth = getCoordsFromStyle(selectedElement.style.cssText).width;
+                selectedData.style = `top: ${newTop.toFixed(1)}%; left: ${newLeft.toFixed(1)}%; width: ${currentWidth}%;`;
+            } else if (type === 'Tooltip') {
+                selectedData.tooltipStyle = `top: ${newTop.toFixed(1)}%; left: ${newLeft.toFixed(1)}%;`;
+            }
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            document.removeEventListener('mousemove', dragMove);
+            document.removeEventListener('mouseup', stopDrag);
+            exportConfig(); // Auto updates code on drop
+        }
+
+        // Control Sliders Handlers
+        document.getElementById('slider-width').addEventListener('input', (e) => {
+            if (!selectedElement || !selectedData) return;
+            const val = parseFloat(e.target.value);
+            document.getElementById('val-width').innerText = val + '%';
+            selectedElement.style.width = val + '%';
+            
+            const type = document.getElementById('selected-type').innerText;
+            const coords = getCoordsFromStyle(selectedElement.style.cssText);
+            if (type === 'Landmark' || type === 'Character') {
+                selectedData.style = `top: ${coords.top}%; left: ${coords.left}%; width: ${val}%;`;
+                exportConfig();
+            }
+        });
+
+        document.getElementById('slider-opacity').addEventListener('input', (e) => {
+            if (!selectedElement || !selectedData) return;
+            const val = parseFloat(e.target.value);
+            document.getElementById('val-opacity').innerText = val;
+            selectedElement.style.opacity = val;
+            selectedData.opacity = val;
+            exportConfig();
+        });
+
+        // Export coordinates helper
+        function exportConfig() {
+            const cleanLandmarks = landmarks.map(lm => {
+                let obj = {
+                    id: lm.id,
+                    name: lm.name,
+                    image: lm.image,
+                    style: lm.style,
+                    opacity: lm.opacity,
+                    badgeColor: lm.badgeColor,
+                    onClick: lm.id === 'my-house' ? 'showProfileTab' : 
+                             lm.id === 'village-plaza' ? 'showVillageTab' : 
+                             lm.id === 'bulletin-board' ? 'rollMagicMushroom' :
+                             lm.id === 'wishing-well' ? 'showWishingWellMessage' : 'showGateMessage'
+                };
+                if (lm.hasTooltip !== false) {
+                    obj.tooltipStyle = lm.tooltipStyle || `top: ${(parseFloat(lm.style.split('top:')[1]) - 5).toFixed(1)}%; left: ${lm.style.split('left:')[1].split(';')[0].trim()};`;
+                } else {
+                    obj.hasTooltip = false;
+                }
+                return obj;
+            });
+
+            const cleanCharacters = characters.map(char => ({
+                id: char.id,
+                name: char.name,
+                image: char.image,
+                style: char.style,
+                opacity: char.opacity
+            }));
+
+            let exportText = `// Copy hai mảng này thay vào app.js:\n\n`;
+            exportText += `const MAP_LANDMARKS = ${JSON.stringify(cleanLandmarks, null, 4)};\n\n`;
+            exportText += `const VILLAGE_CHARACTERS = ${JSON.stringify(cleanCharacters, null, 4)};`;
+            
+            document.getElementById('export-code').value = exportText;
+        }
+
+        // Run initiation
+        initElements();
+        exportConfig();
+    </script>
+</body>
+</html>
