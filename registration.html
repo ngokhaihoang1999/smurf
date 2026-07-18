@@ -448,6 +448,142 @@
             display: none !important;
         }
 
+        /* ── IMMERSIVE FULLSCREEN VILLAGE MAP ── */
+        #view-home main {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+        }
+
+        #view-home #map-viewport {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+            z-index: 1 !important;
+        }
+
+        #view-home #map-board {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            aspect-ratio: 1 / 2 !important;
+            min-width: 100% !important;
+            min-height: 100% !important;
+            width: auto !important;
+            height: auto !important;
+            max-width: none !important;
+            max-height: none !important;
+            background-size: 100% 100% !important;
+        }
+
+        /* Float welcome banner on top of map */
+        #view-home #welcome-banner {
+            top: 60px !important;
+            margin-left: 16px !important;
+            margin-right: 16px !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+        }
+
+        @keyframes fluid-slide-down {
+            0% {
+                transform: translateY(-150%);
+                opacity: 0;
+            }
+            60% {
+                transform: translateY(12px);
+                opacity: 1;
+            }
+            80% {
+                transform: translateY(-4px);
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fluid-slide-up {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            20% {
+                transform: translateY(8px);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-150%);
+                opacity: 0;
+            }
+        }
+
+        .animate-fluid-enter {
+            animation: fluid-slide-down 1.2s cubic-bezier(0.25, 1, 0.50, 1) forwards !important;
+        }
+
+        .animate-fluid-exit {
+            animation: fluid-slide-up 1.0s cubic-bezier(0.25, 1, 0.50, 1) forwards !important;
+        }
+
+        /* ── INTERACTIVE SMURF SPEECH BUBBLES ── */
+        .speech-bubble {
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%) scale(0.85);
+            background: white;
+            color: #1e293b;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+            border: 2px solid #3b82f6;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0;
+            transition: all 0.30s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .speech-bubble.show {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
+        }
+
+        /* Triangle bubble pointer */
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #3b82f6 transparent transparent transparent;
+        }
+
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 4px;
+            border-style: solid;
+            border-color: white transparent transparent transparent;
+            z-index: 1;
+        }
+
 
     </style>
 </head>
