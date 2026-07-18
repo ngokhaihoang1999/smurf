@@ -898,6 +898,8 @@
             }
         }
 
+        let welcomeBannerAnimated = false;
+
         function showHomeTab() {
             closeEditSheet();
             const detailModal = document.getElementById('detail-modal');
@@ -911,7 +913,7 @@
             // Render welcome name and stats
             const welcomeSpan = document.getElementById('home-welcome-name');
             if (welcomeSpan) {
-                welcomeSpan.textContent = currentUser ? currentUser.smurfName : 'Khách Ghé Chơi';
+                welcomeSpan.textContent = 'Làng Sì Trum';
             }
             const countSpan = document.getElementById('home-village-count');
             if (countSpan) {
@@ -922,6 +924,23 @@
             renderMapLandmarks();
             renderVillageCharacters();
             applyMapBackgroundConfig();
+
+            // Trigger the welcome banner animation once at startup after resources load
+            if (!welcomeBannerAnimated) {
+                welcomeBannerAnimated = true;
+                setTimeout(() => {
+                    const banner = document.getElementById('welcome-banner');
+                    if (banner) {
+                        banner.classList.remove('-translate-y-[150%]', 'opacity-0');
+                        banner.classList.add('translate-y-0', 'opacity-100');
+                        
+                        setTimeout(() => {
+                            banner.classList.remove('translate-y-0', 'opacity-100');
+                            banner.classList.add('-translate-y-[150%]', 'opacity-0');
+                        }, 5000);
+                    }
+                }, 800);
+            }
         }
 
         function showProfileTab() {

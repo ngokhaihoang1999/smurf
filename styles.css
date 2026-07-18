@@ -543,7 +543,7 @@ body.sheet-open #main-bottom-nav {
 }
 
 /* Float welcome banner on top of map */
-#view-home .absolute.top-16.left-0.right-0 {
+#view-home #welcome-banner {
     top: 60px !important;
     margin-left: 16px !important;
     margin-right: 16px !important;
@@ -553,4 +553,8 @@ body.sheet-open #main-bottom-nav {
     background: rgba(255, 255, 255, 0.8) !important;
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.fluid-slide {
+    transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 1.2s cubic-bezier(0.19, 1, 0.22, 1) !important;
 }
