@@ -1583,25 +1583,32 @@
                     localStorage.setItem('smurf_residents_cache', JSON.stringify(RESIDENTS_DATA));
 
                     // Fetch reaction counts from the Google Sheet and merge
-                    gasRequestJsonp({ action: 'getReactions' }, (reactResp) => {
-                        if (reactResp && reactResp.status === 'success' && reactResp.reactions) {
-                            let db = {};
-                            try {
-                                const cached = localStorage.getItem('smurf_social_db');
-                                if (cached) db = JSON.parse(cached);
-                            } catch(e) {}
-                            
-                            for (const tid in reactResp.reactions) {
-                                if (!db[tid]) {
-                                    db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
+                    gasRequestJsonp({ action: 'getReactions', fromTelegramId: telegramId }, (reactResp) => {
+                        if (reactResp && reactResp.status === 'success') {
+                            if (reactResp.reactions) {
+                                let db = {};
+                                try {
+                                    const cached = localStorage.getItem('smurf_social_db');
+                                    if (cached) db = JSON.parse(cached);
+                                } catch(e) {}
+                                
+                                for (const tid in reactResp.reactions) {
+                                    if (!db[tid]) {
+                                        db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
+                                    }
+                                    db[tid].likes = reactResp.reactions[tid].likes || 0;
+                                    db[tid].funnys = reactResp.reactions[tid].funnys || 0;
+                                    db[tid].stars = reactResp.reactions[tid].stars || 0;
+                                    db[tid].cools = reactResp.reactions[tid].cools || 0;
                                 }
-                                db[tid].likes = reactResp.reactions[tid].likes || 0;
-                                db[tid].funnys = reactResp.reactions[tid].funnys || 0;
-                                db[tid].stars = reactResp.reactions[tid].stars || 0;
-                                db[tid].cools = reactResp.reactions[tid].cools || 0;
+                                
+                                localStorage.setItem('smurf_social_db', JSON.stringify(db));
                             }
                             
-                            localStorage.setItem('smurf_social_db', JSON.stringify(db));
+                            if (reactResp.myReactions) {
+                                localStorage.setItem('smurf_my_reactions', JSON.stringify(reactResp.myReactions));
+                            }
+                            
                             loadSocialData();
                             updateLeaderboard();
                         }
@@ -3843,6 +3850,11 @@
             const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
+            if (!telegramId) {
+                alert("📢 Bạn cần có Telegram ID để thực hiện tương tác này!");
+                return;
+            }
+            
             let myReactions = {};
             try {
                 myReactions = JSON.parse(localStorage.getItem('smurf_my_reactions')) || {};
@@ -3875,6 +3887,7 @@
             // Dispatch update to online spreadsheet
             gasRequestJsonp({
                 action: 'updateReaction',
+                fromTelegramId: telegramId,
                 telegramId: targetId,
                 smurfName: activeModalItem?.smurfName || '',
                 type: type,
@@ -3887,6 +3900,15 @@
                     latestData.stars = reactResp.stars || 0;
                     latestData.cools = reactResp.cools || 0;
                     saveSocialData(targetId, latestData);
+                    
+                    let updatedMyReactions = {};
+                    try {
+                        updatedMyReactions = JSON.parse(localStorage.getItem('smurf_my_reactions')) || {};
+                    } catch (e) {}
+                    
+                    updatedMyReactions[reactionKey] = !!reactResp.isAdd;
+                    localStorage.setItem('smurf_my_reactions', JSON.stringify(updatedMyReactions));
+                    
                     loadSocialData();
                     updateLeaderboard();
                 }

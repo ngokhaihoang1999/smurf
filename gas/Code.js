@@ -367,10 +367,13 @@ function doGet(e) {
         });
         break;
       case "getReactions":
-        result = handleGetReactions();
+        result = handleGetReactions({
+          fromTelegramId: e.parameter.fromTelegramId || ""
+        });
         break;
       case "updateReaction":
         result = handleUpdateReaction({
+          fromTelegramId: e.parameter.fromTelegramId || "",
           telegramId: e.parameter.telegramId || "",
           smurfName: e.parameter.smurfName || "",
           type: e.parameter.type || "",
@@ -476,31 +479,79 @@ function getReactionsSheet() {
   return sheet;
 }
 
-function handleGetReactions() {
-  var sheet = getReactionsSheet();
+function getReactionLogsSheet() {
+  var ss;
+  try {
+    ss = SpreadsheetApp.openById(SHEET_ID);
+  } catch (err) {
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  }
+  var sheet = ss.getSheetByName("ReactionLogs");
+  if (!sheet) {
+    sheet = ss.insertSheet("ReactionLogs");
+    sheet.appendRow(["From Telegram ID", "To Telegram ID", "Reaction Type", "Timestamp"]);
+  }
+  return sheet;
+}
+
+function findReactionRow(sheet, fromId, toId, type) {
   var lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return { status: "success", reactions: {} };
-  
-  var data = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
+  if (lastRow <= 1) return -1;
+  var data = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+  for (var i = 0; i < data.length; i++) {
+    if (String(data[i][0]).trim() === String(fromId).trim() &&
+        String(data[i][1]).trim() === String(toId).trim() &&
+        String(data[i][2]).trim() === String(type).trim()) {
+      return i + 2;
+    }
+  }
+  return -1;
+}
+
+function handleGetReactions(data) {
+  var reactionsSheet = getReactionsSheet();
+  var lastRow = reactionsSheet.getLastRow();
   var reactions = {};
-  data.forEach(function(row) {
-    var tid = String(row[0]).trim();
-    reactions[tid] = {
-      likes: Number(row[2]) || 0,
-      funnys: Number(row[3]) || 0,
-      stars: Number(row[4]) || 0,
-      cools: Number(row[5]) || 0
-    };
-  });
-  return { status: "success", reactions: reactions };
+  if (lastRow > 1) {
+    var sheetData = reactionsSheet.getRange(2, 1, lastRow - 1, 7).getValues();
+    sheetData.forEach(function(row) {
+      var tid = String(row[0]).trim();
+      reactions[tid] = {
+        likes: Number(row[2]) || 0,
+        funnys: Number(row[3]) || 0,
+        stars: Number(row[4]) || 0,
+        cools: Number(row[5]) || 0
+      };
+    });
+  }
+  
+  var myReactions = {};
+  var fromTelegramId = data && data.fromTelegramId ? String(data.fromTelegramId).trim() : "";
+  if (fromTelegramId) {
+    var logsSheet = getReactionLogsSheet();
+    var logsLastRow = logsSheet.getLastRow();
+    if (logsLastRow > 1) {
+      var logsData = logsSheet.getRange(2, 1, logsLastRow - 1, 3).getValues();
+      logsData.forEach(function(row) {
+        if (String(row[0]).trim() === fromTelegramId) {
+          var targetId = String(row[1]).trim();
+          var type = String(row[2]).trim();
+          var reactionKey = targetId + "_" + type;
+          myReactions[reactionKey] = true;
+        }
+      });
+    }
+  }
+  
+  return { status: "success", reactions: reactions, myReactions: myReactions };
 }
 
 function handleUpdateReaction(data) {
-  var sheet = getReactionsSheet();
-  var telegramId = String(data.telegramId).trim();
+  var reactionsSheet = getReactionsSheet();
+  var targetId = String(data.telegramId).trim();
   var smurfName = String(data.smurfName || "").trim();
   var type = data.type; // "like", "funny", "star", "cool"
-  var isAdd = !!data.isAdd;
+  var fromTelegramId = data.fromTelegramId ? String(data.fromTelegramId).trim() : "";
   
   var colIndex = -1;
   if (type === 'like') colIndex = 3; // Col C
@@ -510,13 +561,31 @@ function handleUpdateReaction(data) {
   
   if (colIndex === -1) return { status: "error", message: "Invalid reaction type: " + type };
   
-  // Find existing row
-  var lastRow = sheet.getLastRow();
+  var isAdd = true;
+  if (fromTelegramId) {
+    var logsSheet = getReactionLogsSheet();
+    var logRowNum = findReactionRow(logsSheet, fromTelegramId, targetId, type);
+    if (logRowNum !== -1) {
+      // Reaction exists -> remove it
+      logsSheet.deleteRow(logRowNum);
+      isAdd = false;
+    } else {
+      // Reaction does not exist -> add it
+      logsSheet.appendRow([fromTelegramId, targetId, type, new Date()]);
+      isAdd = true;
+    }
+  } else {
+    // Fallback backward compatibility
+    isAdd = !!data.isAdd;
+  }
+  
+  // Find existing row in Reactions sheet
+  var lastRow = reactionsSheet.getLastRow();
   var rowNum = -1;
   if (lastRow > 1) {
-    var idCol = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    var idCol = reactionsSheet.getRange(2, 1, lastRow - 1, 1).getValues();
     for (var i = 0; i < idCol.length; i++) {
-      if (String(idCol[i][0]).trim() === telegramId) {
+      if (String(idCol[i][0]).trim() === targetId) {
         rowNum = i + 2;
         break;
       }
@@ -524,27 +593,28 @@ function handleUpdateReaction(data) {
   }
   
   if (rowNum === -1) {
-    // Append new row
-    var newRow = [telegramId, smurfName, 0, 0, 0, 0, new Date()];
+    // Append new row in Reactions sheet
+    var newRow = [targetId, smurfName, 0, 0, 0, 0, new Date()];
     if (isAdd) newRow[colIndex - 1] = 1;
-    sheet.appendRow(newRow);
-    rowNum = sheet.getLastRow();
+    reactionsSheet.appendRow(newRow);
+    rowNum = reactionsSheet.getLastRow();
   } else {
-    var currentVal = Number(sheet.getRange(rowNum, colIndex).getValue()) || 0;
+    var currentVal = Number(reactionsSheet.getRange(rowNum, colIndex).getValue()) || 0;
     var newVal = isAdd ? currentVal + 1 : Math.max(0, currentVal - 1);
-    sheet.getRange(rowNum, colIndex).setValue(newVal);
-    sheet.getRange(rowNum, 7).setValue(new Date()); // Update timestamp
+    reactionsSheet.getRange(rowNum, colIndex).setValue(newVal);
+    reactionsSheet.getRange(rowNum, 7).setValue(new Date()); // Update timestamp
   }
   
   // Read and return updated values
-  var updatedVals = sheet.getRange(rowNum, 1, 1, 7).getValues()[0];
+  var updatedVals = reactionsSheet.getRange(rowNum, 1, 1, 7).getValues()[0];
   return {
     status: "success",
-    telegramId: telegramId,
+    telegramId: targetId,
     likes: Number(updatedVals[2]) || 0,
     funnys: Number(updatedVals[3]) || 0,
     stars: Number(updatedVals[4]) || 0,
-    cools: Number(updatedVals[5]) || 0
+    cools: Number(updatedVals[5]) || 0,
+    isAdd: isAdd
   };
 }
 
