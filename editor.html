@@ -209,11 +209,9 @@
         </div>
         <!-- BACKGROUND SETTINGS -->
         <div class="control-group">
-            <div class="control-title">Cài Đặt Bản Đồ Nền</div>
-            
-            <div class="control-row">
-                <label>Dịch chuyển dọc (Pan Y %): <span id="val-bg-y">-3%</span></label>
-                <input type="range" id="slider-bg-y" min="-30" max="30" step="0.5" value="-3">
+                <div class="control-row">
+                <label>Dịch chuyển dọc (Pan Y %): <span id="val-bg-y">0%</span></label>
+                <input type="range" id="slider-bg-y" min="-30" max="30" step="0.5" value="0">
             </div>
             
             <div class="control-row">
@@ -222,12 +220,12 @@
             </div>
             
             <div class="control-row">
-                <label>Độ bão hòa (Saturate): <span id="val-bg-saturate">95%</span></label>
-                <input type="range" id="slider-bg-saturate" min="50" max="150" step="5" value="95">
+                <label>Độ bão hòa (Saturate): <span id="val-bg-saturate">100%</span></label>
+                <input type="range" id="slider-bg-saturate" min="50" max="150" step="5" value="100">
             </div>
         </div>
 
-        <button class="export-btn" onclick="exportConfig()">Xuất Code Cấu Hình</button>
+        <button class="export-btn" onclick="exportConfig()">Xuất Code Cấu Hướng</button>
         <textarea class="export-area" id="export-code" readonly placeholder="Mã nguồn JS xuất ra ở đây..."></textarea>
     </div>
 
@@ -250,8 +248,8 @@
         ];
 
         let characters = [
-            { id: 1, name: "Tí Đi Bộ", image: "src/assets/characters/smurf_char_1.png", style: "top: 79.3%; left: 15.8%; width: 20%;", opacity: 1 },
-            { id: 2, name: "Tí Vẫy Tay", image: "src/assets/characters/smurf_char_2.png", style: "top: 57%; left: 76.7%; width: 9%;", opacity: 1 },
+            { id: 1, name: "Tí Đi Bộ", image: "src/assets/characters/smurf_char_1.png", style: "top: 80.5%; left: 15.8%; width: 17.5%;", opacity: 1 },
+            { id: 2, name: "Tí Vẫy Tay", image: "src/assets/characters/smurf_char_2.png", style: "top: 51.4%; left: 5.4%; width: 13.5%;", opacity: 1 },
             { id: 3, name: "Tí Đọc Sách", image: "src/assets/characters/smurf_char_3.png", style: "top: 36.6%; left: 46.3%; width: 11%;", opacity: 1 },
             { id: 4, name: "Tí Xách Nước", image: "src/assets/characters/smurf_char_4.png", style: "top: 51.1%; left: 30.4%; width: 14%;", opacity: 1 },
             { id: 5, name: "Tí Nhảy Múa", image: "src/assets/characters/smurf_char_5.png", style: "top: 41.1%; left: 70.9%; width: 15%;", opacity: 1 },
