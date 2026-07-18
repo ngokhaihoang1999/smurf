@@ -931,13 +931,12 @@
                 setTimeout(() => {
                     const banner = document.getElementById('welcome-banner');
                     if (banner) {
-                        banner.classList.remove('-translate-y-[150%]', 'opacity-0');
-                        banner.classList.add('translate-y-0', 'opacity-100');
+                        banner.classList.add('animate-fluid-enter');
                         
                         setTimeout(() => {
-                            banner.classList.remove('translate-y-0', 'opacity-100');
-                            banner.classList.add('-translate-y-[150%]', 'opacity-0');
-                        }, 5000);
+                            banner.classList.remove('animate-fluid-enter');
+                            banner.classList.add('animate-fluid-exit');
+                        }, 10000);
                     }
                 }, 800);
             }
