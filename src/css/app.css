@@ -499,7 +499,8 @@
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
             border: 2px solid #3b82f6;
             white-space: normal;
-            max-width: 150px;
+            width: max-content;
+            max-width: 220px;
             text-align: center;
             pointer-events: none;
             z-index: 50;
