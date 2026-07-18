@@ -226,8 +226,7 @@
             { id: 'my-house', name: '🍄 Nhà Của Bạn (Hồ Sơ)', image: 'src/assets/smurf_papa_house.png', style: 'top: 20%; left: 16%; width: 28%;', opacity: 1, badgeColor: 'bg-smurf-blue', tooltipStyle: 'top: 15%; left: 20%;' },
             { id: 'village-plaza', name: '🏘️ Quảng Trường Cư Dân', image: 'src/assets/smurf_blue_house.png', style: 'top: 42%; left: 54%; width: 28%;', opacity: 1, badgeColor: 'bg-smurf-green', tooltipStyle: 'top: 37%; left: 58%;' },
             { id: 'bulletin-board', name: '📋 Bảng Tin Papa Smurf', image: 'src/assets/smurf_bulletin_board.png', style: 'top: 66%; left: 18%; width: 16%;', opacity: 1, badgeColor: 'bg-smurf-yellow', tooltipStyle: 'top: 61%; left: 22%;' },
-            { id: 'wishing-well', name: '⛲ Giếng Ước Nguyện', image: 'src/assets/smurf_wishing_well.png', style: 'top: 52%; left: 12%; width: 18%;', opacity: 1, hasTooltip: false },
-            { id: 'village-gate', name: '🚧 Cổng Chào Làng', image: 'src/assets/smurf_village_gate.png', style: 'top: 80%; left: 42%; width: 25%;', opacity: 1, hasTooltip: false }
+            { id: 'wishing-well', name: '⛲ Giếng Ước Nguyện', image: 'src/assets/smurf_wishing_well.png', style: 'top: 52%; left: 12%; width: 18%;', opacity: 1, hasTooltip: false }
         ];
 
         let characters = [
@@ -313,7 +312,7 @@
                 div.style.opacity = lm.numericOpacity;
                 div.style.zIndex = 20;
                 div.id = `lm-${lm.id}`;
-                div.innerHTML = `<img src="${lm.image}${cacheBuster}" alt="${lm.name}">`;
+                div.innerHTML = `<img src="${lm.image}${cacheBuster}" alt="${lm.name}" style="filter: drop-shadow(1.5px 0 0 white) drop-shadow(-1.5px 0 0 white) drop-shadow(0 1.5px 0 white) drop-shadow(0 -1.5px 0 white) drop-shadow(0 4px 8px rgba(0,0,0,0.15));">`;
                 
                 div.addEventListener('mousedown', (e) => startDrag(e, div, lm, 'Landmark'));
                 editorLayer.appendChild(div);

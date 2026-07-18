@@ -2156,15 +2156,6 @@
                 opacity: 1,
                 hasTooltip: false,
                 onClick: 'showWishingWellMessage'
-            },
-            {
-                id: 'village-gate',
-                name: '🚧 Cổng Chào Làng',
-                image: 'src/assets/smurf_village_gate.png',
-                style: 'top: 80%; left: 42%; width: 25%;',
-                opacity: 1,
-                hasTooltip: false,
-                onClick: 'showGateMessage'
             }
         ];
 
@@ -2227,7 +2218,7 @@
                 };
                 
                 el.innerHTML = `
-                    <img src="${lm.image}" alt="${lm.name}" class="w-full h-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
+                    <img src="${lm.image}" alt="${lm.name}" class="w-full h-auto" style="filter: drop-shadow(1.5px 0 0 white) drop-shadow(-1.5px 0 0 white) drop-shadow(0 1.5px 0 white) drop-shadow(0 -1.5px 0 white) drop-shadow(0 8px 16px rgba(0,0,0,0.25));">
                 `;
                 
                 container.appendChild(el);
