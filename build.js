@@ -33,6 +33,12 @@ function build() {
             }
         }
 
+        // Auto cache-bust: inject build timestamp into asset URLs
+        const buildTs = Date.now();
+        template = template.replace(/styles\.css\?v=\d+/g, `styles.css?v=${buildTs}`);
+        template = template.replace(/smurf_village_base_map_vertical\.png\?v=\d+/g, `smurf_village_base_map_vertical.png?v=${buildTs}`);
+        console.log(`🔄 Cache-busted assets with timestamp: ${buildTs}`);
+
         fs.writeFileSync(path.join(__dirname, 'registration.html'), template, 'utf8');
         console.log('🎉 Build completed successfully! Output: registration.html');
     } catch (err) {

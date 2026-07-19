@@ -457,10 +457,9 @@
             height: 100% !important;
             border-radius: 0 !important;
             z-index: 1 !important;
-            overflow: hidden !important; /* No scroll allowed */
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important; /* Allow vertical scroll when map taller than viewport */
+            display: block !important;
         }
 
         #view-home #map-viewport::-webkit-scrollbar {
@@ -469,13 +468,10 @@
 
         #view-home #map-board {
             position: relative !important;
-            z-index: 10 !important; /* Render above the blurred background layer */
-            width: auto !important;
-            height: 100% !important;
-            max-width: 100% !important;
-            max-height: 100% !important;
+            z-index: 10 !important;
+            width: 100% !important;
+            height: auto !important;
             aspect-ratio: 1 / 2 !important;
-            flex-shrink: 0 !important;
             margin: 0 auto !important;
         }
 
