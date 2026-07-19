@@ -1007,6 +1007,58 @@
             }
         }
 
+        // ── Desktop Scroll Indicators ──
+        let scrollIndicatorsInitialized = false;
+        function initDesktopScrollIndicators() {
+            if (scrollIndicatorsInitialized) return;
+            scrollIndicatorsInitialized = true;
+
+            const viewport = document.getElementById('map-viewport');
+            const downArrow = document.getElementById('scroll-indicator-down');
+            const upArrow = document.getElementById('scroll-indicator-up');
+            if (!viewport || !downArrow) return;
+
+            // Show down arrow initially
+            downArrow.style.display = 'block';
+
+            function updateScrollArrows() {
+                const scrollTop = viewport.scrollTop;
+                const scrollHeight = viewport.scrollHeight;
+                const clientHeight = viewport.clientHeight;
+                const atTop = scrollTop <= 10;
+                const atBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+                // Show up arrow when not at top
+                if (upArrow) upArrow.style.display = atTop ? 'none' : 'block';
+                // Show down arrow when not at bottom
+                if (downArrow) downArrow.style.display = atBottom ? 'none' : 'block';
+            }
+
+            viewport.addEventListener('scroll', updateScrollArrows, { passive: true });
+            // Initial check after a small delay to let layout settle
+            setTimeout(updateScrollArrows, 500);
+        }
+
+        // ── Desktop Panel Expand Toast (one-time) ──
+        function showExpandPanelToast() {
+            if (localStorage.getItem('smurf_expand_toast_dismissed')) return;
+            const toast = document.getElementById('desktop-expand-toast');
+            if (toast) {
+                toast.style.display = 'flex';
+                // Auto-dismiss after 8 seconds
+                setTimeout(() => { dismissExpandToast(); }, 8000);
+            }
+        }
+        function dismissExpandToast() {
+            const toast = document.getElementById('desktop-expand-toast');
+            if (toast) {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => { toast.style.display = 'none'; }, 300);
+            }
+            localStorage.setItem('smurf_expand_toast_dismissed', '1');
+        }
+
         let welcomeBannerAnimated = false;
 
         function showHomeTab() {
@@ -1048,6 +1100,11 @@
                         }, 10000);
                     }
                 }, 800);
+            }
+            // ── Desktop Scroll Indicators & Expand Panel Toast ──
+            if (document.body.classList.contains('is-desktop-platform')) {
+                initDesktopScrollIndicators();
+                showExpandPanelToast();
             }
         }
 
