@@ -470,8 +470,8 @@
         #view-home #map-board {
             position: relative !important;
             z-index: 10 !important; /* Render above the blurred background layer */
-            width: 100% !important;
-            height: auto !important;
+            width: auto !important;
+            height: 100% !important;
             max-width: 100% !important;
             max-height: 100% !important;
             aspect-ratio: 1 / 2 !important;
