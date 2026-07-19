@@ -533,13 +533,18 @@ body.sheet-open #main-bottom-nav {
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
     aspect-ratio: 1 / 2 !important;
-    min-width: 100% !important;
-    min-height: 100% !important;
     width: auto !important;
-    height: auto !important;
+    height: 100% !important;
     max-width: none !important;
     max-height: none !important;
     background-size: 100% 100% !important;
+}
+
+@media (max-aspect-ratio: 1/2) {
+    #view-home #map-board {
+        width: 100% !important;
+        height: auto !important;
+    }
 }
 
 /* Float welcome banner on top of map */
