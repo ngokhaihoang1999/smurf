@@ -435,6 +435,9 @@
             padding-bottom: 0 !important;
             height: 100% !important;
             max-height: 100% !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
         }
 
         #view-home #map-viewport {
