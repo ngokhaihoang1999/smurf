@@ -949,7 +949,7 @@
                     spawnEmojiParticles(el);
 
                     // 2.1. GIF Animation Trigger (runs for 3 seconds)
-                    const animatedIds = [1];
+                    const animatedIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
                     if (animatedIds.includes(char.id)) {
                         const img = el.querySelector('img');
                         if (img) {
