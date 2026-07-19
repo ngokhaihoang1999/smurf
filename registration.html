@@ -1955,6 +1955,25 @@
             const activeEl = document.getElementById('view-' + name);
             if (activeEl) activeEl.classList.remove('hidden');
 
+            // ── IMMERSIVE MAP: Toggle full-width on outer main wrapper ──
+            // The outer <main> in template.html has Tailwind class "max-w-md" (caps at 448px).
+            // When showing the home/map view, remove that cap so the map fills 100% width.
+            // When showing other views, restore it for proper centered card layout.
+            const outerMain = document.querySelector('body > main');
+            if (outerMain) {
+                if (name === 'home') {
+                    outerMain.classList.remove('max-w-md', 'mx-auto');
+                    outerMain.style.maxWidth = '100%';
+                    outerMain.style.width = '100%';
+                    outerMain.style.margin = '0';
+                } else {
+                    outerMain.classList.add('max-w-md', 'mx-auto');
+                    outerMain.style.maxWidth = '';
+                    outerMain.style.width = '';
+                    outerMain.style.margin = '';
+                }
+            }
+
             // Coordinate global header title
             const titleEl = document.getElementById('header-title');
             if (titleEl) {
