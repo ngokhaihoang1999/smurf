@@ -15,12 +15,25 @@
         if (tg) {
             tg.ready();
             tg.expand();
+            
+            // Inject platform indicators for precise CSS styling
+            const platform = tg.platform || 'unknown';
+            document.body.classList.add(`platform-${platform}`);
+            if (['tdesktop', 'macos', 'web', 'weba', 'webk'].includes(platform)) {
+                document.body.classList.add('is-desktop-platform');
+            } else {
+                document.body.classList.add('is-mobile-platform');
+            }
+            
             const user = tg.initDataUnsafe?.user;
             if (user) {
                 telegramId = String(user.id || '');
                 telegramUsername = user.username || '';
                 telegramFirstName = user.first_name || '';
             }
+        } else {
+            // Outside Telegram context (regular desktop browser)
+            document.body.classList.add('is-desktop-platform');
         }
 
         // ── INIT APP (Offline-First & Background Load) ──
