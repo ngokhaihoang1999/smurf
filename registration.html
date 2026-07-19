@@ -2678,8 +2678,8 @@
         function applyMapBackgroundConfig() {
             const mapBoard = document.getElementById('map-board');
             if (mapBoard) {
-                // Apply Y panning offset
-                mapBoard.style.transform = `translate(-50%, calc(-50% + ${MAP_BG_CONFIG.yOffset}%))`;
+                // Apply Y panning offset using translateY (since map-board is centered via relative margins)
+                mapBoard.style.transform = `translateY(${MAP_BG_CONFIG.yOffset}%)`;
                 // Apply filters (brightness and saturate)
                 mapBoard.style.filter = `brightness(${MAP_BG_CONFIG.brightness}%) saturate(${MAP_BG_CONFIG.saturate}%)`;
             }

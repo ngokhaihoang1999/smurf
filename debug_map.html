@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Debug Map Layout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Same overrides as app.css */
+        html, body {
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
+
+        body > main {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
+        #view-home {
+            width: 100% !important;
+        }
+
+        #view-home main {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+        }
+
+        #view-home #map-viewport {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+            z-index: 1 !important;
+            overflow-y: auto !important;
+            display: block !important;
+        }
+
+        #view-home #map-board {
+            position: relative !important;
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 1 / 2 !important;
+            margin: 0 auto !important;
+            max-width: none !important;
+            max-height: none !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+    <!-- Exact same structure as template.html + HomeView.html -->
+    <main class="w-full bg-[#fafaf6] min-h-screen shadow-2xl relative flex flex-col z-10 overflow-x-hidden">
+        <div id="view-home" class="w-full">
+            <main class="w-full pt-16 pb-20 flex flex-col relative overflow-hidden">
+                <div id="map-viewport" class="w-full h-[calc(100vh-216px)] relative overflow-hidden select-none flex items-center justify-center bg-[#87CEEB] rounded-b-[24px]">
+                    <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner" style="background-image: url('src/assets/smurf_village_base_map_vertical.png'); background-size: 100% 100%; background-repeat: no-repeat;">
+                        <img src="src/assets/smurf_village_base_map_vertical.png" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none" onerror="this.style.display='none'">
+                    </div>
+                </div>
+            </main>
+        </div>
+    </main>
+
+    <!-- Debug overlay showing computed widths -->
+    <div id="debug-info" style="position:fixed; bottom:0; left:0; right:0; background:rgba(0,0,0,0.85); color:#0f0; font-family:monospace; font-size:11px; padding:8px; z-index:9999; max-height:200px; overflow-y:auto;"></div>
+    <script>
+        function updateDebug() {
+            let el = document.getElementById('map-board');
+            let lines = [];
+            while (el && el !== document.documentElement) {
+                const s = window.getComputedStyle(el);
+                lines.push(
+                    `${el.tagName}#${el.id || el.className.split(' ')[0]} → ` +
+                    `offsetW=${el.offsetWidth}px, ` +
+                    `computedW=${s.width}, ` +
+                    `maxW=${s.maxWidth}, ` +
+                    `display=${s.display}, ` +
+                    `pos=${s.position}`
+                );
+                el = el.parentElement;
+            }
+            document.getElementById('debug-info').innerHTML = lines.join('<br>');
+        }
+        setTimeout(updateDebug, 1000);
+        window.addEventListener('resize', updateDebug);
+    </script>
+</body>
+</html>
