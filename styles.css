@@ -19,13 +19,42 @@
 }
 
 /* ── BASE ── */
+html, body {
+    height: 100% !important;
+    height: 100dvh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
 body {
     background-color: var(--smurf-cream);
     color: #171c22;
     font-family: 'Quicksand', sans-serif;
-    margin: 0;
-    padding: 0;
     -webkit-font-smoothing: antialiased;
+}
+
+/* Prevent vertical scroll on main app wrapper */
+body > main {
+    height: 100% !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* SPA views styling for height & scroll context */
+#view-loading,
+#view-home {
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+#view-register,
+#view-profile,
+#view-village {
+    height: 100% !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
 }
 
 body.dotted-bg {
@@ -514,8 +543,8 @@ body.sheet-open #main-bottom-nav {
 #view-home main {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+    height: 100% !important;
+    max-height: 100% !important;
 }
 
 #view-home #map-viewport {
