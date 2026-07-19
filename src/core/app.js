@@ -16,6 +16,13 @@
             tg.ready();
             tg.expand();
             
+            // Request true full-screen mode (Bot API 8.0+) to maximize viewport
+            try {
+                if (typeof tg.requestFullscreen === 'function') {
+                    tg.requestFullscreen();
+                }
+            } catch(e) { /* Older clients may not support this */ }
+            
             // Inject platform indicators for precise CSS styling
             const platform = tg.platform || 'unknown';
             document.body.classList.add(`platform-${platform}`);
