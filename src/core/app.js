@@ -947,6 +947,23 @@
                     
                     // 2. Spawn emoji particles
                     spawnEmojiParticles(el);
+
+                    // 2.1. GIF Animation Trigger (runs for 3 seconds)
+                    const animatedIds = [1];
+                    if (animatedIds.includes(char.id)) {
+                        const img = el.querySelector('img');
+                        if (img) {
+                            const staticSrc = char.image;
+                            // Add timestamp cache-busting to ensure GIF starts from frame 1
+                            const gifSrc = char.image.replace('.png', '.gif') + '?t=' + Date.now();
+                            img.src = gifSrc;
+                            
+                            if (el.gifTimeout) clearTimeout(el.gifTimeout);
+                            el.gifTimeout = setTimeout(() => {
+                                img.src = staticSrc;
+                            }, 3000);
+                        }
+                    }
                     
                     // 3. Show dialog speech bubble
                     let bubble = el.querySelector('.speech-bubble');
