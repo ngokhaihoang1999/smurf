@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784438531831" rel="stylesheet"/>
+    <link href="styles.css?v=1784439691015" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -723,13 +723,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-216px)] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784438531831');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784439691015');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784438531831" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784439691015" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -2660,16 +2660,16 @@
         }
 
         const SMURF_QUOTES = {
-            1: "Đi bộ rèn luyện sức khoẻ nào! 🚶‍♂️🌿",
-            2: "Chào đằng ấy nha! Chúc một ngày tốt lành! 👋💙",
-            3: "Sách dạy rằng... à mà thôi tớ đọc tiếp đây! 📚🤓",
-            4: "Nước giếng ngọt lắm, tớ đi xách thêm gầu nữa! 🪣💧",
-            5: "Lalala~ Nhạc lên là tớ phải quẩy thôi! 🎶🕺",
-            6: "Khò khò... Đừng đánh thức tớ nhé... 😴💤",
-            7: "Làng sạch đẹp thì ai cũng vui! Quét quét... 🧹✨",
-            8: "Để tớ ngẫm nghĩ xem có nên đi ngủ không... 🤔💭",
-            9: "Hỏng hóc gì cứ để tớ sửa cho! Búa đe kìm kéo! 🛠️🔨",
-            10: "Có ai có bánh nấm không? Tớ đói bụng quá! 🍄🎂"
+            1: "Đi bộ rèn luyện sức khoẻ nào! 🚶‍♂️",
+            2: "Chào anh em nha! Chúc một ngày tốt lành! 👋",
+            3: "Papa dạy rằng... à mà thôi đọc tiếp đây! 🤓",
+            4: "Nước trong ngần như lưu ly, để đi xách thêm xô nữa! 💧",
+            5: "Là lá la la là ~ Sing a happy song! 🎶",
+            6: "Khò khò...Ai làm gì làm, ngủ là healing... 😴",
+            7: "Nhà sạch đẹp thì ai cũng vui! Quét quét... 🧹",
+            8: "Giờ chọn đi ngủ hay ăn đây ta... 🤔",
+            9: "Hỏng hóc gì cứ để mình cho! 🛠️",
+            10: "Có ai muốn thử bánh nấm không? Mình thử trước cho xem nè! 🍄"
         };
 
         function spawnEmojiParticles(parentElement) {

@@ -888,16 +888,16 @@
         }
 
         const SMURF_QUOTES = {
-            1: "Đi bộ rèn luyện sức khoẻ nào! 🚶‍♂️🌿",
-            2: "Chào đằng ấy nha! Chúc một ngày tốt lành! 👋💙",
-            3: "Sách dạy rằng... à mà thôi tớ đọc tiếp đây! 📚🤓",
-            4: "Nước giếng ngọt lắm, tớ đi xách thêm gầu nữa! 🪣💧",
-            5: "Lalala~ Nhạc lên là tớ phải quẩy thôi! 🎶🕺",
-            6: "Khò khò... Đừng đánh thức tớ nhé... 😴💤",
-            7: "Làng sạch đẹp thì ai cũng vui! Quét quét... 🧹✨",
-            8: "Để tớ ngẫm nghĩ xem có nên đi ngủ không... 🤔💭",
-            9: "Hỏng hóc gì cứ để tớ sửa cho! Búa đe kìm kéo! 🛠️🔨",
-            10: "Có ai có bánh nấm không? Tớ đói bụng quá! 🍄🎂"
+            1: "Đi bộ rèn luyện sức khoẻ nào! 🚶‍♂️",
+            2: "Chào anh em nha! Chúc một ngày tốt lành! 👋",
+            3: "Papa dạy rằng... à mà thôi đọc tiếp đây! 🤓",
+            4: "Nước trong ngần như lưu ly, để đi xách thêm xô nữa! 💧",
+            5: "Là lá la la là ~ Sing a happy song! 🎶",
+            6: "Khò khò...Ai làm gì làm, ngủ là healing... 😴",
+            7: "Nhà sạch đẹp thì ai cũng vui! Quét quét... 🧹",
+            8: "Giờ chọn đi ngủ hay ăn đây ta... 🤔",
+            9: "Hỏng hóc gì cứ để mình cho! 🛠️",
+            10: "Có ai muốn thử bánh nấm không? Mình thử trước cho xem nè! 🍄"
         };
 
         function spawnEmojiParticles(parentElement) {
