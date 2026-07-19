@@ -540,6 +540,16 @@ body.sheet-open #main-bottom-nav {
 }
 
 /* ── IMMERSIVE FULLSCREEN VILLAGE MAP ── */
+/* Override outer <main> wrapper from template.html (has max-w-md = 448px cap) */
+body > main {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+#view-home {
+    width: 100% !important;
+}
+
 #view-home main {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
