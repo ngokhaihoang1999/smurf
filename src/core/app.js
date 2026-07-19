@@ -1019,7 +1019,7 @@
             if (!viewport || !downArrow) return;
 
             // Show down arrow initially
-            downArrow.style.display = 'block';
+            downArrow.style.display = 'flex';
 
             function updateScrollArrows() {
                 const scrollTop = viewport.scrollTop;
@@ -1029,9 +1029,9 @@
                 const atBottom = scrollTop + clientHeight >= scrollHeight - 10;
 
                 // Show up arrow when not at top
-                if (upArrow) upArrow.style.display = atTop ? 'none' : 'block';
+                if (upArrow) upArrow.style.display = atTop ? 'none' : 'flex';
                 // Show down arrow when not at bottom
-                if (downArrow) downArrow.style.display = atBottom ? 'none' : 'block';
+                if (downArrow) downArrow.style.display = atBottom ? 'none' : 'flex';
             }
 
             viewport.addEventListener('scroll', updateScrollArrows, { passive: true });
