@@ -571,13 +571,6 @@ body.sheet-open #main-bottom-nav {
     background-size: 100% 100% !important;
 }
 
-/* Desktop platforms: show full vertical height of background map to prevent any cropping */
-body.is-desktop-platform #view-home #map-board {
-    min-width: 0 !important;
-    min-height: 0 !important;
-    width: auto !important;
-    height: 100% !important;
-}
 
 /* Float welcome banner on top of map */
 #view-home #welcome-banner {
