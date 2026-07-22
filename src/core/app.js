@@ -123,37 +123,9 @@
                     // Save to local cache
                     localStorage.setItem('smurf_residents_cache', JSON.stringify(RESIDENTS_DATA));
 
-                    // Fetch reaction counts from the Google Sheet and merge
-                    gasRequestJsonp({ action: 'getReactions', fromTelegramId: telegramId }, (reactResp) => {
-                        if (reactResp && reactResp.status === 'success') {
-                            if (reactResp.reactions) {
-                                let db = {};
-                                try {
-                                    const cached = localStorage.getItem('smurf_social_db');
-                                    if (cached) db = JSON.parse(cached);
-                                } catch(e) {}
-                                
-                                for (const tid in reactResp.reactions) {
-                                    if (!db[tid]) {
-                                        db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
-                                    }
-                                    db[tid].likes = reactResp.reactions[tid].likes || 0;
-                                    db[tid].funnys = reactResp.reactions[tid].funnys || 0;
-                                    db[tid].stars = reactResp.reactions[tid].stars || 0;
-                                    db[tid].cools = reactResp.reactions[tid].cools || 0;
-                                }
-                                
-                                localStorage.setItem('smurf_social_db', JSON.stringify(db));
-                            }
-                            
-                            if (reactResp.myReactions) {
-                                localStorage.setItem('smurf_my_reactions', JSON.stringify(reactResp.myReactions));
-                            }
-                            
-                            loadSocialData();
-                            updateLeaderboard();
-                        }
-                    });
+                    // Fetch fresh reaction counts from the Google Sheet
+                    fetchFreshReactions();
+                    setInterval(fetchFreshReactions, 12000);
                     
                     // Initial render from local cache
                     updateLeaderboard();
@@ -3095,6 +3067,40 @@
             } catch(e) {}
             db[tid] = data;
             localStorage.setItem('smurf_social_db', JSON.stringify(db));
+        }
+
+        function fetchFreshReactions() {
+            const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
+            gasRequestJsonp({ action: 'getReactions', fromTelegramId: activeFromId }, (reactResp) => {
+                if (reactResp && reactResp.status === 'success') {
+                    if (reactResp.reactions) {
+                        let db = {};
+                        try {
+                            const cached = localStorage.getItem('smurf_social_db');
+                            if (cached) db = JSON.parse(cached);
+                        } catch(e) {}
+                        
+                        for (const tid in reactResp.reactions) {
+                            if (!db[tid]) {
+                                db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
+                            }
+                            db[tid].likes = reactResp.reactions[tid].likes || 0;
+                            db[tid].funnys = reactResp.reactions[tid].funnys || 0;
+                            db[tid].stars = reactResp.reactions[tid].stars || 0;
+                            db[tid].cools = reactResp.reactions[tid].cools || 0;
+                        }
+                        
+                        localStorage.setItem('smurf_social_db', JSON.stringify(db));
+                    }
+                    
+                    if (reactResp.myReactions) {
+                        localStorage.setItem('smurf_my_reactions', JSON.stringify(reactResp.myReactions));
+                    }
+                    
+                    loadSocialData();
+                    updateLeaderboard();
+                }
+            });
         }
 
         function loadSocialData() {

@@ -508,22 +508,54 @@ function findReactionRow(sheet, fromId, toId, type) {
   return -1;
 }
 
-function handleGetReactions(data) {
-  var reactionsSheet = getReactionsSheet();
-  var lastRow = reactionsSheet.getLastRow();
-  var reactions = {};
-  if (lastRow > 1) {
-    var sheetData = reactionsSheet.getRange(2, 1, lastRow - 1, 7).getValues();
-    sheetData.forEach(function(row) {
-      var tid = String(row[0]).trim();
-      reactions[tid] = {
-        likes: Number(row[2]) || 0,
-        funnys: Number(row[3]) || 0,
-        stars: Number(row[4]) || 0,
-        cools: Number(row[5]) || 0
-      };
+// Tính lại toàn bộ Reaction counts chính xác 100% từ ReactionLogs
+function recountAllReactions() {
+  var logsSheet = getReactionLogsSheet();
+  var logsLastRow = logsSheet.getLastRow();
+  var summary = {};
+  
+  if (logsLastRow > 1) {
+    var logsData = logsSheet.getRange(2, 1, logsLastRow - 1, 3).getValues();
+    logsData.forEach(function(row) {
+      var fromId = String(row[0]).trim();
+      var toId = String(row[1]).trim();
+      var type = String(row[2]).trim();
+      
+      if (!toId) return;
+      if (!summary[toId]) {
+        summary[toId] = { likes: 0, funnys: 0, stars: 0, cools: 0 };
+      }
+      
+      if (type === 'like') summary[toId].likes++;
+      else if (type === 'funny') summary[toId].funnys++;
+      else if (type === 'star') summary[toId].stars++;
+      else if (type === 'cool') summary[toId].cools++;
     });
   }
+  
+  // Đồng bộ lại toàn bộ trang tính Reactions
+  var reactionsSheet = getReactionsSheet();
+  var lastRow = reactionsSheet.getLastRow();
+  
+  // Nếu đã có dữ liệu cũ -> cập nhật các cột số lượng
+  if (lastRow > 1) {
+    var sheetData = reactionsSheet.getRange(2, 1, lastRow - 1, 7).getValues();
+    for (var i = 0; i < sheetData.length; i++) {
+      var rowNum = i + 2;
+      var tid = String(sheetData[i][0]).trim();
+      var counts = summary[tid] || { likes: 0, funnys: 0, stars: 0, cools: 0 };
+      
+      reactionsSheet.getRange(rowNum, 3, 1, 4).setValues([[counts.likes, counts.funnys, counts.stars, counts.cools]]);
+      reactionsSheet.getRange(rowNum, 7).setValue(new Date());
+    }
+  }
+  
+  return summary;
+}
+
+function handleGetReactions(data) {
+  // Tính toán lại chính xác từ ReactionLogs trước khi lấy dữ liệu
+  var reactions = recountAllReactions();
   
   var myReactions = {};
   var fromTelegramId = data && data.fromTelegramId ? String(data.fromTelegramId).trim() : "";
