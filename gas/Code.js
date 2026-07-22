@@ -547,39 +547,59 @@ function handleGetReactions(data) {
 }
 
 function handleUpdateReaction(data) {
-  var reactionsSheet = getReactionsSheet();
-  var targetId = String(data.telegramId).trim();
-  var smurfName = String(data.smurfName || "").trim();
-  var type = data.type; // "like", "funny", "star", "cool"
+  var targetId = data.telegramId ? String(data.telegramId).trim() : "";
   var fromTelegramId = data.fromTelegramId ? String(data.fromTelegramId).trim() : "";
+  var smurfName = String(data.smurfName || "").trim();
+  var type = String(data.type || "").trim(); // "like", "funny", "star", "cool"
   
-  var colIndex = -1;
-  if (type === 'like') colIndex = 3; // Col C
-  else if (type === 'funny') colIndex = 4; // Col D
-  else if (type === 'star') colIndex = 5; // Col E
-  else if (type === 'cool') colIndex = 6; // Col F
-  
-  if (colIndex === -1) return { status: "error", message: "Invalid reaction type: " + type };
-  
-  var isAdd = true;
-  if (fromTelegramId) {
-    var logsSheet = getReactionLogsSheet();
-    var logRowNum = findReactionRow(logsSheet, fromTelegramId, targetId, type);
-    if (logRowNum !== -1) {
-      // Reaction exists -> remove it
-      logsSheet.deleteRow(logRowNum);
-      isAdd = false;
-    } else {
-      // Reaction does not exist -> add it
-      logsSheet.appendRow([fromTelegramId, targetId, type, new Date()]);
-      isAdd = true;
-    }
-  } else {
-    // Fallback backward compatibility
-    isAdd = !!data.isAdd;
+  if (!fromTelegramId) {
+    return { status: "error", message: "Yêu cầu fromTelegramId (Telegram ID của người tương tác)" };
+  }
+  if (!targetId) {
+    return { status: "error", message: "Yêu cầu telegramId (ID cư dân được thả emoji)" };
   }
   
-  // Find existing row in Reactions sheet
+  var validTypes = ['like', 'funny', 'star', 'cool'];
+  if (validTypes.indexOf(type) === -1) {
+    return { status: "error", message: "Invalid reaction type: " + type };
+  }
+  
+  var logsSheet = getReactionLogsSheet();
+  var logRowNum = findReactionRow(logsSheet, fromTelegramId, targetId, type);
+  var isAdd = true;
+  
+  if (logRowNum !== -1) {
+    // Đã thả emoji trước đó -> Bỏ thả (Toggle OFF)
+    logsSheet.deleteRow(logRowNum);
+    isAdd = false;
+  } else {
+    // Chưa thả emoji -> Thả emoji mới (Toggle ON)
+    logsSheet.appendRow([fromTelegramId, targetId, type, new Date()]);
+    isAdd = true;
+  }
+  
+  // Tính lại tổng số lượng reaction chính xác từ ReactionLogs cho targetId
+  var logsLastRow = logsSheet.getLastRow();
+  var likesCount = 0;
+  var funnysCount = 0;
+  var starsCount = 0;
+  var coolsCount = 0;
+  
+  if (logsLastRow > 1) {
+    var logsData = logsSheet.getRange(2, 1, logsLastRow - 1, 3).getValues();
+    logsData.forEach(function(row) {
+      if (String(row[1]).trim() === targetId) {
+        var rType = String(row[2]).trim();
+        if (rType === 'like') likesCount++;
+        else if (rType === 'funny') funnysCount++;
+        else if (rType === 'star') starsCount++;
+        else if (rType === 'cool') coolsCount++;
+      }
+    });
+  }
+  
+  // Cập nhật hoặc tạo dòng tổng hợp trong bảng Reactions
+  var reactionsSheet = getReactionsSheet();
   var lastRow = reactionsSheet.getLastRow();
   var rowNum = -1;
   if (lastRow > 1) {
@@ -593,27 +613,23 @@ function handleUpdateReaction(data) {
   }
   
   if (rowNum === -1) {
-    // Append new row in Reactions sheet
-    var newRow = [targetId, smurfName, 0, 0, 0, 0, new Date()];
-    if (isAdd) newRow[colIndex - 1] = 1;
-    reactionsSheet.appendRow(newRow);
-    rowNum = reactionsSheet.getLastRow();
+    reactionsSheet.appendRow([targetId, smurfName, likesCount, funnysCount, starsCount, coolsCount, new Date()]);
   } else {
-    var currentVal = Number(reactionsSheet.getRange(rowNum, colIndex).getValue()) || 0;
-    var newVal = isAdd ? currentVal + 1 : Math.max(0, currentVal - 1);
-    reactionsSheet.getRange(rowNum, colIndex).setValue(newVal);
-    reactionsSheet.getRange(rowNum, 7).setValue(new Date()); // Update timestamp
+    reactionsSheet.getRange(rowNum, 2).setValue(smurfName);
+    reactionsSheet.getRange(rowNum, 3).setValue(likesCount);
+    reactionsSheet.getRange(rowNum, 4).setValue(funnysCount);
+    reactionsSheet.getRange(rowNum, 5).setValue(starsCount);
+    reactionsSheet.getRange(rowNum, 6).setValue(coolsCount);
+    reactionsSheet.getRange(rowNum, 7).setValue(new Date());
   }
   
-  // Read and return updated values
-  var updatedVals = reactionsSheet.getRange(rowNum, 1, 1, 7).getValues()[0];
   return {
     status: "success",
     telegramId: targetId,
-    likes: Number(updatedVals[2]) || 0,
-    funnys: Number(updatedVals[3]) || 0,
-    stars: Number(updatedVals[4]) || 0,
-    cools: Number(updatedVals[5]) || 0,
+    likes: likesCount,
+    funnys: funnysCount,
+    stars: starsCount,
+    cools: coolsCount,
     isAdd: isAdd
   };
 }

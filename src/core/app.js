@@ -3139,12 +3139,22 @@
             });
         }
 
+        function getDeviceId() {
+            let id = localStorage.getItem('smurf_device_id');
+            if (!id) {
+                id = 'dev_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+                localStorage.setItem('smurf_device_id', id);
+            }
+            return id;
+        }
+
         function reactToResident(type) {
             const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
-            if (!telegramId) {
-                alert("📢 Bạn cần có Telegram ID để thực hiện tương tác này!");
+            const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
+            if (!activeFromId) {
+                alert("📢 Không tìm thấy ID định danh để thực hiện tương tác!");
                 return;
             }
             
@@ -3180,7 +3190,7 @@
             // Dispatch update to online spreadsheet
             gasRequestJsonp({
                 action: 'updateReaction',
-                fromTelegramId: telegramId,
+                fromTelegramId: activeFromId,
                 telegramId: targetId,
                 smurfName: activeModalItem?.smurfName || '',
                 type: type,
