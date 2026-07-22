@@ -1746,13 +1746,13 @@
                 // Rank 2 (Silver - Left)
                 if (r2) {
                     html += `
-                        <div onclick="openModal('${r2.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[100px] relative z-10">
+                        <div onclick="openModal('${r2.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[96px] relative z-10">
                             <span class="text-[9px] bg-slate-200/90 text-slate-700 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 2</span>
                             <div class="relative w-20 h-20 flex items-center justify-center">
-                                <div class="w-13 h-13 rounded-full overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-white relative z-0">
+                                <div class="w-13 h-13 rounded-full overflow-hidden shadow-md ring-2 ring-slate-300 group-hover:scale-105 transition-transform bg-white relative z-0">
                                     <img src="${r2.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
-                                <img src="src/assets/smurf_laurel_silver.png" class="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none filter drop-shadow-sm group-hover:scale-105 transition-transform" alt="Silver Laurel Wreath">
+                                <img src="src/assets/laurel_silver.svg" class="absolute -inset-1 w-[108%] h-[108%] object-contain z-10 pointer-events-none filter drop-shadow-sm group-hover:scale-105 transition-transform" alt="Silver Laurel">
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
                                 <span class="text-[11px] font-fredoka font-bold text-slate-800 truncate w-full">${r2.smurfName}</span>
@@ -1765,15 +1765,15 @@
                 // Rank 1 (Gold - Center, Tallest & Crown)
                 if (r1) {
                     html += `
-                        <div onclick="openModal('${r1.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[124px] z-20 -mt-3">
+                        <div onclick="openModal('${r1.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[118px] z-20 -mt-3">
                             <div class="relative flex flex-col items-center">
-                                <img src="src/assets/smurf_crown_gold.png" class="w-8 h-8 object-contain absolute -top-5 z-30 animate-bounce filter drop-shadow-sm" style="animation-duration: 2.2s;" alt="Gold Crown">
-                                <span class="text-[9px] bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-white px-2.5 py-0.5 rounded-full font-extrabold mb-1 z-20 shadow-md uppercase tracking-wider">TOP 1</span>
+                                <span class="text-xl absolute -top-4 z-30 animate-bounce filter drop-shadow-sm" style="animation-duration: 2.2s;">👑</span>
+                                <span class="text-[9px] bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-white px-2.5 py-0.5 rounded-full font-extrabold mb-1 z-20 shadow-md uppercase tracking-wider mt-1">TOP 1</span>
                                 <div class="relative w-24 h-24 flex items-center justify-center">
-                                    <div class="w-16 h-16 rounded-full overflow-hidden shadow-lg ring-4 ring-amber-300/50 group-hover:scale-105 transition-transform bg-white relative z-0">
+                                    <div class="w-16 h-16 rounded-full overflow-hidden shadow-lg ring-4 ring-amber-400/60 group-hover:scale-105 transition-transform bg-white relative z-0">
                                         <img src="${r1.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                     </div>
-                                    <img src="src/assets/smurf_laurel_gold.png" class="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" alt="Gold Laurel Wreath">
+                                    <img src="src/assets/laurel_gold.svg" class="absolute -inset-1 w-[108%] h-[108%] object-contain z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" alt="Gold Laurel">
                                 </div>
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
@@ -1787,13 +1787,13 @@
                 // Rank 3 (Bronze - Right)
                 if (r3) {
                     html += `
-                        <div onclick="openModal('${r3.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[100px] relative z-10">
+                        <div onclick="openModal('${r3.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[96px] relative z-10">
                             <span class="text-[9px] bg-amber-100/90 text-amber-800 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 3</span>
                             <div class="relative w-20 h-20 flex items-center justify-center">
-                                <div class="w-13 h-13 rounded-full overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-white relative z-0">
+                                <div class="w-13 h-13 rounded-full overflow-hidden shadow-md ring-2 ring-amber-600/40 group-hover:scale-105 transition-transform bg-white relative z-0">
                                     <img src="${r3.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
-                                <img src="src/assets/smurf_laurel_bronze.png" class="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none filter drop-shadow-sm group-hover:scale-105 transition-transform" alt="Bronze Laurel Wreath">
+                                <img src="src/assets/laurel_bronze.svg" class="absolute -inset-1 w-[108%] h-[108%] object-contain z-10 pointer-events-none filter drop-shadow-sm group-hover:scale-105 transition-transform" alt="Bronze Laurel">
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
                                 <span class="text-[11px] font-fredoka font-bold text-slate-800 truncate w-full">${r3.smurfName}</span>
