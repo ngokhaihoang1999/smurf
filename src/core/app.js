@@ -763,9 +763,12 @@
             const data = { action: 'register' };
             formData.forEach((value, key) => { data[key] = value; });
 
-            // Ensure email is passed
-            data.email = data.email || currentUserEmail || telegramId || '';
-            data.googleName = data.googleName || currentGoogleName || '';
+            // Ensure email and telegramId are always populated for 100% GAS compatibility
+            const userIdentifier = data.email || currentUserEmail || telegramId || ('user_' + Date.now());
+            data.email = userIdentifier;
+            data.telegramId = userIdentifier;
+            data.id = userIdentifier;
+            data.googleName = data.googleName || currentGoogleName || data.smurfName || '';
 
             // Explicitly ensure avatar styling fields are extracted even if FormData missed any
             data.gender = document.getElementById('input-gender')?.value || data.gender || 'Nam (Smurf)';
