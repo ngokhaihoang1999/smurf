@@ -3069,11 +3069,11 @@
             localStorage.setItem('smurf_social_db', JSON.stringify(db));
         }
 
-        let isReactionInFlight = false;
+        let lastReactionTapTimes = {};
 
         function fetchFreshReactions() {
-            // Skip background polling if tab is not visible or user is actively clicking
-            if (document.hidden || isReactionInFlight) return;
+            // Skip background polling if tab is not visible
+            if (document.hidden) return;
             
             const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
             gasRequestJsonp({ action: 'getReactions', fromTelegramId: activeFromId }, (reactResp) => {
@@ -3169,18 +3169,21 @@
         }
 
         function reactToResident(type) {
-            if (isReactionInFlight) return; // Prevent double clicking / spam jumping
-            
             const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
+            
+            const now = Date.now();
+            const tapKey = targetId + '_' + type;
+            if (lastReactionTapTimes[tapKey] && (now - lastReactionTapTimes[tapKey] < 250)) {
+                return; // 250ms per-button throttle to prevent double taps
+            }
+            lastReactionTapTimes[tapKey] = now;
             
             const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
             if (!activeFromId) {
                 alert("📢 Không tìm thấy ID định danh để thực hiện tương tác!");
                 return;
             }
-            
-            isReactionInFlight = true;
             
             let myReactions = {};
             try {
@@ -3211,7 +3214,7 @@
             loadSocialData();
             updateLeaderboard();
             
-            // Dispatch update to online spreadsheet
+            // Dispatch update to online spreadsheet asynchronously
             gasRequestJsonp({
                 action: 'updateReaction',
                 fromTelegramId: activeFromId,
@@ -3220,7 +3223,6 @@
                 type: type,
                 isAdd: !isAlreadyReacted
             }, (reactResp) => {
-                isReactionInFlight = false;
                 if (reactResp && reactResp.status === 'success') {
                     const latestData = getSocialData(targetId);
                     latestData.likes = reactResp.likes || 0;
@@ -3240,8 +3242,6 @@
                     loadSocialData();
                     updateLeaderboard();
                 }
-            }, () => {
-                isReactionInFlight = false;
             });
             
             if (tg?.HapticFeedback) {

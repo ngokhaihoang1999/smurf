@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784728412880" rel="stylesheet"/>
+    <link href="styles.css?v=1784728605383" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -723,13 +723,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-216px)] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784728412880');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784728605383');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784728412880" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784728605383" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -1627,30 +1627,30 @@
         
     <!-- Emoji Reaction Counter Bar (positioned compact above controls) -->
     <div id="modal-reaction-bar" class="fixed bottom-[114px] left-4 right-4 z-[102] opacity-0 transition-opacity duration-300 max-w-[340px] mx-auto pointer-events-auto hidden">
-        <div class="flex justify-around bg-white/95 backdrop-blur-md px-2 py-1 rounded-xl border border-slate-200/50 shadow-[0_4px_16px_rgba(0,0,0,0.1)]">
-            <div class="flex flex-col items-center flex-1 text-center gap-0">
-                <button onclick="reactToResident('like')" id="react-btn-like" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all">
+        <div class="flex justify-around bg-white/95 backdrop-blur-md px-3 py-2.5 rounded-2xl border border-slate-200/60 shadow-[0_6px_20px_rgba(0,0,0,0.12)]">
+            <div class="flex flex-col items-center flex-1 text-center gap-0.5">
+                <button onclick="reactToResident('like')" id="react-btn-like" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all duration-150">
                     <span>❤️</span>
                 </button>
                 <span class="text-[8px] font-bold text-slate-400">Yêu thích</span>
                 <span id="react-count-like" class="text-[9px] font-extrabold text-slate-600">0</span>
             </div>
-            <div class="flex flex-col items-center flex-1 text-center gap-0">
-                <button onclick="reactToResident('funny')" id="react-btn-funny" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all">
+            <div class="flex flex-col items-center flex-1 text-center gap-0.5">
+                <button onclick="reactToResident('funny')" id="react-btn-funny" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all duration-150">
                     <span>🍄</span>
                 </button>
                 <span class="text-[8px] font-bold text-slate-400">Quá Xì Trum</span>
                 <span id="react-count-funny" class="text-[9px] font-extrabold text-slate-600">0</span>
             </div>
-            <div class="flex flex-col items-center flex-1 text-center gap-0">
-                <button onclick="reactToResident('star')" id="react-btn-star" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all">
+            <div class="flex flex-col items-center flex-1 text-center gap-0.5">
+                <button onclick="reactToResident('star')" id="react-btn-star" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all duration-150">
                     <span>🌟</span>
                 </button>
                 <span class="text-[8px] font-bold text-slate-400">Sáng Tạo</span>
                 <span id="react-count-star" class="text-[9px] font-extrabold text-slate-600">0</span>
             </div>
-            <div class="flex flex-col items-center flex-1 text-center gap-0">
-                <button onclick="reactToResident('cool')" id="react-btn-cool" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all">
+            <div class="flex flex-col items-center flex-1 text-center gap-0.5">
+                <button onclick="reactToResident('cool')" id="react-btn-cool" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all duration-150">
                     <span>🕶️</span>
                 </button>
                 <span class="text-[8px] font-bold text-slate-400">Ngầu</span>
@@ -4841,11 +4841,11 @@
             localStorage.setItem('smurf_social_db', JSON.stringify(db));
         }
 
-        let isReactionInFlight = false;
+        let lastReactionTapTimes = {};
 
         function fetchFreshReactions() {
-            // Skip background polling if tab is not visible or user is actively clicking
-            if (document.hidden || isReactionInFlight) return;
+            // Skip background polling if tab is not visible
+            if (document.hidden) return;
             
             const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
             gasRequestJsonp({ action: 'getReactions', fromTelegramId: activeFromId }, (reactResp) => {
@@ -4941,18 +4941,21 @@
         }
 
         function reactToResident(type) {
-            if (isReactionInFlight) return; // Prevent double clicking / spam jumping
-            
             const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
+            
+            const now = Date.now();
+            const tapKey = targetId + '_' + type;
+            if (lastReactionTapTimes[tapKey] && (now - lastReactionTapTimes[tapKey] < 250)) {
+                return; // 250ms per-button throttle to prevent double taps
+            }
+            lastReactionTapTimes[tapKey] = now;
             
             const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
             if (!activeFromId) {
                 alert("📢 Không tìm thấy ID định danh để thực hiện tương tác!");
                 return;
             }
-            
-            isReactionInFlight = true;
             
             let myReactions = {};
             try {
@@ -4983,7 +4986,7 @@
             loadSocialData();
             updateLeaderboard();
             
-            // Dispatch update to online spreadsheet
+            // Dispatch update to online spreadsheet asynchronously
             gasRequestJsonp({
                 action: 'updateReaction',
                 fromTelegramId: activeFromId,
@@ -4992,7 +4995,6 @@
                 type: type,
                 isAdd: !isAlreadyReacted
             }, (reactResp) => {
-                isReactionInFlight = false;
                 if (reactResp && reactResp.status === 'success') {
                     const latestData = getSocialData(targetId);
                     latestData.likes = reactResp.likes || 0;
@@ -5012,8 +5014,6 @@
                     loadSocialData();
                     updateLeaderboard();
                 }
-            }, () => {
-                isReactionInFlight = false;
             });
             
             if (tg?.HapticFeedback) {
