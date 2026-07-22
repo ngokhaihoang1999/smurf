@@ -3073,25 +3073,31 @@
             const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
             gasRequestJsonp({ action: 'getReactions', fromTelegramId: activeFromId }, (reactResp) => {
                 if (reactResp && reactResp.status === 'success') {
-                    if (reactResp.reactions) {
-                        let db = {};
-                        try {
-                            const cached = localStorage.getItem('smurf_social_db');
-                            if (cached) db = JSON.parse(cached);
-                        } catch(e) {}
-                        
-                        for (const tid in reactResp.reactions) {
+                    let db = {};
+                    try {
+                        const cached = localStorage.getItem('smurf_social_db');
+                        if (cached) db = JSON.parse(cached);
+                    } catch(e) {}
+                    
+                    const serverReactions = reactResp.reactions || {};
+                    
+                    // Force-sync every resident with server counts to eliminate any stale device cache
+                    if (Array.isArray(RESIDENTS_DATA) && RESIDENTS_DATA.length > 0) {
+                        RESIDENTS_DATA.forEach(r => {
+                            const tid = String(r.telegramId || '');
+                            if (!tid) return;
                             if (!db[tid]) {
                                 db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
                             }
-                            db[tid].likes = reactResp.reactions[tid].likes || 0;
-                            db[tid].funnys = reactResp.reactions[tid].funnys || 0;
-                            db[tid].stars = reactResp.reactions[tid].stars || 0;
-                            db[tid].cools = reactResp.reactions[tid].cools || 0;
-                        }
-                        
-                        localStorage.setItem('smurf_social_db', JSON.stringify(db));
+                            const counts = serverReactions[tid] || { likes: 0, funnys: 0, stars: 0, cools: 0 };
+                            db[tid].likes = counts.likes || 0;
+                            db[tid].funnys = counts.funnys || 0;
+                            db[tid].stars = counts.stars || 0;
+                            db[tid].cools = counts.cools || 0;
+                        });
                     }
+                    
+                    localStorage.setItem('smurf_social_db', JSON.stringify(db));
                     
                     if (reactResp.myReactions) {
                         localStorage.setItem('smurf_my_reactions', JSON.stringify(reactResp.myReactions));
