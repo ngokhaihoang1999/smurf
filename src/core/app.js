@@ -1746,19 +1746,19 @@
                 // Rank 2 (Silver - Left)
                 if (r2) {
                     html += `
-                        <div onclick="openModal('${r2.smurfName}')" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-transform w-[90px]">
+                        <div onclick="openModal('${r2.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[96px] relative z-10">
                             <div class="relative flex flex-col items-center">
-                                <span class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-extrabold mb-1 shadow-sm">TOP 2</span>
-                                <div class="w-12 h-12 rounded-full border-2 border-slate-300 overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-white relative">
+                                <span class="text-[9px] bg-slate-200/90 text-slate-700 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 2</span>
+                                <div class="w-13 h-13 rounded-full border-2 border-slate-300 overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-white relative">
                                     <img src="${r2.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
-                                <span class="text-[11px] font-fredoka font-bold text-slate-700 truncate w-full">${r2.smurfName}</span>
-                                <span class="text-[9px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 mt-0.5">✨ ${r2.score}</span>
+                                <span class="text-[11px] font-fredoka font-bold text-slate-800 truncate w-full">${r2.smurfName}</span>
+                                <span class="text-[9px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 mt-0.5 shadow-sm">✨ ${r2.score}</span>
                             </div>
-                            <div class="w-full h-11 mt-1 relative flex items-center justify-center">
-                                <img src="src/assets/smurf_podium_silver.png" class="w-full h-full object-contain drop-shadow-md" alt="Silver Podium">
+                            <div class="w-full h-12 mt-1 relative flex items-center justify-center pointer-events-none">
+                                <img src="src/assets/smurf_podium_silver.png" class="w-full h-full object-contain filter drop-shadow-md" alt="Silver Podium">
                             </div>
                         </div>
                     `;
@@ -1767,20 +1767,20 @@
                 // Rank 1 (Gold - Center, Tallest)
                 if (r1) {
                     html += `
-                        <div onclick="openModal('${r1.smurfName}')" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-transform w-[110px] z-10 -mt-3">
+                        <div onclick="openModal('${r1.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[114px] z-20 -mt-4">
                             <div class="relative flex flex-col items-center">
-                                <img src="src/assets/smurf_crown_gold.png" class="w-7 h-7 object-contain absolute -top-4 z-20 animate-bounce" style="animation-duration: 2s;" alt="Gold Crown">
-                                <div class="w-16 h-16 rounded-full border-2 border-amber-400 overflow-hidden shadow-lg ring-4 ring-amber-300/40 group-hover:scale-105 transition-transform bg-white relative mt-2">
+                                <img src="src/assets/smurf_crown_gold.png" class="w-8 h-8 object-contain absolute -top-5 z-30 animate-bounce filter drop-shadow-sm" style="animation-duration: 2.2s;" alt="Gold Crown">
+                                <div class="w-16 h-16 rounded-full border-2 border-amber-400 overflow-hidden shadow-lg ring-4 ring-amber-300/50 group-hover:scale-105 transition-transform bg-white relative mt-2">
                                     <img src="${r1.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
-                                <span class="text-[9px] bg-gradient-to-r from-amber-500 to-yellow-400 text-white px-2 py-0.2 rounded-full font-extrabold -mt-2.5 z-20 shadow-md">TOP 1</span>
+                                <span class="text-[9px] bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-white px-2.5 py-0.5 rounded-full font-extrabold -mt-2 z-20 shadow-md uppercase tracking-wider">TOP 1</span>
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
-                                <span class="text-[12px] font-fredoka font-extrabold text-amber-900 truncate w-full">${r1.smurfName}</span>
+                                <span class="text-[12px] font-fredoka font-extrabold text-amber-950 truncate w-full">${r1.smurfName}</span>
                                 <span class="text-[10px] font-extrabold text-amber-700 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300 shadow-sm mt-0.5">✨ ${r1.score}</span>
                             </div>
-                            <div class="w-full h-14 mt-1 relative flex items-center justify-center">
-                                <img src="src/assets/smurf_podium_gold.png" class="w-full h-full object-contain drop-shadow-lg" alt="Gold Podium">
+                            <div class="w-full h-15 mt-1 relative flex items-center justify-center pointer-events-none">
+                                <img src="src/assets/smurf_podium_gold.png" class="w-full h-full object-contain filter drop-shadow-lg" alt="Gold Podium">
                             </div>
                         </div>
                     `;
@@ -1789,19 +1789,19 @@
                 // Rank 3 (Bronze - Right)
                 if (r3) {
                     html += `
-                        <div onclick="openModal('${r3.smurfName}')" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-transform w-[90px]">
+                        <div onclick="openModal('${r3.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[96px] relative z-10">
                             <div class="relative flex flex-col items-center">
-                                <span class="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-extrabold mb-1 shadow-sm">TOP 3</span>
-                                <div class="w-12 h-12 rounded-full border-2 border-amber-700/40 overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-white relative">
+                                <span class="text-[9px] bg-amber-100/90 text-amber-800 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 3</span>
+                                <div class="w-13 h-13 rounded-full border-2 border-amber-700/40 overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-white relative">
                                     <img src="${r3.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
-                                <span class="text-[11px] font-fredoka font-bold text-slate-700 truncate w-full">${r3.smurfName}</span>
-                                <span class="text-[9px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 mt-0.5">✨ ${r3.score}</span>
+                                <span class="text-[11px] font-fredoka font-bold text-slate-800 truncate w-full">${r3.smurfName}</span>
+                                <span class="text-[9px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 mt-0.5 shadow-sm">✨ ${r3.score}</span>
                             </div>
-                            <div class="w-full h-10 mt-1 relative flex items-center justify-center">
-                                <img src="src/assets/smurf_podium_bronze.png" class="w-full h-full object-contain drop-shadow-md" alt="Bronze Podium">
+                            <div class="w-full h-10 mt-1 relative flex items-center justify-center pointer-events-none">
+                                <img src="src/assets/smurf_podium_bronze.png" class="w-full h-full object-contain filter drop-shadow-md" alt="Bronze Podium">
                             </div>
                         </div>
                     `;
