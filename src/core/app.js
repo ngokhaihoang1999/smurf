@@ -733,6 +733,14 @@
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
             const btnText = document.getElementById('btn-text');
+
+            if (!currentUserEmail) {
+                alert("⚠️ Vui lòng Đăng Nhập bằng Tài Khoản Google trước khi tạo hồ sơ cư dân!");
+                showView('loading');
+                setTimeout(initGoogleSignIn, 150);
+                return;
+            }
+
             btn.disabled = true; btnText.textContent = "ĐANG GỬI ĐĂNG KÝ..."; btn.style.opacity = '0.7';
 
             const form = document.getElementById('registry-form');
