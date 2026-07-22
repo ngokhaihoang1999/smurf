@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784745375153" rel="stylesheet"/>
+    <link href="styles.css?v=1784745843492" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -744,13 +744,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-100px)] min-h-[550px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784745375153');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784745843492');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784745375153" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784745843492" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -1381,51 +1381,51 @@
     <!-- VIEW: VILLAGE (Quảng Trường Cư Dân)    -->
     <!-- ═══════════════════════════════════════ -->
     <div id="view-village" class="w-full hidden">
-        <main class="w-full max-w-md mx-auto px-4 pt-16 pb-24 flex flex-col gap-4">
-            <!-- Search and Filters -->
-            <div class="flex flex-col gap-3 text-center items-center mt-2">
-                <p class="text-[11px] font-bold text-slate-400 max-w-xs">Nhấp vào thẻ dọc của thành viên để lật 3D xem mặt trước (ngang) chứa thông tin đầy đủ.</p>
-                
+        <main class="w-full max-w-md mx-auto px-4 pt-16 pb-28 flex flex-col gap-3.5">
+            
+            <!-- Compact Search & Mushroom Filter Pills Toolbar -->
+            <div class="flex flex-col gap-2.5 mt-2 bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-sky-100 shadow-sm">
                 <!-- Search Bar -->
                 <div class="w-full relative">
-                    <span class="material-symbols-outlined absolute left-4 top-2 text-slate-400 text-lg">search</span>
-                    <input type="text" id="search-input" oninput="filterResidents()" placeholder="Tìm tên Xì Trum hoặc tên thật..." class="w-full pl-10 pr-4 py-2 bg-white border-2 border-slate-200 text-slate-800 rounded-full text-xs font-bold focus:border-smurf-blue focus:ring-0 transition-all shadow-sm"/>
+                    <span class="material-symbols-outlined absolute left-3.5 top-2.5 text-slate-400 text-base">search</span>
+                    <input type="text" id="search-input" oninput="filterResidents()" placeholder="Tìm tên Xì Trum hoặc tên thật..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-xs font-bold focus:border-smurf-blue focus:bg-white focus:ring-0 transition-all"/>
                 </div>
                 
-                <!-- Filter Select Dropdown -->
-                <div class="w-full relative">
-                    <select id="filter-select" onchange="setFilter(this.value)" class="w-full pl-4 pr-10 py-2 bg-white border-2 border-slate-200 text-slate-800 rounded-full text-xs font-bold focus:border-smurf-blue focus:ring-0 transition-all shadow-sm appearance-none cursor-pointer">
-                        <option value="ALL">Tất Cả Nhóm</option>
-                        <option value="N1T1">Nhóm N1T1</option>
-                        <option value="N1T2">Nhóm N1T2</option>
-                        <option value="N1T3">Nhóm N1T3</option>
-                        <option value="N1T4">Nhóm N1T4</option>
-                        <option value="N1T5">Nhóm N1T5</option>
-                        <option value="N2T1">Nhóm N2T1</option>
-                        <option value="N2T2">Nhóm N2T2</option>
-                        <option value="N2T3">Nhóm N2T3</option>
-                        <option value="N2T4">Nhóm N2T4</option>
-                        <option value="N2T5">Nhóm N2T5</option>
-                    </select>
-                    <!-- Custom Arrow down icon -->
-                    <span class="material-symbols-outlined absolute right-4 top-2 text-slate-400 text-lg pointer-events-none">keyboard_arrow_down</span>
+                <!-- Horizontal Mushroom Pill Badges for Group Filtering -->
+                <div class="scroll-wrapper">
+                    <div class="flex overflow-x-auto gap-1.5 pb-1 custom-scroll" id="village-group-pills">
+                        <button type="button" onclick="setFilter('ALL')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap active" data-group="ALL">🌈 Tất Cả</button>
+                        <button type="button" onclick="setFilter('N1T1')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N1T1">🍄 N1T1</button>
+                        <button type="button" onclick="setFilter('N1T2')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N1T2">🍄 N1T2</button>
+                        <button type="button" onclick="setFilter('N1T3')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N1T3">🌟 N1T3</button>
+                        <button type="button" onclick="setFilter('N1T4')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N1T4">🍄 N1T4</button>
+                        <button type="button" onclick="setFilter('N1T5')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N1T5">🍄 N1T5</button>
+                        <button type="button" onclick="setFilter('N2T1')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N2T1">⚡ N2T1</button>
+                        <button type="button" onclick="setFilter('N2T2')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N2T2">⚡ N2T2</button>
+                        <button type="button" onclick="setFilter('N2T3')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N2T3">⚡ N2T3</button>
+                        <button type="button" onclick="setFilter('N2T4')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N2T4">⚡ N2T4</button>
+                        <button type="button" onclick="setFilter('N2T5')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N2T5">⚡ N2T5</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- TOP 5 LEADERBOARD -->
-            <div id="village-leaderboard-card" class="bg-white rounded-3xl p-4.5 shadow-sm border border-slate-100 flex flex-col gap-3 mt-2">
-                <div class="flex items-center gap-1.5 border-b border-slate-100 pb-2.5">
-                    <span class="text-base">🏆</span>
-                    <span class="font-fredoka text-xs text-slate-800 font-extrabold uppercase tracking-wide">Bảng Xếp Hạng Yêu Thích</span>
+            <!-- TOP 3 PODIUM SPOTLIGHT STAGE (Custom Smurf Village Assets) -->
+            <div id="village-podium-spotlight" class="bg-gradient-to-b from-sky-100/70 via-sky-50/50 to-white/90 rounded-3xl p-3.5 shadow-sm border border-sky-100 flex flex-col gap-2 relative overflow-hidden">
+                <div class="flex items-center justify-between border-b border-sky-100/60 pb-2">
+                    <span class="font-fredoka text-xs text-smurf-blue font-extrabold uppercase tracking-wide flex items-center gap-1.5">
+                        <img src="src/assets/smurf_crown_gold.png" class="w-5 h-5 object-contain" alt="Crown">
+                        <span>Bục Vinh Danh Xì Trum Yêu Thích</span>
+                    </span>
+                    <span class="text-[9px] text-slate-400 font-bold">Top 3 Cư Dân</span>
                 </div>
-                <div class="flex flex-col gap-2.5" id="leaderboard-list">
-                    <div class="text-center py-2 text-[10px] text-slate-400 font-bold">Đang tải bảng xếp hạng...</div>
+                <div id="podium-stage-wrapper" class="flex justify-center items-end gap-2 pt-2 pb-1 min-h-[140px]">
+                    <div class="text-center py-4 text-[10px] text-slate-400 font-bold">Đang tải bục vinh danh...</div>
                 </div>
             </div>
 
-            <!-- Grid of Residents -->
-            <section class="grid grid-cols-2 gap-4 justify-items-center mt-2" id="residents-grid">
-                <!-- Grid items will be injected dynamically -->
+            <!-- MAIN RESIDENT AVATAR CARDS GRID (Positioned directly below Podium) -->
+            <section class="grid grid-cols-2 gap-3.5 justify-items-center mt-1" id="residents-grid">
+                <!-- Dynamic cards injected via JS -->
             </section>
         </main>
 
@@ -3512,17 +3512,29 @@
 
         function setFilter(filter) {
             activeFilter = filter;
+            
+            // Update active state on group filter pill buttons
+            const pills = document.querySelectorAll('#village-group-pills button');
+            pills.forEach(btn => {
+                if (btn.getAttribute('data-group') === filter) {
+                    btn.className = 'pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap active pill-btn-red';
+                } else {
+                    btn.className = 'pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap';
+                }
+            });
+
             renderGrid();
         }
 
         function filterResidents() {
-            searchQuery = document.getElementById('search-input').value;
+            searchQuery = document.getElementById('search-input')?.value || '';
             renderGrid();
         }
 
         function updateLeaderboard() {
-            const container = document.getElementById('leaderboard-list');
-            if (!container) return;
+            const stage = document.getElementById('podium-stage-wrapper');
+            const legacyContainer = document.getElementById('leaderboard-list');
+            if (!stage && !legacyContainer) return;
             
             // Calculate total reactions for each resident
             const scored = RESIDENTS_DATA.map(r => {
@@ -3534,41 +3546,79 @@
             // Sort descending
             scored.sort((a, b) => b.score - a.score);
             
-            // Take top 5
-            const top5 = scored.slice(0, 5);
-            
-            // Ranks
-            const rankEmojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-            
-            container.innerHTML = '';
-            top5.forEach((user, idx) => {
-                const row = document.createElement('div');
-                row.className = 'flex items-center justify-between text-xs font-bold py-1 px-1 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer';
-                
-                row.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm w-5 text-center">${rankEmojis[idx]}</span>
-                        <img src="${user.avatar}" class="w-8 h-8 rounded-full border border-slate-200 object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
-                        <div class="flex flex-col">
-                            <span class="text-slate-700 font-fredoka">${user.smurfName}</span>
-                            <span class="text-[9px] text-slate-400">${user.group || 'Cư dân'}</span>
+            const r1 = scored[0] || null;
+            const r2 = scored[1] || null;
+            const r3 = scored[2] || null;
+
+            if (stage) {
+                let html = '';
+
+                // Rank 2 (Silver - Left)
+                if (r2) {
+                    html += `
+                        <div onclick="openModal('${r2.smurfName}')" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-transform w-[90px]">
+                            <div class="relative flex flex-col items-center">
+                                <span class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-extrabold mb-1 shadow-sm">TOP 2</span>
+                                <div class="w-12 h-12 rounded-full border-2 border-slate-300 overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-white relative">
+                                    <img src="${r2.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-center text-center mt-1 w-full">
+                                <span class="text-[11px] font-fredoka font-bold text-slate-700 truncate w-full">${r2.smurfName}</span>
+                                <span class="text-[9px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 mt-0.5">✨ ${r2.score}</span>
+                            </div>
+                            <div class="w-full h-11 mt-1 relative flex items-center justify-center">
+                                <img src="src/assets/smurf_podium_silver.png" class="w-full h-full object-contain drop-shadow-md" alt="Silver Podium">
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex items-center gap-1 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full text-[10px]">
-                        <span>✨</span>
-                        <span>${user.score}</span>
-                    </div>
-                `;
-                
-                row.onclick = () => {
-                    const item = RESIDENTS_DATA.find(r => r.telegramId === user.telegramId);
-                    if (item) {
-                        openModal(item.smurfName, row);
-                    }
-                };
-                
-                container.appendChild(row);
-            });
+                    `;
+                }
+
+                // Rank 1 (Gold - Center, Tallest)
+                if (r1) {
+                    html += `
+                        <div onclick="openModal('${r1.smurfName}')" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-transform w-[110px] z-10 -mt-3">
+                            <div class="relative flex flex-col items-center">
+                                <img src="src/assets/smurf_crown_gold.png" class="w-7 h-7 object-contain absolute -top-4 z-20 animate-bounce" style="animation-duration: 2s;" alt="Gold Crown">
+                                <div class="w-16 h-16 rounded-full border-2 border-amber-400 overflow-hidden shadow-lg ring-4 ring-amber-300/40 group-hover:scale-105 transition-transform bg-white relative mt-2">
+                                    <img src="${r1.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                </div>
+                                <span class="text-[9px] bg-gradient-to-r from-amber-500 to-yellow-400 text-white px-2 py-0.2 rounded-full font-extrabold -mt-2.5 z-20 shadow-md">TOP 1</span>
+                            </div>
+                            <div class="flex flex-col items-center text-center mt-1 w-full">
+                                <span class="text-[12px] font-fredoka font-extrabold text-amber-900 truncate w-full">${r1.smurfName}</span>
+                                <span class="text-[10px] font-extrabold text-amber-700 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300 shadow-sm mt-0.5">✨ ${r1.score}</span>
+                            </div>
+                            <div class="w-full h-14 mt-1 relative flex items-center justify-center">
+                                <img src="src/assets/smurf_podium_gold.png" class="w-full h-full object-contain drop-shadow-lg" alt="Gold Podium">
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Rank 3 (Bronze - Right)
+                if (r3) {
+                    html += `
+                        <div onclick="openModal('${r3.smurfName}')" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-transform w-[90px]">
+                            <div class="relative flex flex-col items-center">
+                                <span class="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-extrabold mb-1 shadow-sm">TOP 3</span>
+                                <div class="w-12 h-12 rounded-full border-2 border-amber-700/40 overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-white relative">
+                                    <img src="${r3.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-center text-center mt-1 w-full">
+                                <span class="text-[11px] font-fredoka font-bold text-slate-700 truncate w-full">${r3.smurfName}</span>
+                                <span class="text-[9px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 mt-0.5">✨ ${r3.score}</span>
+                            </div>
+                            <div class="w-full h-10 mt-1 relative flex items-center justify-center">
+                                <img src="src/assets/smurf_podium_bronze.png" class="w-full h-full object-contain drop-shadow-md" alt="Bronze Podium">
+                            </div>
+                        </div>
+                    `;
+                }
+
+                stage.innerHTML = html;
+            }
         }
 
         // ── 3D DETAIL CARD FLIP & ASPECT MORPH LOGIC ──

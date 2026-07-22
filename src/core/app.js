@@ -1702,17 +1702,29 @@
 
         function setFilter(filter) {
             activeFilter = filter;
+            
+            // Update active state on group filter pill buttons
+            const pills = document.querySelectorAll('#village-group-pills button');
+            pills.forEach(btn => {
+                if (btn.getAttribute('data-group') === filter) {
+                    btn.className = 'pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap active pill-btn-red';
+                } else {
+                    btn.className = 'pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap';
+                }
+            });
+
             renderGrid();
         }
 
         function filterResidents() {
-            searchQuery = document.getElementById('search-input').value;
+            searchQuery = document.getElementById('search-input')?.value || '';
             renderGrid();
         }
 
         function updateLeaderboard() {
-            const container = document.getElementById('leaderboard-list');
-            if (!container) return;
+            const stage = document.getElementById('podium-stage-wrapper');
+            const legacyContainer = document.getElementById('leaderboard-list');
+            if (!stage && !legacyContainer) return;
             
             // Calculate total reactions for each resident
             const scored = RESIDENTS_DATA.map(r => {
@@ -1724,41 +1736,79 @@
             // Sort descending
             scored.sort((a, b) => b.score - a.score);
             
-            // Take top 5
-            const top5 = scored.slice(0, 5);
-            
-            // Ranks
-            const rankEmojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-            
-            container.innerHTML = '';
-            top5.forEach((user, idx) => {
-                const row = document.createElement('div');
-                row.className = 'flex items-center justify-between text-xs font-bold py-1 px-1 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer';
-                
-                row.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm w-5 text-center">${rankEmojis[idx]}</span>
-                        <img src="${user.avatar}" class="w-8 h-8 rounded-full border border-slate-200 object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
-                        <div class="flex flex-col">
-                            <span class="text-slate-700 font-fredoka">${user.smurfName}</span>
-                            <span class="text-[9px] text-slate-400">${user.group || 'Cư dân'}</span>
+            const r1 = scored[0] || null;
+            const r2 = scored[1] || null;
+            const r3 = scored[2] || null;
+
+            if (stage) {
+                let html = '';
+
+                // Rank 2 (Silver - Left)
+                if (r2) {
+                    html += `
+                        <div onclick="openModal('${r2.smurfName}')" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-transform w-[90px]">
+                            <div class="relative flex flex-col items-center">
+                                <span class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-extrabold mb-1 shadow-sm">TOP 2</span>
+                                <div class="w-12 h-12 rounded-full border-2 border-slate-300 overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-white relative">
+                                    <img src="${r2.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-center text-center mt-1 w-full">
+                                <span class="text-[11px] font-fredoka font-bold text-slate-700 truncate w-full">${r2.smurfName}</span>
+                                <span class="text-[9px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 mt-0.5">✨ ${r2.score}</span>
+                            </div>
+                            <div class="w-full h-11 mt-1 relative flex items-center justify-center">
+                                <img src="src/assets/smurf_podium_silver.png" class="w-full h-full object-contain drop-shadow-md" alt="Silver Podium">
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex items-center gap-1 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full text-[10px]">
-                        <span>✨</span>
-                        <span>${user.score}</span>
-                    </div>
-                `;
-                
-                row.onclick = () => {
-                    const item = RESIDENTS_DATA.find(r => r.telegramId === user.telegramId);
-                    if (item) {
-                        openModal(item.smurfName, row);
-                    }
-                };
-                
-                container.appendChild(row);
-            });
+                    `;
+                }
+
+                // Rank 1 (Gold - Center, Tallest)
+                if (r1) {
+                    html += `
+                        <div onclick="openModal('${r1.smurfName}')" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-transform w-[110px] z-10 -mt-3">
+                            <div class="relative flex flex-col items-center">
+                                <img src="src/assets/smurf_crown_gold.png" class="w-7 h-7 object-contain absolute -top-4 z-20 animate-bounce" style="animation-duration: 2s;" alt="Gold Crown">
+                                <div class="w-16 h-16 rounded-full border-2 border-amber-400 overflow-hidden shadow-lg ring-4 ring-amber-300/40 group-hover:scale-105 transition-transform bg-white relative mt-2">
+                                    <img src="${r1.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                </div>
+                                <span class="text-[9px] bg-gradient-to-r from-amber-500 to-yellow-400 text-white px-2 py-0.2 rounded-full font-extrabold -mt-2.5 z-20 shadow-md">TOP 1</span>
+                            </div>
+                            <div class="flex flex-col items-center text-center mt-1 w-full">
+                                <span class="text-[12px] font-fredoka font-extrabold text-amber-900 truncate w-full">${r1.smurfName}</span>
+                                <span class="text-[10px] font-extrabold text-amber-700 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300 shadow-sm mt-0.5">✨ ${r1.score}</span>
+                            </div>
+                            <div class="w-full h-14 mt-1 relative flex items-center justify-center">
+                                <img src="src/assets/smurf_podium_gold.png" class="w-full h-full object-contain drop-shadow-lg" alt="Gold Podium">
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Rank 3 (Bronze - Right)
+                if (r3) {
+                    html += `
+                        <div onclick="openModal('${r3.smurfName}')" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-transform w-[90px]">
+                            <div class="relative flex flex-col items-center">
+                                <span class="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-extrabold mb-1 shadow-sm">TOP 3</span>
+                                <div class="w-12 h-12 rounded-full border-2 border-amber-700/40 overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-white relative">
+                                    <img src="${r3.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-center text-center mt-1 w-full">
+                                <span class="text-[11px] font-fredoka font-bold text-slate-700 truncate w-full">${r3.smurfName}</span>
+                                <span class="text-[9px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 mt-0.5">✨ ${r3.score}</span>
+                            </div>
+                            <div class="w-full h-10 mt-1 relative flex items-center justify-center">
+                                <img src="src/assets/smurf_podium_bronze.png" class="w-full h-full object-contain drop-shadow-md" alt="Bronze Podium">
+                            </div>
+                        </div>
+                    `;
+                }
+
+                stage.innerHTML = html;
+            }
         }
 
         // ── 3D DETAIL CARD FLIP & ASPECT MORPH LOGIC ──

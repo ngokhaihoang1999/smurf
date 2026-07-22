@@ -2,51 +2,51 @@
     <!-- VIEW: VILLAGE (Quảng Trường Cư Dân)    -->
     <!-- ═══════════════════════════════════════ -->
     <div id="view-village" class="w-full hidden">
-        <main class="w-full max-w-md mx-auto px-4 pt-16 pb-24 flex flex-col gap-4">
-            <!-- Search and Filters -->
-            <div class="flex flex-col gap-3 text-center items-center mt-2">
-                <p class="text-[11px] font-bold text-slate-400 max-w-xs">Nhấp vào thẻ dọc của thành viên để lật 3D xem mặt trước (ngang) chứa thông tin đầy đủ.</p>
-                
+        <main class="w-full max-w-md mx-auto px-4 pt-16 pb-28 flex flex-col gap-3.5">
+            
+            <!-- Compact Search & Mushroom Filter Pills Toolbar -->
+            <div class="flex flex-col gap-2.5 mt-2 bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-sky-100 shadow-sm">
                 <!-- Search Bar -->
                 <div class="w-full relative">
-                    <span class="material-symbols-outlined absolute left-4 top-2 text-slate-400 text-lg">search</span>
-                    <input type="text" id="search-input" oninput="filterResidents()" placeholder="Tìm tên Xì Trum hoặc tên thật..." class="w-full pl-10 pr-4 py-2 bg-white border-2 border-slate-200 text-slate-800 rounded-full text-xs font-bold focus:border-smurf-blue focus:ring-0 transition-all shadow-sm"/>
+                    <span class="material-symbols-outlined absolute left-3.5 top-2.5 text-slate-400 text-base">search</span>
+                    <input type="text" id="search-input" oninput="filterResidents()" placeholder="Tìm tên Xì Trum hoặc tên thật..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-xs font-bold focus:border-smurf-blue focus:bg-white focus:ring-0 transition-all"/>
                 </div>
                 
-                <!-- Filter Select Dropdown -->
-                <div class="w-full relative">
-                    <select id="filter-select" onchange="setFilter(this.value)" class="w-full pl-4 pr-10 py-2 bg-white border-2 border-slate-200 text-slate-800 rounded-full text-xs font-bold focus:border-smurf-blue focus:ring-0 transition-all shadow-sm appearance-none cursor-pointer">
-                        <option value="ALL">Tất Cả Nhóm</option>
-                        <option value="N1T1">Nhóm N1T1</option>
-                        <option value="N1T2">Nhóm N1T2</option>
-                        <option value="N1T3">Nhóm N1T3</option>
-                        <option value="N1T4">Nhóm N1T4</option>
-                        <option value="N1T5">Nhóm N1T5</option>
-                        <option value="N2T1">Nhóm N2T1</option>
-                        <option value="N2T2">Nhóm N2T2</option>
-                        <option value="N2T3">Nhóm N2T3</option>
-                        <option value="N2T4">Nhóm N2T4</option>
-                        <option value="N2T5">Nhóm N2T5</option>
-                    </select>
-                    <!-- Custom Arrow down icon -->
-                    <span class="material-symbols-outlined absolute right-4 top-2 text-slate-400 text-lg pointer-events-none">keyboard_arrow_down</span>
+                <!-- Horizontal Mushroom Pill Badges for Group Filtering -->
+                <div class="scroll-wrapper">
+                    <div class="flex overflow-x-auto gap-1.5 pb-1 custom-scroll" id="village-group-pills">
+                        <button type="button" onclick="setFilter('ALL')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap active" data-group="ALL">🌈 Tất Cả</button>
+                        <button type="button" onclick="setFilter('N1T1')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N1T1">🍄 N1T1</button>
+                        <button type="button" onclick="setFilter('N1T2')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N1T2">🍄 N1T2</button>
+                        <button type="button" onclick="setFilter('N1T3')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N1T3">🌟 N1T3</button>
+                        <button type="button" onclick="setFilter('N1T4')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N1T4">🍄 N1T4</button>
+                        <button type="button" onclick="setFilter('N1T5')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N1T5">🍄 N1T5</button>
+                        <button type="button" onclick="setFilter('N2T1')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N2T1">⚡ N2T1</button>
+                        <button type="button" onclick="setFilter('N2T2')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N2T2">⚡ N2T2</button>
+                        <button type="button" onclick="setFilter('N2T3')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N2T3">⚡ N2T3</button>
+                        <button type="button" onclick="setFilter('N2T4')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N2T4">⚡ N2T4</button>
+                        <button type="button" onclick="setFilter('N2T5')" class="pill-btn group-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap" data-group="N2T5">⚡ N2T5</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- TOP 5 LEADERBOARD -->
-            <div id="village-leaderboard-card" class="bg-white rounded-3xl p-4.5 shadow-sm border border-slate-100 flex flex-col gap-3 mt-2">
-                <div class="flex items-center gap-1.5 border-b border-slate-100 pb-2.5">
-                    <span class="text-base">🏆</span>
-                    <span class="font-fredoka text-xs text-slate-800 font-extrabold uppercase tracking-wide">Bảng Xếp Hạng Yêu Thích</span>
+            <!-- TOP 3 PODIUM SPOTLIGHT STAGE (Custom Smurf Village Assets) -->
+            <div id="village-podium-spotlight" class="bg-gradient-to-b from-sky-100/70 via-sky-50/50 to-white/90 rounded-3xl p-3.5 shadow-sm border border-sky-100 flex flex-col gap-2 relative overflow-hidden">
+                <div class="flex items-center justify-between border-b border-sky-100/60 pb-2">
+                    <span class="font-fredoka text-xs text-smurf-blue font-extrabold uppercase tracking-wide flex items-center gap-1.5">
+                        <img src="src/assets/smurf_crown_gold.png" class="w-5 h-5 object-contain" alt="Crown">
+                        <span>Bục Vinh Danh Xì Trum Yêu Thích</span>
+                    </span>
+                    <span class="text-[9px] text-slate-400 font-bold">Top 3 Cư Dân</span>
                 </div>
-                <div class="flex flex-col gap-2.5" id="leaderboard-list">
-                    <div class="text-center py-2 text-[10px] text-slate-400 font-bold">Đang tải bảng xếp hạng...</div>
+                <div id="podium-stage-wrapper" class="flex justify-center items-end gap-2 pt-2 pb-1 min-h-[140px]">
+                    <div class="text-center py-4 text-[10px] text-slate-400 font-bold">Đang tải bục vinh danh...</div>
                 </div>
             </div>
 
-            <!-- Grid of Residents -->
-            <section class="grid grid-cols-2 gap-4 justify-items-center mt-2" id="residents-grid">
-                <!-- Grid items will be injected dynamically -->
+            <!-- MAIN RESIDENT AVATAR CARDS GRID (Positioned directly below Podium) -->
+            <section class="grid grid-cols-2 gap-3.5 justify-items-center mt-1" id="residents-grid">
+                <!-- Dynamic cards injected via JS -->
             </section>
         </main>
 
