@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=7" rel="stylesheet"/>
+    <link href="styles.css?v=8" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -51,34 +51,40 @@
 {{CSS}}
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center">
-    <!-- Top Decorative Gradient -->
-    <div class="w-full max-w-md h-48 bg-gradient-to-b from-sky-200 to-transparent absolute top-0 left-50 -translate-x-50 pointer-events-none opacity-30 z-0"></div>
+<body class="min-h-screen bg-slate-900 md:bg-gradient-to-br md:from-slate-950 md:via-sky-950 md:to-slate-900 flex justify-center items-center p-0 md:py-6 selection:bg-smurf-blue selection:text-white">
+
+    <!-- Outer Responsive App Shell Container -->
+    <div id="app-shell" class="w-full max-w-[480px] min-h-screen md:min-h-[850px] md:max-h-[92vh] bg-[#fafaf6] relative flex flex-col z-10 overflow-hidden md:rounded-[36px] md:border-4 md:border-slate-700/50 md:shadow-[0_25px_70px_rgba(0,0,0,0.6)]">
+        
+        <!-- Top Decorative Gradient -->
+        <div class="w-full h-48 bg-gradient-to-b from-sky-200 to-transparent absolute top-0 left-0 pointer-events-none opacity-30 z-0"></div>
 
 {{HEADER}}
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- MAIN CONTAINER WITH SPA VIEWS           -->
-    <!-- ═══════════════════════════════════════ -->
-    <main class="w-full bg-[#fafaf6] min-h-screen shadow-2xl relative flex flex-col z-10 overflow-x-hidden">
-        
+        <!-- ═══════════════════════════════════════ -->
+        <!-- MAIN CONTAINER WITH SPA VIEWS           -->
+        <!-- ═══════════════════════════════════════ -->
+        <main class="w-full bg-[#fafaf6] flex-1 relative flex flex-col z-10 overflow-x-hidden overflow-y-auto">
+            
 {{LOADING_VIEW}}
-        
+            
 {{HOME_VIEW}}
-        
+            
 {{REGISTER_VIEW}}
-        
+            
 {{PROFILE_VIEW}}
-        
+            
 {{VILLAGE_VIEW}}
-        
-    </main>
+            
+        </main>
 
 {{BOTTOM_NAV}}
 {{VILLAGE_CHAT}}
 {{EDIT_SHEET}}
 
 {{DETAIL_MODAL}}
+
+    </div>
 
     <!-- ═══════════════════════════════════════ -->
     <!-- SCRIPT LOGIC                            -->

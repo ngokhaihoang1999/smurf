@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784741761284" rel="stylesheet"/>
+    <link href="styles.css?v=1784742398899" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -665,12 +665,16 @@
 
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center">
-    <!-- Top Decorative Gradient -->
-    <div class="w-full max-w-md h-48 bg-gradient-to-b from-sky-200 to-transparent absolute top-0 left-50 -translate-x-50 pointer-events-none opacity-30 z-0"></div>
+<body class="min-h-screen bg-slate-900 md:bg-gradient-to-br md:from-slate-950 md:via-sky-950 md:to-slate-900 flex justify-center items-center p-0 md:py-6 selection:bg-smurf-blue selection:text-white">
+
+    <!-- Outer Responsive App Shell Container -->
+    <div id="app-shell" class="w-full max-w-[480px] min-h-screen md:min-h-[850px] md:max-h-[92vh] bg-[#fafaf6] relative flex flex-col z-10 overflow-hidden md:rounded-[36px] md:border-4 md:border-slate-700/50 md:shadow-[0_25px_70px_rgba(0,0,0,0.6)]">
+        
+        <!-- Top Decorative Gradient -->
+        <div class="w-full h-48 bg-gradient-to-b from-sky-200 to-transparent absolute top-0 left-0 pointer-events-none opacity-30 z-0"></div>
 
     <!-- Global Header (Tactile Wood Design) -->
-    <header class="wood-texture fixed top-0 w-full max-w-md mx-auto left-0 right-0 z-50 text-white flex items-center justify-between px-5 h-12 shadow-lg rounded-b-2xl">
+    <header class="wood-texture absolute top-0 left-0 right-0 w-full z-50 text-white flex items-center justify-between px-5 h-12 shadow-lg rounded-b-2xl">
         <div class="flex items-center gap-2 cursor-pointer" onclick="showHomeTab()">
             <span class="material-symbols-outlined text-smurf-yellow text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" id="header-icon">park</span>
             <h1 class="font-fredoka text-lg tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" id="header-title">Làng Xì Trum</h1>
@@ -682,11 +686,11 @@
     </header>
 
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- MAIN CONTAINER WITH SPA VIEWS           -->
-    <!-- ═══════════════════════════════════════ -->
-    <main class="w-full bg-[#fafaf6] min-h-screen shadow-2xl relative flex flex-col z-10 overflow-x-hidden">
-        
+        <!-- ═══════════════════════════════════════ -->
+        <!-- MAIN CONTAINER WITH SPA VIEWS           -->
+        <!-- ═══════════════════════════════════════ -->
+        <main class="w-full bg-[#fafaf6] flex-1 relative flex flex-col z-10 overflow-x-hidden overflow-y-auto">
+            
     <!-- ═══════════════════════════════════════ -->
     <!-- VIEW: LOADING & GOOGLE SIGN-IN         -->
     <!-- ═══════════════════════════════════════ -->
@@ -713,7 +717,7 @@
         </div>
     </div>
 
-        
+            
 <!-- ═══════════════════════════════════════ -->
 <!-- VIEW: HOME (Interactive Village Map)    -->
 <!-- ═══════════════════════════════════════ -->
@@ -736,16 +740,16 @@
         </div>
 
         <!-- 2D Fixed Map Viewport -->
-        <div id="map-viewport" class="w-full h-[calc(100vh-216px)] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
+        <div id="map-viewport" class="w-full h-[calc(100vh-140px)] min-h-[580px] max-h-[760px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784741761284');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784742398899');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784741761284" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784742398899" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -916,7 +920,7 @@
 }
 </style>
 
-        
+            
     <!-- ═══════════════════════════════════════ -->
     <!-- VIEW: REGISTRATION (User mới)          -->
     <!-- ═══════════════════════════════════════ -->
@@ -1224,7 +1228,7 @@
         </main>
     </div>
 
-        
+            
 <!-- ═══════════════════════════════════════ -->
 <!-- VIEW: PROFILE (My Resident Card)        -->
 <!-- ═══════════════════════════════════════ -->
@@ -1371,7 +1375,7 @@
     </div>
 </div>
 
-        
+            
     <!-- ═══════════════════════════════════════ -->
     <!-- VIEW: VILLAGE (Quảng Trường Cư Dân)    -->
     <!-- ═══════════════════════════════════════ -->
@@ -1434,11 +1438,11 @@
     </div>
 
 
-        
-    </main>
+            
+        </main>
 
     <!-- GLOBAL BOTTOM NAV BAR -->
-    <nav class="bottom-nav max-w-md mx-auto hidden" id="main-bottom-nav">
+    <nav class="bottom-nav absolute bottom-0 left-0 right-0 w-full z-50 hidden" id="main-bottom-nav">
         <div id="nav-item-home" class="nav-item active" onclick="showHomeTab()">
             <span class="material-symbols-outlined" id="nav-icon-home" style="font-variation-settings: 'FILL' 1;">home</span>
             <span>Trang Chủ</span>
@@ -1798,6 +1802,8 @@
         </div>
     </div>
 
+
+    </div>
 
     <!-- ═══════════════════════════════════════ -->
     <!-- SCRIPT LOGIC                            -->
@@ -2205,25 +2211,6 @@
             // Show active view
             const activeEl = document.getElementById('view-' + name);
             if (activeEl) activeEl.classList.remove('hidden');
-
-            // ── IMMERSIVE MAP: Toggle full-width on outer main wrapper ──
-            // The outer <main> in template.html has Tailwind class "max-w-md" (caps at 448px).
-            // When showing the home/map view, remove that cap so the map fills 100% width.
-            // When showing other views, restore it for proper centered card layout.
-            const outerMain = document.querySelector('body > main');
-            if (outerMain) {
-                if (name === 'home') {
-                    outerMain.classList.remove('max-w-md', 'mx-auto');
-                    outerMain.style.maxWidth = '100%';
-                    outerMain.style.width = '100%';
-                    outerMain.style.margin = '0';
-                } else {
-                    outerMain.classList.add('max-w-md', 'mx-auto');
-                    outerMain.style.maxWidth = '';
-                    outerMain.style.width = '';
-                    outerMain.style.margin = '';
-                }
-            }
 
             // Coordinate global header title
             const titleEl = document.getElementById('header-title');
