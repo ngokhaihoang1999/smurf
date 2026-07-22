@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784725722197" rel="stylesheet"/>
+    <link href="styles.css?v=1784726094530" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -723,13 +723,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-216px)] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784725722197');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784726094530');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784725722197" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784726094530" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -1560,22 +1560,22 @@
                 
                 <!-- Mặt sau: Thẻ Dọc 3:4 (Thẻ Thống kê) -->
                 <div class="card-face card-back flex flex-col justify-between p-0 overflow-hidden" style="background: #ffffff; border-radius: 28px;">
-                    <div style="width: 100%; position: relative; overflow: hidden; flex: 1;">
-                        <img id="m-card-avatar" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                    <div style="width: 100%; position: relative; overflow: hidden; flex: 1; background: #e8f4f8;">
+                        <img id="m-card-avatar" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: contain; object-position: center center;" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                         <!-- Group Badge Overlay -->
-                        <span class="absolute top-4 right-4 bg-smurf-blue text-white px-3 py-1 rounded-full text-xs font-bold shadow-md uppercase" id="m-card-group">Nhóm</span>
+                        <span class="absolute top-3 right-3 bg-smurf-blue text-white px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-md uppercase" id="m-card-group">Nhóm</span>
                         <!-- Decorative icon -->
-                        <span class="absolute top-4 left-4 bg-white/90 text-smurf-blue p-1.5 rounded-full text-sm font-bold shadow-md material-symbols-outlined">park</span>
+                        <span class="absolute top-3 left-3 bg-white/90 text-smurf-blue p-1 rounded-full text-xs font-bold shadow-md material-symbols-outlined">park</span>
                     </div>
                     
                     <!-- Compact info below avatar in modal vertical card -->
-                    <div class="w-full pt-2 pb-5 px-6 flex flex-col justify-center bg-white border-t border-slate-100">
+                    <div class="w-full pt-1.5 pb-2.5 px-4 flex flex-col justify-center bg-white border-t border-slate-100">
                         <div class="flex justify-between items-center w-full">
-                            <span class="font-bold text-[13px] text-slate-700 truncate mr-2" style="max-width: 170px;" id="m-card-real-name">Tên thật</span>
+                            <span class="font-bold text-xs text-slate-700 truncate mr-2" style="max-width: 170px;" id="m-card-real-name">Tên thật</span>
                             <span class="text-[10px] text-slate-400 font-bold truncate" style="max-width: 110px;" id="m-card-name">Tí...</span>
                         </div>
                         
-                        <div class="flex justify-between w-full mt-1.5 pt-1.5 border-t border-slate-100 text-[10px] text-smurf-red font-bold">
+                        <div class="flex justify-between w-full mt-1 pt-1 border-t border-slate-100 text-[10px] text-smurf-red font-bold">
                             <span id="m-card-hobby" class="truncate" style="max-width: 130px;">🏸 Cầu lông</span>
                             <span class="text-slate-300">•</span>
                             <span id="m-card-personality" class="truncate" style="max-width: 130px;">Kiên nhẫn</span>
@@ -1593,7 +1593,7 @@
                         <!-- Avatar (nằm ở trục dọc x=80 y=138 w=589 h=823) -->
                         <div style="position: absolute; left: 80px; top: 138px; width: 589px; height: 823px; z-index: 1;">
                             <div style="width: 100%; height: 100%; overflow: hidden; background: #e8f4f8; border-radius: 12px;">
-                                <img id="m-preview-smurf-avatar" src="" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                <img id="m-preview-smurf-avatar" src="" style="width: 100%; height: 100%; object-fit: contain; object-position: center center;" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                             </div>
                         </div>
 
@@ -1625,36 +1625,36 @@
         </div>
     </div>
         
-    <!-- Emoji Reaction Counter Bar (positioned just above controls) -->
-    <div id="modal-reaction-bar" class="fixed bottom-[136px] left-4 right-4 z-[102] opacity-0 transition-opacity duration-300 max-w-[360px] mx-auto pointer-events-auto hidden">
-        <div class="flex justify-around bg-white/95 backdrop-blur-md px-2.5 py-2.5 rounded-2xl border border-slate-200/50 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-            <div class="flex flex-col items-center flex-1 text-center gap-0.5">
-                <button onclick="reactToResident('like')" id="react-btn-like" class="w-11 h-11 rounded-full flex items-center justify-center text-2xl hover:bg-slate-100/50 active:scale-90 transition-all">
+    <!-- Emoji Reaction Counter Bar (positioned compact above controls) -->
+    <div id="modal-reaction-bar" class="fixed bottom-[114px] left-4 right-4 z-[102] opacity-0 transition-opacity duration-300 max-w-[340px] mx-auto pointer-events-auto hidden">
+        <div class="flex justify-around bg-white/95 backdrop-blur-md px-2 py-1 rounded-xl border border-slate-200/50 shadow-[0_4px_16px_rgba(0,0,0,0.1)]">
+            <div class="flex flex-col items-center flex-1 text-center gap-0">
+                <button onclick="reactToResident('like')" id="react-btn-like" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all">
                     <span>❤️</span>
                 </button>
-                <span class="text-[9px] font-bold text-slate-400">Yêu thích</span>
-                <span id="react-count-like" class="text-[10px] font-extrabold text-slate-600">0</span>
+                <span class="text-[8px] font-bold text-slate-400">Yêu thích</span>
+                <span id="react-count-like" class="text-[9px] font-extrabold text-slate-600">0</span>
             </div>
-            <div class="flex flex-col items-center flex-1 text-center gap-0.5">
-                <button onclick="reactToResident('funny')" id="react-btn-funny" class="w-11 h-11 rounded-full flex items-center justify-center text-2xl hover:bg-slate-100/50 active:scale-90 transition-all">
+            <div class="flex flex-col items-center flex-1 text-center gap-0">
+                <button onclick="reactToResident('funny')" id="react-btn-funny" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all">
                     <span>🍄</span>
                 </button>
-                <span class="text-[9px] font-bold text-slate-400">Quá Xì Trum</span>
-                <span id="react-count-funny" class="text-[10px] font-extrabold text-slate-600">0</span>
+                <span class="text-[8px] font-bold text-slate-400">Quá Xì Trum</span>
+                <span id="react-count-funny" class="text-[9px] font-extrabold text-slate-600">0</span>
             </div>
-            <div class="flex flex-col items-center flex-1 text-center gap-0.5">
-                <button onclick="reactToResident('star')" id="react-btn-star" class="w-11 h-11 rounded-full flex items-center justify-center text-2xl hover:bg-slate-100/50 active:scale-90 transition-all">
+            <div class="flex flex-col items-center flex-1 text-center gap-0">
+                <button onclick="reactToResident('star')" id="react-btn-star" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all">
                     <span>🌟</span>
                 </button>
-                <span class="text-[9px] font-bold text-slate-400">Sáng Tạo</span>
-                <span id="react-count-star" class="text-[10px] font-extrabold text-slate-600">0</span>
+                <span class="text-[8px] font-bold text-slate-400">Sáng Tạo</span>
+                <span id="react-count-star" class="text-[9px] font-extrabold text-slate-600">0</span>
             </div>
-            <div class="flex flex-col items-center flex-1 text-center gap-0.5">
-                <button onclick="reactToResident('cool')" id="react-btn-cool" class="w-11 h-11 rounded-full flex items-center justify-center text-2xl hover:bg-slate-100/50 active:scale-90 transition-all">
+            <div class="flex flex-col items-center flex-1 text-center gap-0">
+                <button onclick="reactToResident('cool')" id="react-btn-cool" class="w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-slate-100/50 active:scale-90 transition-all">
                     <span>🕶️</span>
                 </button>
-                <span class="text-[9px] font-bold text-slate-400">Ngầu</span>
-                <span id="react-count-cool" class="text-[10px] font-extrabold text-slate-600">0</span>
+                <span class="text-[8px] font-bold text-slate-400">Ngầu</span>
+                <span id="react-count-cool" class="text-[9px] font-extrabold text-slate-600">0</span>
             </div>
         </div>
     </div>
