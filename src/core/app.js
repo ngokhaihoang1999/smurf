@@ -1683,7 +1683,6 @@
                 cardEl.innerHTML = `
                     <div class="w-full relative overflow-hidden" style="aspect-ratio: 3/4;">
                         <img src="${item.avatar}" alt="Avatar" class="w-full h-full object-cover" style="object-position: center top;" loading="lazy" onerror="this.src='avatars/smurf_basic_placeholder.png'">
-                        <span class="absolute top-3 left-3 bg-white/90 text-smurf-blue p-1 rounded-full text-[11px] font-bold shadow-md material-symbols-outlined">park</span>
                     </div>
                     <div class="w-full py-2.5 px-3 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 62px;">
                         <div class="flex justify-between items-start w-full gap-1">
