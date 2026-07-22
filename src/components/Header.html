@@ -1,11 +1,11 @@
     <!-- Global Header (Tactile Wood Design) -->
     <header class="wood-texture fixed top-0 w-full max-w-md mx-auto left-0 right-0 z-50 text-white flex items-center justify-between px-5 h-12 shadow-lg rounded-b-2xl">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="showHomeTab()">
             <span class="material-symbols-outlined text-smurf-yellow text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" id="header-icon">park</span>
             <h1 class="font-fredoka text-lg tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" id="header-title">Làng Xì Trum</h1>
         </div>
-        <div class="flex items-center gap-1.5 bg-white/20 px-2.5 py-1 rounded-full border border-white/30 backdrop-blur-md" id="header-user-badge">
-            <span id="header-username" class="text-[11px] font-bold text-white">Khách</span>
-            <span class="material-symbols-outlined text-white text-sm">account_circle</span>
+        <div class="flex items-center gap-1.5 bg-white/20 px-2.5 py-1 rounded-full border border-white/30 backdrop-blur-md cursor-pointer hover:bg-white/30 transition-all" id="header-user-badge" onclick="onHeaderBadgeClick()">
+            <span id="header-username" class="text-[11px] font-bold text-white max-w-[110px] truncate">Khách</span>
+            <span class="material-symbols-outlined text-white text-sm" id="header-user-icon">account_circle</span>
         </div>
     </header>

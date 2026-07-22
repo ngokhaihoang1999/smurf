@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784740227984" rel="stylesheet"/>
+    <link href="styles.css?v=1784741281295" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -671,13 +671,13 @@
 
     <!-- Global Header (Tactile Wood Design) -->
     <header class="wood-texture fixed top-0 w-full max-w-md mx-auto left-0 right-0 z-50 text-white flex items-center justify-between px-5 h-12 shadow-lg rounded-b-2xl">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="showHomeTab()">
             <span class="material-symbols-outlined text-smurf-yellow text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" id="header-icon">park</span>
             <h1 class="font-fredoka text-lg tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" id="header-title">Làng Xì Trum</h1>
         </div>
-        <div class="flex items-center gap-1.5 bg-white/20 px-2.5 py-1 rounded-full border border-white/30 backdrop-blur-md" id="header-user-badge">
-            <span id="header-username" class="text-[11px] font-bold text-white">Khách</span>
-            <span class="material-symbols-outlined text-white text-sm">account_circle</span>
+        <div class="flex items-center gap-1.5 bg-white/20 px-2.5 py-1 rounded-full border border-white/30 backdrop-blur-md cursor-pointer hover:bg-white/30 transition-all" id="header-user-badge" onclick="onHeaderBadgeClick()">
+            <span id="header-username" class="text-[11px] font-bold text-white max-w-[110px] truncate">Khách</span>
+            <span class="material-symbols-outlined text-white text-sm" id="header-user-icon">account_circle</span>
         </div>
     </header>
 
@@ -688,13 +688,29 @@
     <main class="w-full bg-[#fafaf6] min-h-screen shadow-2xl relative flex flex-col z-10 overflow-x-hidden">
         
     <!-- ═══════════════════════════════════════ -->
-    <!-- VIEW: LOADING                          -->
+    <!-- VIEW: LOADING & GOOGLE SIGN-IN         -->
     <!-- ═══════════════════════════════════════ -->
-    <div id="view-loading" class="loading-spinner w-full">
-        <div class="spinner"></div>
-        <p class="font-fredoka text-lg text-smurf-blue">Đang kết nối Làng Xì Trum...</p>
-        <p class="text-xs text-slate-400 font-bold">Xác minh cư dân qua Telegram</p>
-        <button onclick="showView('register'); setupRegistrationForm();" class="mt-4 text-xs text-smurf-blue underline font-bold" style="display:none" id="skip-loading-btn">Bỏ qua → Đăng ký mới</button>
+    <div id="view-loading" class="loading-spinner w-full flex flex-col items-center justify-center p-6 text-center">
+        <div class="spinner mb-3" id="loading-spinner-circle"></div>
+        <p class="font-fredoka text-xl text-smurf-blue drop-shadow-sm mb-1" id="loading-status-title">Đang kết nối Làng Xì Trum...</p>
+        <p class="text-xs text-slate-500 font-bold mb-5" id="loading-status-sub">Định danh cư dân bằng Tài khoản Google</p>
+
+        <!-- Google Sign-In Container -->
+        <div id="google-signin-box" class="w-full max-w-xs bg-white/95 backdrop-blur-md p-5 rounded-2xl border-2 border-smurf-blueLight shadow-xl flex flex-col items-center gap-4 transition-all">
+            <div class="flex items-center gap-2 text-slate-700">
+                <span class="material-symbols-outlined text-smurf-blue text-2xl">account_circle</span>
+                <span class="font-fredoka text-base text-slate-800">Đăng Nhập Cư Dân</span>
+            </div>
+            
+            <p class="text-xs text-slate-600 font-bold leading-relaxed">Vui lòng đăng nhập tài khoản Google để truy cập ứng dụng Làng Xì Trum.</p>
+
+            <!-- Render Target for Google Button -->
+            <div id="google-btn-wrapper" class="w-full flex justify-center py-1"></div>
+
+            <button onclick="showView('register'); setupRegistrationForm();" class="text-xs text-slate-400 font-bold hover:text-smurf-blue transition-colors underline pt-2" id="skip-loading-btn">
+                Đăng ký cư dân mới mà không cần đăng nhập
+            </button>
+        </div>
     </div>
 
         
@@ -723,13 +739,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-216px)] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784740227984');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784741281295');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784740227984" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784741281295" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -936,9 +952,23 @@
 
             <!-- Registration Form -->
             <form id="registry-form" onsubmit="submitRegistration(event)" class="flex flex-col gap-5">
+                <input type="hidden" id="user-email" name="email" value=""/>
+                <input type="hidden" id="google-name" name="googleName" value=""/>
                 <input type="hidden" id="telegram-id" name="telegramId" value=""/>
                 <input type="hidden" id="telegram-username" name="telegramUsername" value=""/>
                 <input type="hidden" id="telegram-first-name" name="telegramFirstName" value=""/>
+
+                <!-- Banner xác thực Gmail -->
+                <div id="google-auth-status-banner" class="bg-blue-50 border-2 border-blue-200 p-3 rounded-2xl flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-2.5">
+                        <span class="material-symbols-outlined text-smurf-blue text-xl">verified_user</span>
+                        <div class="flex flex-col">
+                            <span class="text-[11px] font-bold text-slate-500">Tài Khoản Đăng Nhập</span>
+                            <span class="text-xs font-bold text-smurf-blue truncate max-w-[200px]" id="auth-status-email">Đang xác thực Google...</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="signOutGoogle()" class="text-[11px] font-bold text-slate-400 hover:text-red-500 underline">Đổi TK</button>
+                </div>
 
                 <!-- Section 1: Thông Tin Cá Nhân -->
                 <section class="w-full">
@@ -1307,6 +1337,12 @@
                 <div class="hitbox-overlay absolute -inset-2 z-20 cursor-pointer" style="top: -16px; pointer-events: auto;"></div>
                 <span class="material-symbols-outlined text-base">edit</span>
                 <span>Chỉnh Sửa Thông Tin</span>
+            </div>
+
+            <!-- Google Sign Out Button -->
+            <div onclick="signOutGoogle()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-3 rounded-2xl font-fredoka text-sm flex items-center justify-center gap-1.5 active:opacity-75 cursor-pointer mt-1" role="button">
+                <span class="material-symbols-outlined text-base">logout</span>
+                <span>Đăng Xuất Google</span>
             </div>
         </div>
         
@@ -1772,6 +1808,21 @@
     <script>
         const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzwcqWPzX3QIiXqLwygf0ygIe9rObPaeHE9vhf8fKj9joz-twqqZmzVhMKuw7Znl7R2mQ/exec";
 
+        // ── GOOGLE AUTH CONFIG ──
+        const GOOGLE_CLIENT_ID = "223717465183-0e7qdqn69ng9qi1eujnirifabk7ub9a4.apps.googleusercontent.com";
+        let currentUserEmail = localStorage.getItem('smurf_user_email') || '';
+        let currentGoogleName = '';
+        let currentGooglePicture = '';
+
+        try {
+            const cachedGUser = localStorage.getItem('smurf_google_user');
+            if (cachedGUser) {
+                const parsedGUser = JSON.parse(cachedGUser);
+                currentGoogleName = parsedGUser.name || '';
+                currentGooglePicture = parsedGUser.picture || '';
+            }
+        } catch(e) {}
+
         // ── STATE ──
         let currentUser = null;
         let telegramId = '';
@@ -1781,6 +1832,157 @@
         let activeFilter = 'ALL';
         let searchQuery = '';
         let filteredResidentsList = [];
+
+        // ── GOOGLE SIGN-IN HELPERS ──
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error("Failed to parse JWT", e);
+                return null;
+            }
+        }
+
+        window.handleGoogleCredentialResponse = function(response) {
+            if (!response || !response.credential) return;
+            const payload = parseJwt(response.credential);
+            if (!payload || !payload.email) {
+                alert("⚠️ Không thể đọc xác thực từ Google. Vui lòng thử lại!");
+                return;
+            }
+
+            currentUserEmail = payload.email;
+            currentGoogleName = payload.name || payload.given_name || payload.email.split('@')[0];
+            currentGooglePicture = payload.picture || '';
+
+            localStorage.setItem('smurf_user_email', currentUserEmail);
+            localStorage.setItem('smurf_google_user', JSON.stringify({
+                email: currentUserEmail,
+                name: currentGoogleName,
+                picture: currentGooglePicture
+            }));
+
+            updateGoogleAuthBanner();
+            updateHeaderBadge();
+
+            // Lookup resident in local RESIDENTS_DATA or via GAS
+            const foundUser = RESIDENTS_DATA.find(r => 
+                String(r.email || r.telegramId || '').toLowerCase() === currentUserEmail.toLowerCase()
+            );
+
+            if (foundUser) {
+                currentUser = foundUser;
+                localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                showHomeTab();
+            } else {
+                gasRequestJsonp({ action: 'lookup', email: currentUserEmail }, (resp) => {
+                    if (resp && resp.exists && resp.data) {
+                        currentUser = {
+                            ...resp.data,
+                            avatar: `avatars/avatar_${resp.data.email || resp.data.telegramId}.png?v=` + Date.now()
+                        };
+                        localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                        showHomeTab();
+                    } else {
+                        // Not registered yet -> show Registration screen with email prefilled
+                        showView('register');
+                        setupRegistrationForm();
+                    }
+                });
+            }
+        };
+
+        function initGoogleSignIn() {
+            const wrapper = document.getElementById('google-btn-wrapper');
+            if (!wrapper) return;
+
+            const renderBtn = () => {
+                if (window.google && window.google.accounts && window.google.accounts.id) {
+                    try {
+                        window.google.accounts.id.initialize({
+                            client_id: GOOGLE_CLIENT_ID,
+                            callback: window.handleGoogleCredentialResponse,
+                            auto_select: false
+                        });
+
+                        window.google.accounts.id.renderButton(
+                            wrapper,
+                            {
+                                type: 'standard',
+                                theme: 'outline',
+                                size: 'large',
+                                text: 'signin_with',
+                                shape: 'rectangular',
+                                logo_alignment: 'left',
+                                width: 250
+                            }
+                        );
+                    } catch(err) {
+                        console.warn("Google Sign-In init error:", err);
+                    }
+                }
+            };
+
+            if (window.google && window.google.accounts) {
+                renderBtn();
+            } else {
+                if (!document.getElementById('gsi-client-script')) {
+                    const script = document.createElement('script');
+                    script.id = 'gsi-client-script';
+                    script.src = 'https://accounts.google.com/gsi/client';
+                    script.async = true;
+                    script.defer = true;
+                    script.onload = renderBtn;
+                    document.head.appendChild(script);
+                }
+            }
+        }
+
+        window.signOutGoogle = function() {
+            if (confirm("Bạn có chắc chắn muốn đăng xuất tài khoản Google?")) {
+                localStorage.removeItem('smurf_user_email');
+                localStorage.removeItem('smurf_user_cache');
+                localStorage.removeItem('smurf_google_user');
+                currentUser = null;
+                currentUserEmail = '';
+                currentGoogleName = '';
+                currentGooglePicture = '';
+
+                if (window.google && window.google.accounts && window.google.accounts.id) {
+                    try { window.google.accounts.id.disableAutoSelect(); } catch(e){}
+                }
+
+                updateHeaderBadge();
+                showView('loading');
+                setTimeout(initGoogleSignIn, 150);
+            }
+        };
+
+        function updateGoogleAuthBanner() {
+            const emailSpan = document.getElementById('auth-status-email');
+            if (emailSpan) {
+                emailSpan.textContent = currentUserEmail ? currentUserEmail : "Đăng nhập bằng Google bên dưới";
+            }
+            const userEmailInput = document.getElementById('user-email');
+            if (userEmailInput) userEmailInput.value = currentUserEmail;
+            
+            const googleNameInput = document.getElementById('google-name');
+            if (googleNameInput) googleNameInput.value = currentGoogleName;
+        }
+
+        window.onHeaderBadgeClick = function() {
+            if (currentUser) {
+                showProfileView();
+            } else {
+                showView('loading');
+                setTimeout(initGoogleSignIn, 100);
+            }
+        };
 
         // ── TELEGRAM SDK ──
         const tg = window.Telegram?.WebApp;
@@ -1810,9 +2012,9 @@
 
         // ── INIT APP (Offline-First & Background Load) ──
         async function initApp() {
-            // For testing outside Telegram: allow URL param override
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('tid')) telegramId = urlParams.get('tid');
+            if (urlParams.get('email')) currentUserEmail = urlParams.get('email');
 
             // 1. Load from Cache immediately (0ms delay)
             const cachedUser = localStorage.getItem('smurf_user_cache');
@@ -1829,8 +2031,8 @@
             if (cachedUser) {
                 try {
                     currentUser = JSON.parse(cachedUser);
-                    // Override cached telegram id if query param/SDK has it
                     if (telegramId) currentUser.telegramId = telegramId;
+                    if (currentUserEmail) currentUser.email = currentUserEmail;
                     
                     const tab = urlParams.get('tab');
                     if (tab === 'village') {
@@ -1840,10 +2042,10 @@
                     }
                 } catch(e) {
                     console.warn('Failed to parse cached user');
-                    // Stay on loading view
                 }
             } else {
-                // Stay on loading view while fetching data
+                // Initialize Google Sign-In UI on loading screen
+                setTimeout(initGoogleSignIn, 200);
             }
 
             // Update user badge if info is available
@@ -1858,39 +2060,44 @@
                             const smurf = (r.smurfName || '').toLowerCase();
                             const real = (r.realName || '').toLowerCase();
                             const grp = (r.group || '').toLowerCase();
-                            const tid = String(r.telegramId || '');
+                            const tid = String(r.telegramId || r.email || '');
                             if (smurf.includes('test') || real.includes('test') || grp.includes('nhóm a') || grp === 'a' || tid === '123456' || tid === '123') {
                                 return false;
                             }
                             return true;
                         })
-                        .map(r => ({
-                            smurfName: r.smurfName || '',
-                            realName: r.realName || '',
-                            group: r.group || '',
-                            personality: r.personality || '',
-                            tinhCach: r.personality || '',
-                            hobbies: r.hobbies || '',
-                            soThich: r.hobbies || '',
-                            strength: r.strength || '',
-                            diemManh: r.strength || '',
-                            weakness: r.weakness || '',
-                            diemYeu: r.weakness || '',
-                            bio: r.bio || '',
-                            telegramId: r.telegramId || '',
-                            avatar: `avatars/avatar_${r.telegramId}.png?v=` + (r.timestamp ? new Date(r.timestamp).getTime() : Date.now()),
-                            gender: r.gender || '',
-                            hat: r.hat || '',
-                            hatcolor: r.hatcolor || '',
-                            hair: r.hair || '',
-                            faceacc: r.faceacc || '',
-                            outfit: r.outfit || '',
-                            prop: r.prop || '',
-                            expression: r.expression || '',
-                            pose: r.pose || '',
-                            background: r.background || '',
-                            cardFront: ''
-                        }));
+                        .map(r => {
+                            const userKey = r.email || r.telegramId || '';
+                            return {
+                                email: r.email || '',
+                                telegramId: r.telegramId || r.email || '',
+                                googleName: r.googleName || '',
+                                smurfName: r.smurfName || '',
+                                realName: r.realName || '',
+                                group: r.group || '',
+                                personality: r.personality || '',
+                                tinhCach: r.personality || '',
+                                hobbies: r.hobbies || '',
+                                soThich: r.hobbies || '',
+                                strength: r.strength || '',
+                                diemManh: r.strength || '',
+                                weakness: r.weakness || '',
+                                diemYeu: r.weakness || '',
+                                bio: r.bio || '',
+                                avatar: `avatars/avatar_${userKey}.png?v=` + (r.timestamp ? new Date(r.timestamp).getTime() : Date.now()),
+                                gender: r.gender || '',
+                                hat: r.hat || '',
+                                hatcolor: r.hatcolor || '',
+                                hair: r.hair || '',
+                                faceacc: r.faceacc || '',
+                                outfit: r.outfit || '',
+                                prop: r.prop || '',
+                                expression: r.expression || '',
+                                pose: r.pose || '',
+                                background: r.background || '',
+                                cardFront: ''
+                            };
+                        });
 
                     // Save to local cache
                     localStorage.setItem('smurf_residents_cache', JSON.stringify(RESIDENTS_DATA));
@@ -1902,14 +2109,16 @@
                     // Initial render from local cache
                     updateLeaderboard();
 
-                    // Lookup current user in fresh data
-                    if (telegramId) {
-                        const foundUser = RESIDENTS_DATA.find(r => String(r.telegramId) === String(telegramId));
+                    // Lookup current user in fresh data using Email or Telegram ID
+                    const lookupKey = (currentUserEmail || telegramId).toLowerCase();
+                    if (lookupKey) {
+                        const foundUser = RESIDENTS_DATA.find(r => 
+                            String(r.email || r.telegramId || '').toLowerCase() === lookupKey
+                        );
                         if (foundUser) {
                             currentUser = foundUser;
                             localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                             
-                            // If they were stuck on loading screen or register screen, transition them to home
                             const activeView = getActiveView();
                             if (activeView === 'loading' || activeView === 'register') {
                                 const tab = urlParams.get('tab');
@@ -1924,16 +2133,18 @@
                                 showHomeTab();
                             }
                         } else {
-                            // User not registered -> force registration
-                            currentUser = null;
-                            showView('register');
-                            setupRegistrationForm();
+                            // User not registered -> prompt registration with pre-filled email
+                            if (!currentUser) {
+                                showView('register');
+                                setupRegistrationForm();
+                            }
                         }
                     } else {
-                        // Outside Telegram & no query param -> force registration
-                        currentUser = null;
-                        showView('register');
-                        setupRegistrationForm();
+                        // Not logged in -> render Google Sign-In button
+                        if (!currentUser) {
+                            showView('loading');
+                            setTimeout(initGoogleSignIn, 150);
+                        }
                     }
 
                     // Render grid silently in background if on village tab
@@ -2134,11 +2345,14 @@
 
         // ── REGISTRATION LOGIC ──
         function setupRegistrationForm() {
+            if (document.getElementById('user-email')) document.getElementById('user-email').value = currentUserEmail;
+            if (document.getElementById('google-name')) document.getElementById('google-name').value = currentGoogleName;
             // Inject Telegram ID into form fields
             if (document.getElementById('telegram-id')) document.getElementById('telegram-id').value = telegramId;
             if (document.getElementById('telegram-username')) document.getElementById('telegram-username').value = telegramUsername;
             if (document.getElementById('telegram-first-name')) document.getElementById('telegram-first-name').value = telegramFirstName;
             
+            updateGoogleAuthBanner();
             setupCharCounters();
             setupDesignTabs();
             setupAvatarPills();
@@ -2357,6 +2571,10 @@
             const data = { action: 'register' };
             formData.forEach((value, key) => { data[key] = value; });
 
+            // Ensure email is passed
+            data.email = data.email || currentUserEmail || telegramId || '';
+            data.googleName = data.googleName || currentGoogleName || '';
+
             // Explicitly ensure avatar styling fields are extracted even if FormData missed any
             data.gender = document.getElementById('input-gender')?.value || data.gender || 'Nam (Smurf)';
             data.hat = document.getElementById('input-hat')?.value || data.hat || 'Không';
@@ -2374,12 +2592,19 @@
                 if (result.status === 'success') {
                     alert("🎉 Đăng ký thành công! Chào mừng bạn vào Làng Xì Trum.");
                     localStorage.removeItem('smurf_registration_draft');
-                    currentUser = { ...data, hobbies: data.hobbies, strength: data.strength, weakness: data.weakness, personality: data.personality };
+                    currentUser = { 
+                        ...data, 
+                        email: data.email,
+                        hobbies: data.hobbies, 
+                        strength: data.strength, 
+                        weakness: data.weakness, 
+                        personality: data.personality 
+                    };
                     localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                     showProfileView();
                 } else if (result.status === 'duplicate') {
-                    alert("⚠️ Telegram ID này đã đăng ký rồi!");
-                    const lookup = await gasRequest({ action: 'lookup', telegramId });
+                    alert("⚠️ Tài khoản Gmail/ID này đã đăng ký rồi!");
+                    const lookup = await gasRequest({ action: 'lookup', email: data.email });
                     if (lookup.exists) { 
                         currentUser = lookup.data; 
                         localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
@@ -2402,9 +2627,11 @@
             const saveBtn = document.getElementById('edit-save-btn');
             saveBtn.disabled = true; saveBtn.style.opacity = '0.7';
 
+            const userKey = currentUser ? (currentUser.email || currentUser.telegramId) : (currentUserEmail || telegramId);
             const data = {
                 action: 'update',
-                telegramId: currentUser ? currentUser.telegramId : telegramId,
+                email: userKey,
+                telegramId: userKey,
                 smurfName: document.getElementById('edit-smurf-name').value,
                 realName: document.getElementById('edit-real-name').value,
                 group: document.getElementById('edit-group').value,

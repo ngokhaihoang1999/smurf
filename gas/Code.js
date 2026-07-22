@@ -1,9 +1,10 @@
 /**
  * GOOGLE APPS SCRIPT MIDDLEWARE FOR SMURF VILLAGE REGISTRY
+ * (Supports Google Sign-In with Gmail Primary Key & Backward Compatibility)
  * 
- * API Endpoints (via doPost):
- *   action: "register" → Đăng ký cư dân mới (chặn trùng Telegram ID)
- *   action: "lookup"   → Tra cứu cư dân theo Telegram ID
+ * API Endpoints (via doPost / doGet):
+ *   action: "register" → Đăng ký cư dân mới (chặn trùng Email/ID)
+ *   action: "lookup"   → Tra cứu cư dân theo Email/Gmail hoặc Telegram ID
  *   action: "update"   → Cập nhật thông tin cá nhân (chỉ các cột editable)
  *   action: "listAll"  → Liệt kê toàn bộ cư dân (cho Village Square)
  * 
@@ -16,9 +17,9 @@ var DRIVE_FOLDER_ID = "1aLOyh5r1PJqgfpSfNqj37mGNZJ18Ctyi";
 // Cột header chuẩn
 var HEADERS = [
   "Timestamp",            // A (1)
-  "Telegram ID",          // B (2) ← PRIMARY KEY
-  "Telegram Username",    // C (3)
-  "Telegram First Name",  // D (4)
+  "Email (Gmail)",        // B (2) ← PRIMARY KEY
+  "Tên Google",           // C (3)
+  "Avatar Google",        // D (4)
   "Tên Xì Trum",         // E (5)  ← editable
   "Tên Thật",            // F (6)  ← editable
   "Nhóm",                // G (7)  ← editable
@@ -82,15 +83,18 @@ function ensureHeaders(sheet) {
   }
 }
 
-// Tìm hàng theo Telegram ID (cột B = cột 2)
-function findRowByTelegramId(sheet, telegramId) {
+// Tìm hàng theo Identifier (Email hoặc Telegram ID) ở cột B (cột 2)
+function findRowByIdentifier(sheet, idVal) {
+  if (!idVal) return -1;
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) return -1; // Chỉ có header hoặc trống
   
-  var idCol = sheet.getRange(2, 2, lastRow - 1, 1).getValues(); // Cột B, bỏ header
+  var targetStr = String(idVal).trim().toLowerCase();
+  var idCol = sheet.getRange(2, 2, lastRow - 1, 1).getValues(); // Cột B
   for (var i = 0; i < idCol.length; i++) {
-    if (String(idCol[i][0]).trim() === String(telegramId).trim()) {
-      return i + 2; // +2 vì bắt đầu từ hàng 2 (bỏ header) và 1-indexed
+    var valInSheet = String(idCol[i][0]).trim().toLowerCase();
+    if (valInSheet === targetStr) {
+      return i + 2; // +2 vì bắt đầu từ hàng 2 và 1-indexed
     }
   }
   return -1;
@@ -102,9 +106,10 @@ function rowToObject(sheet, rowNum) {
   var obj = {};
   // Map header → value
   obj.timestamp = values[0];
-  obj.telegramId = String(values[1]);
-  obj.telegramUsername = values[2];
-  obj.telegramFirstName = values[3];
+  obj.email = String(values[1]);
+  obj.telegramId = String(values[1]); // Alias for compatibility
+  obj.googleName = values[2];
+  obj.googlePicture = values[3];
   obj.smurfName = values[4];
   obj.realName = values[5];
   obj.group = values[6];
@@ -137,12 +142,12 @@ function handleLookup(data) {
   var sheet = getSheet();
   ensureHeaders(sheet);
   
-  var telegramId = data.telegramId;
-  if (!telegramId) {
-    return { exists: false, error: "Missing telegramId" };
+  var identifier = data.email || data.telegramId || data.id;
+  if (!identifier) {
+    return { exists: false, error: "Missing email or telegramId" };
   }
   
-  var rowNum = findRowByTelegramId(sheet, telegramId);
+  var rowNum = findRowByIdentifier(sheet, identifier);
   if (rowNum === -1) {
     return { exists: false };
   }
@@ -158,15 +163,15 @@ function handleRegister(data) {
   var sheet = getSheet();
   ensureHeaders(sheet);
   
-  var telegramId = data.telegramId;
-  if (!telegramId) {
-    return { status: "error", message: "Missing telegramId" };
+  var identifier = data.email || data.telegramId || data.id;
+  if (!identifier) {
+    return { status: "error", message: "Missing email or identifier" };
   }
   
   // Chặn đăng ký trùng
-  var existingRow = findRowByTelegramId(sheet, telegramId);
+  var existingRow = findRowByIdentifier(sheet, identifier);
   if (existingRow !== -1) {
-    return { status: "duplicate", message: "Telegram ID này đã đăng ký rồi!" };
+    return { status: "duplicate", message: "Tài khoản Gmail này đã đăng ký rồi!" };
   }
   
   // Xử lý upload ảnh base64 nếu có
@@ -219,9 +224,9 @@ function handleRegister(data) {
   // Ghi dòng mới
   sheet.appendRow([
     sanitizeInput(data.timestamp || new Date().toISOString()),
-    sanitizeInput(telegramId),
-    sanitizeInput(data.telegramUsername),
-    sanitizeInput(data.telegramFirstName),
+    sanitizeInput(identifier),
+    sanitizeInput(data.googleName || data.telegramUsername || ""),
+    sanitizeInput(data.googlePicture || data.telegramFirstName || ""),
     sanitizeInput(data.smurfName),
     sanitizeInput(data.realName),
     sanitizeInput(data.group),
@@ -255,14 +260,14 @@ function handleRegister(data) {
 function handleUpdate(data) {
   var sheet = getSheet();
   
-  var telegramId = data.telegramId;
-  if (!telegramId) {
-    return { status: "error", message: "Missing telegramId" };
+  var identifier = data.email || data.telegramId || data.id;
+  if (!identifier) {
+    return { status: "error", message: "Missing email or identifier" };
   }
   
-  var rowNum = findRowByTelegramId(sheet, telegramId);
+  var rowNum = findRowByIdentifier(sheet, identifier);
   if (rowNum === -1) {
-    return { status: "error", message: "Không tìm thấy cư dân với Telegram ID này" };
+    return { status: "error", message: "Không tìm thấy cư dân với Email này!" };
   }
   
   // Chỉ cập nhật các cột cho phép
@@ -302,7 +307,7 @@ function handleListAll() {
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
-    var action = data.action || "register"; // Mặc định "register" cho backward compat
+    var action = data.action || "register";
     
     var result;
     switch (action) {
@@ -325,7 +330,7 @@ function doPost(e) {
         result = handleGetChat();
         break;
       case "getReactions":
-        result = handleGetReactions();
+        result = handleGetReactions(data);
         break;
       case "updateReaction":
         result = handleUpdateReaction(data);
@@ -350,7 +355,7 @@ function doGet(e) {
     
     switch (action) {
       case "lookup":
-        result = handleLookup({ telegramId: e.parameter.telegramId || "" });
+        result = handleLookup({ email: e.parameter.email || e.parameter.telegramId || "" });
         break;
       case "listAll":
         result = handleListAll();
@@ -360,7 +365,7 @@ function doGet(e) {
         break;
       case "sendChat":
         result = handleSendChat({
-          telegramId: e.parameter.telegramId || "",
+          email: e.parameter.email || e.parameter.telegramId || "",
           smurfName: e.parameter.smurfName || "",
           message: e.parameter.message || "",
           mood: e.parameter.mood || ""
@@ -368,25 +373,23 @@ function doGet(e) {
         break;
       case "getReactions":
         result = handleGetReactions({
-          fromTelegramId: e.parameter.fromTelegramId || ""
+          fromEmail: e.parameter.fromEmail || e.parameter.fromTelegramId || ""
         });
         break;
       case "updateReaction":
         result = handleUpdateReaction({
-          fromTelegramId: e.parameter.fromTelegramId || "",
-          telegramId: e.parameter.telegramId || "",
+          fromEmail: e.parameter.fromEmail || e.parameter.fromTelegramId || "",
+          targetEmail: e.parameter.targetEmail || e.parameter.telegramId || "",
           smurfName: e.parameter.smurfName || "",
           type: e.parameter.type || "",
           isAdd: e.parameter.isAdd === "true"
         });
         break;
       default:
-        result = { status: "ok", message: "API Làng Xì Trum V2.2 — Use ?action=lookup&telegramId=xxx or ?action=listAll" };
+        result = { status: "ok", message: "API Làng Xì Trum V3.0 (Google Identity Edition)" };
     }
     
     var jsonStr = JSON.stringify(result);
-    
-    // JSONP support: if callback param exists, wrap in callback
     var callback = e.parameter && e.parameter.callback;
     if (callback) {
       return ContentService.createTextOutput(callback + "(" + jsonStr + ")")
@@ -415,7 +418,7 @@ function getChatSheet() {
   var sheet = ss.getSheetByName("Chat");
   if (!sheet) {
     sheet = ss.insertSheet("Chat");
-    sheet.appendRow(["Timestamp", "Telegram ID", "Tên Xì Trum", "Tin Nhắn", "Cảm Xúc (Mood)"]);
+    sheet.appendRow(["Timestamp", "Email (Gmail)", "Tên Xì Trum", "Tin Nhắn", "Cảm Xúc (Mood)"]);
   }
   return sheet;
 }
@@ -424,19 +427,20 @@ function handleSendChat(data) {
   var sheet = getChatSheet();
   var cleanMsg = sanitizeInput(data.message || "");
   var cleanMood = sanitizeInput(data.mood || "normal");
+  var userKey = sanitizeInput(data.email || data.telegramId || "");
   
-  if (cleanMsg.length > 50) cleanMsg = cleanMsg.substring(0, 50); // limit to 50 chars
+  if (cleanMsg.length > 50) cleanMsg = cleanMsg.substring(0, 50);
   
   sheet.appendRow([
     new Date(),
-    sanitizeInput(data.telegramId || ""),
-    sanitizeInput(data.smurfName || "Khách Ẩn Danh"),
+    userKey,
+    sanitizeInput(data.smurfName || "Cư Dân Xì Trum"),
     cleanMsg,
     cleanMood
   ]);
   
   var lastRow = sheet.getLastRow();
-  if (lastRow > 31) { // Keep last 30 messages
+  if (lastRow > 31) {
     sheet.deleteRows(2, lastRow - 31);
   }
   
@@ -449,36 +453,23 @@ function handleGetChat() {
   if (lastRow <= 1) return { status: "success", messages: [] };
   
   var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
-  var messages = data.map(function(row) {
-    return {
-      time: Utilities.formatDate(row[0], "GMT+7", "HH:mm"),
-      telegramId: String(row[1]),
-      smurfName: String(row[2]),
-      message: String(row[3]),
-      mood: String(row[4])
-    };
-  });
+  var messages = [];
+  for (var i = 0; i < data.length; i++) {
+    messages.push({
+      timestamp: data[i][0],
+      email: data[i][1],
+      telegramId: data[i][1], // Alias
+      smurfName: data[i][2],
+      message: data[i][3],
+      mood: data[i][4]
+    });
+  }
   return { status: "success", messages: messages };
 }
 
 // ═══════════════════════════════════════
-// REACTION / SOCIAL INTERACTIONS ONLINE STORAGE
+// EMOJI REACTIONS FUNCTIONALITY
 // ═══════════════════════════════════════
-function getReactionsSheet() {
-  var ss;
-  try {
-    ss = SpreadsheetApp.openById(SHEET_ID);
-  } catch (err) {
-    ss = SpreadsheetApp.getActiveSpreadsheet();
-  }
-  var sheet = ss.getSheetByName("Reactions");
-  if (!sheet) {
-    sheet = ss.insertSheet("Reactions");
-    sheet.appendRow(["Telegram ID", "Tên Xì Trum", "Likes", "Funnys", "Stars", "Cools", "Last Updated"]);
-  }
-  return sheet;
-}
-
 function getReactionLogsSheet() {
   var ss;
   try {
@@ -489,156 +480,148 @@ function getReactionLogsSheet() {
   var sheet = ss.getSheetByName("ReactionLogs");
   if (!sheet) {
     sheet = ss.insertSheet("ReactionLogs");
-    sheet.appendRow(["From Telegram ID", "To Telegram ID", "Reaction Type", "Timestamp"]);
+    sheet.appendRow(["Timestamp", "FromEmail", "TargetEmail", "TargetSmurfName", "Type", "Action"]);
   }
   return sheet;
 }
 
-function findReactionRow(sheet, fromId, toId, type) {
-  var lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return -1;
-  var data = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
-  for (var i = 0; i < data.length; i++) {
-    if (String(data[i][0]).trim() === String(fromId).trim() &&
-        String(data[i][1]).trim() === String(toId).trim() &&
-        String(data[i][2]).trim() === String(type).trim()) {
-      return i + 2;
-    }
-  }
-  return -1;
-}
-
-// Tính lại toàn bộ Reaction counts chính xác 100% từ ReactionLogs (có CacheService 15s)
-function recountAllReactions(forceRefresh) {
-  var cache = CacheService.getScriptCache();
-  if (!forceRefresh) {
-    var cached = cache.get("all_reactions_summary");
-    if (cached) {
-      try {
-        return JSON.parse(cached);
-      } catch(e) {}
-    }
-  }
-  
-  var logsSheet = getReactionLogsSheet();
-  var logsLastRow = logsSheet.getLastRow();
-  var summary = {};
-  
-  if (logsLastRow > 1) {
-    var logsData = logsSheet.getRange(2, 1, logsLastRow - 1, 3).getValues();
-    logsData.forEach(function(row) {
-      var toId = String(row[1]).trim();
-      var type = String(row[2]).trim();
-      
-      if (!toId) return;
-      if (!summary[toId]) {
-        summary[toId] = { likes: 0, funnys: 0, stars: 0, cools: 0 };
-      }
-      
-      if (type === 'like') summary[toId].likes++;
-      else if (type === 'funny') summary[toId].funnys++;
-      else if (type === 'star') summary[toId].stars++;
-      else if (type === 'cool') summary[toId].cools++;
-    });
-  }
-  
-  // Đồng bộ lại toàn bộ trang tính Reactions
-  var reactionsSheet = getReactionsSheet();
-  var lastRow = reactionsSheet.getLastRow();
-  if (lastRow > 1) {
-    var sheetData = reactionsSheet.getRange(2, 1, lastRow - 1, 7).getValues();
-    for (var i = 0; i < sheetData.length; i++) {
-      var rowNum = i + 2;
-      var tid = String(sheetData[i][0]).trim();
-      var counts = summary[tid] || { likes: 0, funnys: 0, stars: 0, cools: 0 };
-      reactionsSheet.getRange(rowNum, 3, 1, 4).setValues([[counts.likes, counts.funnys, counts.stars, counts.cools]]);
-    }
-  }
-  
-  // Lưu cache 15 giây để phục vụ hàng chục người dùng cùng lúc siêu nhanh
+function getReactionsSummarySheet() {
+  var ss;
   try {
-    cache.put("all_reactions_summary", JSON.stringify(summary), 15);
-  } catch(e) {}
-  
-  return summary;
+    ss = SpreadsheetApp.openById(SHEET_ID);
+  } catch (err) {
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  }
+  var sheet = ss.getSheetByName("Reactions");
+  if (!sheet) {
+    sheet = ss.insertSheet("Reactions");
+    sheet.appendRow(["TargetEmail", "TargetSmurfName", "Heart", "Star", "Party", "Fire"]);
+  }
+  return sheet;
 }
 
 function handleGetReactions(data) {
-  var reactions = recountAllReactions(false);
+  var summarySheet = getReactionsSummarySheet();
+  var logsSheet = getReactionLogsSheet();
   
-  var myReactions = {};
-  var fromTelegramId = data && data.fromTelegramId ? String(data.fromTelegramId).trim() : "";
-  if (fromTelegramId) {
-    var logsSheet = getReactionLogsSheet();
-    var logsLastRow = logsSheet.getLastRow();
-    if (logsLastRow > 1) {
-      var logsData = logsSheet.getRange(2, 1, logsLastRow - 1, 3).getValues();
-      logsData.forEach(function(row) {
-        if (String(row[0]).trim() === fromTelegramId) {
-          var targetId = String(row[1]).trim();
-          var type = String(row[2]).trim();
-          var reactionKey = targetId + "_" + type;
-          myReactions[reactionKey] = true;
-        }
-      });
+  var sLast = summarySheet.getLastRow();
+  var summaryMap = {};
+  if (sLast > 1) {
+    var sData = summarySheet.getRange(2, 1, sLast - 1, 6).getValues();
+    for (var i = 0; i < sData.length; i++) {
+      var emailKey = String(sData[i][0]).trim();
+      summaryMap[emailKey] = {
+        targetEmail: emailKey,
+        targetTelegramId: emailKey,
+        targetSmurfName: sData[i][1],
+        heart: Number(sData[i][2]) || 0,
+        star: Number(sData[i][3]) || 0,
+        party: Number(sData[i][4]) || 0,
+        fire: Number(sData[i][5]) || 0
+      };
     }
   }
   
-  return { status: "success", reactions: reactions, myReactions: myReactions };
-}
-
-function handleUpdateReaction(data) {
-  var targetId = data.telegramId ? String(data.telegramId).trim() : "";
-  var fromTelegramId = data.fromTelegramId ? String(data.fromTelegramId).trim() : "";
-  var smurfName = String(data.smurfName || "").trim();
-  var type = String(data.type || "").trim(); // "like", "funny", "star", "cool"
-  
-  if (!fromTelegramId) {
-    return { status: "error", message: "Yêu cầu fromTelegramId (Telegram ID của người tương tác)" };
+  var userActiveReactions = {};
+  var fromEmail = data ? (data.fromEmail || data.fromTelegramId) : "";
+  if (fromEmail) {
+    var lLast = logsSheet.getLastRow();
+    if (lLast > 1) {
+      var lData = logsSheet.getRange(2, 1, lLast - 1, 6).getValues();
+      var fromKey = String(fromEmail).trim();
+      
+      var stateTracker = {};
+      for (var j = 0; j < lData.length; j++) {
+        var logFrom = String(lData[j][1]).trim();
+        if (logFrom === fromKey) {
+          var targetKey = String(lData[j][2]).trim();
+          var type = String(lData[j][4]).trim();
+          var act = String(lData[j][5]).trim();
+          
+          if (!stateTracker[targetKey]) stateTracker[targetKey] = {};
+          stateTracker[targetKey][type] = (act === "ADD");
+        }
+      }
+      
+      for (var tKey in stateTracker) {
+        userActiveReactions[tKey] = [];
+        for (var rxType in stateTracker[tKey]) {
+          if (stateTracker[tKey][rxType] === true) {
+            userActiveReactions[tKey].push(rxType);
+          }
+        }
+      }
+    }
   }
-  if (!targetId) {
-    return { status: "error", message: "Yêu cầu telegramId (ID cư dân được thả emoji)" };
-  }
-  
-  var validTypes = ['like', 'funny', 'star', 'cool'];
-  if (validTypes.indexOf(type) === -1) {
-    return { status: "error", message: "Invalid reaction type: " + type };
-  }
-  
-  var logsSheet = getReactionLogsSheet();
-  var logRowNum = findReactionRow(logsSheet, fromTelegramId, targetId, type);
-  var isAdd = true;
-  
-  if (logRowNum !== -1) {
-    // Đã thả emoji trước đó -> Bỏ thả (Toggle OFF)
-    logsSheet.deleteRow(logRowNum);
-    isAdd = false;
-  } else {
-    // Chưa thả emoji -> Thả emoji mới (Toggle ON)
-    logsSheet.appendRow([fromTelegramId, targetId, type, new Date()]);
-    isAdd = true;
-  }
-  
-  // Xóa cache cũ để ép đếm lại ngay lập tức
-  var summary = recountAllReactions(true);
-  var targetCounts = summary[targetId] || { likes: 0, funnys: 0, stars: 0, cools: 0 };
   
   return {
     status: "success",
-    telegramId: targetId,
-    likes: targetCounts.likes || 0,
-    funnys: targetCounts.funnys || 0,
-    stars: targetCounts.stars || 0,
-    cools: targetCounts.cools || 0,
-    isAdd: isAdd
+    reactions: summaryMap,
+    userActiveReactions: userActiveReactions
   };
 }
 
-// Hàm test permission (chạy 1 lần trên GAS web UI để kích hoạt cấp quyền)
-function testPermission() {
-  var sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
-  Logger.log("Sheet: " + sheet.getName() + " | Rows: " + sheet.getLastRow());
+function handleUpdateReaction(data) {
+  var fromEmail = data.fromEmail || data.fromTelegramId;
+  var targetEmail = data.targetEmail || data.telegramId;
+  var smurfName = data.smurfName || "";
+  var rxType = data.type || "heart";
+  var isAdd = data.isAdd === true || data.isAdd === "true";
   
-  var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
-  Logger.log("Drive folder: " + folder.getName());
+  if (!fromEmail || !targetEmail) {
+    return { status: "error", message: "Missing fromEmail or targetEmail" };
+  }
+  
+  var logsSheet = getReactionLogsSheet();
+  logsSheet.appendRow([
+    new Date(),
+    sanitizeInput(fromEmail),
+    sanitizeInput(targetEmail),
+    sanitizeInput(smurfName),
+    sanitizeInput(rxType),
+    isAdd ? "ADD" : "REMOVE"
+  ]);
+  
+  var summarySheet = getReactionsSummarySheet();
+  var sLast = summarySheet.getLastRow();
+  var targetRow = -1;
+  var currentCounts = { heart: 0, star: 0, party: 0, fire: 0 };
+  
+  if (sLast > 1) {
+    var sData = summarySheet.getRange(2, 1, sLast - 1, 6).getValues();
+    var tKey = String(targetEmail).trim();
+    for (var i = 0; i < sData.length; i++) {
+      if (String(sData[i][0]).trim() === tKey) {
+        targetRow = i + 2;
+        currentCounts.heart = Number(sData[i][2]) || 0;
+        currentCounts.star = Number(sData[i][3]) || 0;
+        currentCounts.party = Number(sData[i][4]) || 0;
+        currentCounts.fire = Number(sData[i][5]) || 0;
+        break;
+      }
+    }
+  }
+  
+  var colMap = { "heart": 3, "star": 4, "party": 5, "fire": 6 };
+  var targetCol = colMap[rxType] || 3;
+  
+  var newCount = (currentCounts[rxType] || 0) + (isAdd ? 1 : -1);
+  if (newCount < 0) newCount = 0;
+  
+  if (targetRow !== -1) {
+    summarySheet.getRange(targetRow, targetCol).setValue(newCount);
+    if (smurfName) summarySheet.getRange(targetRow, 2).setValue(sanitizeInput(smurfName));
+  } else {
+    currentCounts[rxType] = isAdd ? 1 : 0;
+    summarySheet.appendRow([
+      sanitizeInput(targetEmail),
+      sanitizeInput(smurfName),
+      currentCounts.heart,
+      currentCounts.star,
+      currentCounts.party,
+      currentCounts.fire
+    ]);
+  }
+  
+  return { status: "success", newCount: newCount };
 }

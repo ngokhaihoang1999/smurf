@@ -1,9 +1,25 @@
     <!-- ═══════════════════════════════════════ -->
-    <!-- VIEW: LOADING                          -->
+    <!-- VIEW: LOADING & GOOGLE SIGN-IN         -->
     <!-- ═══════════════════════════════════════ -->
-    <div id="view-loading" class="loading-spinner w-full">
-        <div class="spinner"></div>
-        <p class="font-fredoka text-lg text-smurf-blue">Đang kết nối Làng Xì Trum...</p>
-        <p class="text-xs text-slate-400 font-bold">Xác minh cư dân qua Telegram</p>
-        <button onclick="showView('register'); setupRegistrationForm();" class="mt-4 text-xs text-smurf-blue underline font-bold" style="display:none" id="skip-loading-btn">Bỏ qua → Đăng ký mới</button>
+    <div id="view-loading" class="loading-spinner w-full flex flex-col items-center justify-center p-6 text-center">
+        <div class="spinner mb-3" id="loading-spinner-circle"></div>
+        <p class="font-fredoka text-xl text-smurf-blue drop-shadow-sm mb-1" id="loading-status-title">Đang kết nối Làng Xì Trum...</p>
+        <p class="text-xs text-slate-500 font-bold mb-5" id="loading-status-sub">Định danh cư dân bằng Tài khoản Google</p>
+
+        <!-- Google Sign-In Container -->
+        <div id="google-signin-box" class="w-full max-w-xs bg-white/95 backdrop-blur-md p-5 rounded-2xl border-2 border-smurf-blueLight shadow-xl flex flex-col items-center gap-4 transition-all">
+            <div class="flex items-center gap-2 text-slate-700">
+                <span class="material-symbols-outlined text-smurf-blue text-2xl">account_circle</span>
+                <span class="font-fredoka text-base text-slate-800">Đăng Nhập Cư Dân</span>
+            </div>
+            
+            <p class="text-xs text-slate-600 font-bold leading-relaxed">Vui lòng đăng nhập tài khoản Google để truy cập ứng dụng Làng Xì Trum.</p>
+
+            <!-- Render Target for Google Button -->
+            <div id="google-btn-wrapper" class="w-full flex justify-center py-1"></div>
+
+            <button onclick="showView('register'); setupRegistrationForm();" class="text-xs text-slate-400 font-bold hover:text-smurf-blue transition-colors underline pt-2" id="skip-loading-btn">
+                Đăng ký cư dân mới mà không cần đăng nhập
+            </button>
+        </div>
     </div>
