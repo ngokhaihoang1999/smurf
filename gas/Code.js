@@ -508,8 +508,18 @@ function findReactionRow(sheet, fromId, toId, type) {
   return -1;
 }
 
-// Tính lại toàn bộ Reaction counts chính xác 100% từ ReactionLogs
-function recountAllReactions() {
+// Tính lại toàn bộ Reaction counts chính xác 100% từ ReactionLogs (có CacheService 15s)
+function recountAllReactions(forceRefresh) {
+  var cache = CacheService.getScriptCache();
+  if (!forceRefresh) {
+    var cached = cache.get("all_reactions_summary");
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch(e) {}
+    }
+  }
+  
   var logsSheet = getReactionLogsSheet();
   var logsLastRow = logsSheet.getLastRow();
   var summary = {};
@@ -517,7 +527,6 @@ function recountAllReactions() {
   if (logsLastRow > 1) {
     var logsData = logsSheet.getRange(2, 1, logsLastRow - 1, 3).getValues();
     logsData.forEach(function(row) {
-      var fromId = String(row[0]).trim();
       var toId = String(row[1]).trim();
       var type = String(row[2]).trim();
       
@@ -536,26 +545,26 @@ function recountAllReactions() {
   // Đồng bộ lại toàn bộ trang tính Reactions
   var reactionsSheet = getReactionsSheet();
   var lastRow = reactionsSheet.getLastRow();
-  
-  // Nếu đã có dữ liệu cũ -> cập nhật các cột số lượng
   if (lastRow > 1) {
     var sheetData = reactionsSheet.getRange(2, 1, lastRow - 1, 7).getValues();
     for (var i = 0; i < sheetData.length; i++) {
       var rowNum = i + 2;
       var tid = String(sheetData[i][0]).trim();
       var counts = summary[tid] || { likes: 0, funnys: 0, stars: 0, cools: 0 };
-      
       reactionsSheet.getRange(rowNum, 3, 1, 4).setValues([[counts.likes, counts.funnys, counts.stars, counts.cools]]);
-      reactionsSheet.getRange(rowNum, 7).setValue(new Date());
     }
   }
+  
+  // Lưu cache 15 giây để phục vụ hàng chục người dùng cùng lúc siêu nhanh
+  try {
+    cache.put("all_reactions_summary", JSON.stringify(summary), 15);
+  } catch(e) {}
   
   return summary;
 }
 
 function handleGetReactions(data) {
-  // Tính toán lại chính xác từ ReactionLogs trước khi lấy dữ liệu
-  var reactions = recountAllReactions();
+  var reactions = recountAllReactions(false);
   
   var myReactions = {};
   var fromTelegramId = data && data.fromTelegramId ? String(data.fromTelegramId).trim() : "";
@@ -610,58 +619,17 @@ function handleUpdateReaction(data) {
     isAdd = true;
   }
   
-  // Tính lại tổng số lượng reaction chính xác từ ReactionLogs cho targetId
-  var logsLastRow = logsSheet.getLastRow();
-  var likesCount = 0;
-  var funnysCount = 0;
-  var starsCount = 0;
-  var coolsCount = 0;
-  
-  if (logsLastRow > 1) {
-    var logsData = logsSheet.getRange(2, 1, logsLastRow - 1, 3).getValues();
-    logsData.forEach(function(row) {
-      if (String(row[1]).trim() === targetId) {
-        var rType = String(row[2]).trim();
-        if (rType === 'like') likesCount++;
-        else if (rType === 'funny') funnysCount++;
-        else if (rType === 'star') starsCount++;
-        else if (rType === 'cool') coolsCount++;
-      }
-    });
-  }
-  
-  // Cập nhật hoặc tạo dòng tổng hợp trong bảng Reactions
-  var reactionsSheet = getReactionsSheet();
-  var lastRow = reactionsSheet.getLastRow();
-  var rowNum = -1;
-  if (lastRow > 1) {
-    var idCol = reactionsSheet.getRange(2, 1, lastRow - 1, 1).getValues();
-    for (var i = 0; i < idCol.length; i++) {
-      if (String(idCol[i][0]).trim() === targetId) {
-        rowNum = i + 2;
-        break;
-      }
-    }
-  }
-  
-  if (rowNum === -1) {
-    reactionsSheet.appendRow([targetId, smurfName, likesCount, funnysCount, starsCount, coolsCount, new Date()]);
-  } else {
-    reactionsSheet.getRange(rowNum, 2).setValue(smurfName);
-    reactionsSheet.getRange(rowNum, 3).setValue(likesCount);
-    reactionsSheet.getRange(rowNum, 4).setValue(funnysCount);
-    reactionsSheet.getRange(rowNum, 5).setValue(starsCount);
-    reactionsSheet.getRange(rowNum, 6).setValue(coolsCount);
-    reactionsSheet.getRange(rowNum, 7).setValue(new Date());
-  }
+  // Xóa cache cũ để ép đếm lại ngay lập tức
+  var summary = recountAllReactions(true);
+  var targetCounts = summary[targetId] || { likes: 0, funnys: 0, stars: 0, cools: 0 };
   
   return {
     status: "success",
     telegramId: targetId,
-    likes: likesCount,
-    funnys: funnysCount,
-    stars: starsCount,
-    cools: coolsCount,
+    likes: targetCounts.likes || 0,
+    funnys: targetCounts.funnys || 0,
+    stars: targetCounts.stars || 0,
+    cools: targetCounts.cools || 0,
     isAdd: isAdd
   };
 }

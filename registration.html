@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784727901401" rel="stylesheet"/>
+    <link href="styles.css?v=1784728412880" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -723,13 +723,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-216px)] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784727901401');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784728412880');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784727901401" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784728412880" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -1897,7 +1897,7 @@
 
                     // Fetch fresh reaction counts from the Google Sheet
                     fetchFreshReactions();
-                    setInterval(fetchFreshReactions, 12000);
+                    setInterval(fetchFreshReactions, 25000);
                     
                     // Initial render from local cache
                     updateLeaderboard();
@@ -4841,7 +4841,12 @@
             localStorage.setItem('smurf_social_db', JSON.stringify(db));
         }
 
+        let isReactionInFlight = false;
+
         function fetchFreshReactions() {
+            // Skip background polling if tab is not visible or user is actively clicking
+            if (document.hidden || isReactionInFlight) return;
+            
             const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
             gasRequestJsonp({ action: 'getReactions', fromTelegramId: activeFromId }, (reactResp) => {
                 if (reactResp && reactResp.status === 'success') {
@@ -4892,12 +4897,13 @@
             const countStar = document.getElementById('react-count-star');
             const countCool = document.getElementById('react-count-cool');
             
-            if (countLike) countLike.textContent = data.likes || 0;
-            if (countFunny) countFunny.textContent = data.funnys || 0;
-            if (countStar) countStar.textContent = data.stars || 0;
-            if (countCool) countCool.textContent = data.cools || 0;
+            // Only update DOM if value actually changed to prevent flicker
+            if (countLike && countLike.textContent !== String(data.likes || 0)) countLike.textContent = data.likes || 0;
+            if (countFunny && countFunny.textContent !== String(data.funnys || 0)) countFunny.textContent = data.funnys || 0;
+            if (countStar && countStar.textContent !== String(data.stars || 0)) countStar.textContent = data.stars || 0;
+            if (countCool && countCool.textContent !== String(data.cools || 0)) countCool.textContent = data.cools || 0;
             
-            // Highlight active button states locally
+            // Highlight active button states locally with smooth ring micro-animation
             let myReactions = {};
             try {
                 myReactions = JSON.parse(localStorage.getItem('smurf_my_reactions')) || {};
@@ -4911,13 +4917,15 @@
                 if (btn) {
                     const reactionKey = targetId + "_" + t;
                     if (myReactions[reactionKey]) {
-                        btn.style.background = '#e0f2fe'; // light sky blue background
-                        btn.style.borderColor = '#0ea5e9';
-                        btn.style.borderWidth = '2px';
+                        btn.style.background = '#e0f2fe';
+                        btn.style.outline = '2px solid #0ea5e9';
+                        btn.style.outlineOffset = '0px';
+                        btn.style.transform = 'scale(1.1)';
                     } else {
                         btn.style.background = '';
-                        btn.style.borderColor = '';
-                        btn.style.borderWidth = '';
+                        btn.style.outline = '';
+                        btn.style.outlineOffset = '';
+                        btn.style.transform = '';
                     }
                 }
             });
@@ -4933,6 +4941,8 @@
         }
 
         function reactToResident(type) {
+            if (isReactionInFlight) return; // Prevent double clicking / spam jumping
+            
             const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
@@ -4941,6 +4951,8 @@
                 alert("📢 Không tìm thấy ID định danh để thực hiện tương tác!");
                 return;
             }
+            
+            isReactionInFlight = true;
             
             let myReactions = {};
             try {
@@ -4980,6 +4992,7 @@
                 type: type,
                 isAdd: !isAlreadyReacted
             }, (reactResp) => {
+                isReactionInFlight = false;
                 if (reactResp && reactResp.status === 'success') {
                     const latestData = getSocialData(targetId);
                     latestData.likes = reactResp.likes || 0;
@@ -4999,6 +5012,8 @@
                     loadSocialData();
                     updateLeaderboard();
                 }
+            }, () => {
+                isReactionInFlight = false;
             });
             
             if (tg?.HapticFeedback) {

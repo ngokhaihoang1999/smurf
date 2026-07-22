@@ -125,7 +125,7 @@
 
                     // Fetch fresh reaction counts from the Google Sheet
                     fetchFreshReactions();
-                    setInterval(fetchFreshReactions, 12000);
+                    setInterval(fetchFreshReactions, 25000);
                     
                     // Initial render from local cache
                     updateLeaderboard();
@@ -3069,7 +3069,12 @@
             localStorage.setItem('smurf_social_db', JSON.stringify(db));
         }
 
+        let isReactionInFlight = false;
+
         function fetchFreshReactions() {
+            // Skip background polling if tab is not visible or user is actively clicking
+            if (document.hidden || isReactionInFlight) return;
+            
             const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
             gasRequestJsonp({ action: 'getReactions', fromTelegramId: activeFromId }, (reactResp) => {
                 if (reactResp && reactResp.status === 'success') {
@@ -3120,12 +3125,13 @@
             const countStar = document.getElementById('react-count-star');
             const countCool = document.getElementById('react-count-cool');
             
-            if (countLike) countLike.textContent = data.likes || 0;
-            if (countFunny) countFunny.textContent = data.funnys || 0;
-            if (countStar) countStar.textContent = data.stars || 0;
-            if (countCool) countCool.textContent = data.cools || 0;
+            // Only update DOM if value actually changed to prevent flicker
+            if (countLike && countLike.textContent !== String(data.likes || 0)) countLike.textContent = data.likes || 0;
+            if (countFunny && countFunny.textContent !== String(data.funnys || 0)) countFunny.textContent = data.funnys || 0;
+            if (countStar && countStar.textContent !== String(data.stars || 0)) countStar.textContent = data.stars || 0;
+            if (countCool && countCool.textContent !== String(data.cools || 0)) countCool.textContent = data.cools || 0;
             
-            // Highlight active button states locally
+            // Highlight active button states locally with smooth ring micro-animation
             let myReactions = {};
             try {
                 myReactions = JSON.parse(localStorage.getItem('smurf_my_reactions')) || {};
@@ -3139,13 +3145,15 @@
                 if (btn) {
                     const reactionKey = targetId + "_" + t;
                     if (myReactions[reactionKey]) {
-                        btn.style.background = '#e0f2fe'; // light sky blue background
-                        btn.style.borderColor = '#0ea5e9';
-                        btn.style.borderWidth = '2px';
+                        btn.style.background = '#e0f2fe';
+                        btn.style.outline = '2px solid #0ea5e9';
+                        btn.style.outlineOffset = '0px';
+                        btn.style.transform = 'scale(1.1)';
                     } else {
                         btn.style.background = '';
-                        btn.style.borderColor = '';
-                        btn.style.borderWidth = '';
+                        btn.style.outline = '';
+                        btn.style.outlineOffset = '';
+                        btn.style.transform = '';
                     }
                 }
             });
@@ -3161,6 +3169,8 @@
         }
 
         function reactToResident(type) {
+            if (isReactionInFlight) return; // Prevent double clicking / spam jumping
+            
             const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
@@ -3169,6 +3179,8 @@
                 alert("📢 Không tìm thấy ID định danh để thực hiện tương tác!");
                 return;
             }
+            
+            isReactionInFlight = true;
             
             let myReactions = {};
             try {
@@ -3208,6 +3220,7 @@
                 type: type,
                 isAdd: !isAlreadyReacted
             }, (reactResp) => {
+                isReactionInFlight = false;
                 if (reactResp && reactResp.status === 'success') {
                     const latestData = getSocialData(targetId);
                     latestData.likes = reactResp.likes || 0;
@@ -3227,6 +3240,8 @@
                     loadSocialData();
                     updateLeaderboard();
                 }
+            }, () => {
+                isReactionInFlight = false;
             });
             
             if (tg?.HapticFeedback) {
