@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784743297846" rel="stylesheet"/>
+    <link href="styles.css?v=1784743977603" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -665,10 +665,11 @@
 
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50/50 flex flex-col items-center justify-start relative selection:bg-smurf-blue selection:text-white">
+<body class="min-h-screen bg-sky-100 flex flex-col items-center justify-start relative selection:bg-smurf-blue selection:text-white overflow-x-hidden">
 
-    <!-- Top Decorative Ambient Background -->
-    <div class="w-full max-w-xl h-48 bg-gradient-to-b from-sky-300/40 to-transparent absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none z-0"></div>
+    <!-- Panoramic Desktop Smurf Village Landscape Background -->
+    <div class="fixed inset-0 z-0 bg-cover bg-center pointer-events-none filter blur-[1.5px] opacity-45 scale-105" style="background-image: url('src/assets/smurf_desktop_landscape_bg.png');"></div>
+    <div class="fixed inset-0 z-0 bg-gradient-to-b from-sky-200/30 via-sky-100/10 to-amber-50/20 pointer-events-none"></div>
 
     <!-- Outer Responsive App Shell Container -->
     <div id="app-shell" class="w-full max-w-xl min-h-screen bg-[#fafaf6] relative flex flex-col z-10 shadow-2xl overflow-x-hidden md:my-3 md:rounded-3xl md:border-2 md:border-sky-200/80">
@@ -743,13 +744,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-100px)] min-h-[550px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784743297846');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784743977603');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784743297846" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784743977603" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -1638,8 +1639,8 @@
                         <img id="m-preview-card-cutout" src="card_bg_cutout.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; object-fit: fill; display: block;" onerror="this.style.display='none'">
 
                         <!-- Real Name text -->
-                        <div style="position: absolute; left: 812px; top: 144px; width: 552px; height: 112px; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 0 40px;">
-                            <div id="m-preview-real-name" style="font-family: 'Baloo 2', cursive; font-size: 50px; font-weight: 800; color: #ffffff; text-shadow: 0 3px 6px rgba(0,0,0,0.15); text-align: center; white-space: nowrap; overflow: visible; width: 100%; line-height: 1.1; transform: translateY(-5px);">Tên thật</div>
+                        <div style="position: absolute; left: 812px; top: 148px; width: 552px; height: 112px; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 0 40px;">
+                            <div id="m-preview-real-name" style="font-family: 'Baloo 2', cursive; font-size: 50px; font-weight: 800; color: #ffffff; text-shadow: 0 3px 6px rgba(0,0,0,0.15); text-align: center; white-space: nowrap; overflow: visible; width: 100%; line-height: 1.1; transform: translateY(1px);">Tên thật</div>
                         </div>
 
                         <!-- Group Badge -->

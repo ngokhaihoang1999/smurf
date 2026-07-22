@@ -51,10 +51,11 @@
 {{CSS}}
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50/50 flex flex-col items-center justify-start relative selection:bg-smurf-blue selection:text-white">
+<body class="min-h-screen bg-sky-100 flex flex-col items-center justify-start relative selection:bg-smurf-blue selection:text-white overflow-x-hidden">
 
-    <!-- Top Decorative Ambient Background -->
-    <div class="w-full max-w-xl h-48 bg-gradient-to-b from-sky-300/40 to-transparent absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none z-0"></div>
+    <!-- Panoramic Desktop Smurf Village Landscape Background -->
+    <div class="fixed inset-0 z-0 bg-cover bg-center pointer-events-none filter blur-[1.5px] opacity-45 scale-105" style="background-image: url('src/assets/smurf_desktop_landscape_bg.png');"></div>
+    <div class="fixed inset-0 z-0 bg-gradient-to-b from-sky-200/30 via-sky-100/10 to-amber-50/20 pointer-events-none"></div>
 
     <!-- Outer Responsive App Shell Container -->
     <div id="app-shell" class="w-full max-w-xl min-h-screen bg-[#fafaf6] relative flex flex-col z-10 shadow-2xl overflow-x-hidden md:my-3 md:rounded-3xl md:border-2 md:border-sky-200/80">
