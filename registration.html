@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784744270736" rel="stylesheet"/>
+    <link href="styles.css?v=1784744439279" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -667,9 +667,9 @@
 </head>
 <body class="min-h-screen bg-sky-100 flex flex-col items-center justify-start relative selection:bg-smurf-blue selection:text-white overflow-x-hidden">
 
-    <!-- Panoramic Desktop Smurf Village Landscape Background -->
-    <div class="fixed inset-0 z-0 bg-cover bg-center pointer-events-none filter blur-[1.5px] opacity-45 scale-105" style="background-image: url('src/assets/smurf_desktop_landscape_bg.png');"></div>
-    <div class="fixed inset-0 z-0 bg-gradient-to-b from-sky-200/30 via-sky-100/10 to-amber-50/20 pointer-events-none"></div>
+    <!-- Authentic Smurf Village Base Map Desktop Background -->
+    <div class="fixed inset-0 z-0 bg-cover bg-center pointer-events-none filter blur-[3px] opacity-40 scale-105" style="background-image: url('src/assets/smurf_village_base_map.png');"></div>
+    <div class="fixed inset-0 z-0 bg-gradient-to-b from-sky-200/40 via-sky-100/20 to-amber-50/30 pointer-events-none"></div>
 
     <!-- Outer Responsive App Shell Container -->
     <div id="app-shell" class="w-full max-w-xl min-h-screen bg-[#fafaf6] relative flex flex-col z-10 shadow-2xl overflow-x-hidden md:my-3 md:rounded-3xl md:border-2 md:border-sky-200/80">
@@ -744,13 +744,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-100px)] min-h-[550px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784744270736');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784744439279');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784744270736" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784744439279" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
