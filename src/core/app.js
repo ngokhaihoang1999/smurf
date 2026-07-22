@@ -428,7 +428,8 @@
             updateHeaderBadge();
             const d = currentUser;
             if (!d) return;
-            const avatarUrl = `avatars/avatar_${d.telegramId || telegramId}.png`;
+            const userKey = (d.email || d.telegramId || telegramId || '').replace(/[^a-zA-Z0-9]/g, '_');
+            const avatarUrl = (d.avatar ? d.avatar.split('?')[0] : `avatars/avatar_${userKey}.png`) + '?v=' + Date.now();
             
             // Re-render elements for the vertical card face (back)
             const profileAvatar = document.getElementById('profile-avatar');
