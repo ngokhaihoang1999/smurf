@@ -1533,12 +1533,25 @@
             }
         }
 
+        // ── ENNEAGRAM AUTO-FORMATTER ──
+        function formatEnneagramText(text) {
+            if (!text) return '';
+            let str = String(text).trim();
+            if (/^(số|so)\s*([1-9](\s*-\s*[1-9])?)$/i.test(str)) {
+                return str.replace(/^(số|so)\s*/i, 'Enneagram Số ');
+            }
+            if (/^[1-9]$/.test(str)) {
+                return 'Enneagram Số ' + str;
+            }
+            return str;
+        }
+
         // ── DYNAMIC FONT AUTO-FIT BY TEXT LENGTH ──
         function adjustAllCardFonts(prefix) {
             const nameEl = document.getElementById(prefix + 'real-name');
             if (nameEl) {
                 const len = nameEl.textContent.length;
-                nameEl.style.fontSize = len > 18 ? '28px' : len > 14 ? '30px' : '50px';
+                nameEl.style.fontSize = len > 25 ? '32px' : len > 18 ? '38px' : len > 13 ? '44px' : '52px';
             }
             
             const bioEl = document.getElementById(prefix + 'bio');
@@ -1664,18 +1677,20 @@
                 const cardEl = document.createElement('div');
                 cardEl.className = 'card-scene smurf-card flex flex-col overflow-hidden';
                 cardEl.onclick = function() { openModal(item.smurfName, this); };
+                const formattedPersonality = formatEnneagramText(item.tinhCach ? item.tinhCach.split(',')[0] : '');
+                const formattedHobby = item.soThich ? item.soThich.split(',')[0] : '';
                 cardEl.innerHTML = `
                     <div class="w-full relative overflow-hidden" style="aspect-ratio: 3/4;">
                         <img src="${item.avatar}" alt="Avatar" class="w-full h-full object-cover" style="object-position: center top;" loading="lazy" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                         <span class="absolute top-3 left-3 bg-white/90 text-smurf-blue p-1 rounded-full text-[11px] font-bold shadow-md material-symbols-outlined">park</span>
                     </div>
-                    <div class="w-full py-2.5 px-3.5 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 58px;">
-                        <div class="flex justify-between items-center w-full">
-                            <span class="font-bold text-[13px] text-slate-700 truncate mr-2" style="max-width: 140px;">${item.realName}</span>
-                            <span class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase">${item.group}</span>
+                    <div class="w-full py-2.5 px-3 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 62px;">
+                        <div class="flex justify-between items-start w-full gap-1">
+                            <span class="font-bold text-[12px] text-slate-800 leading-snug block break-words flex-1">${item.realName}</span>
+                            <span class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase shrink-0 mt-0.5">${item.group}</span>
                         </div>
-                        <div class="text-[10px] text-slate-400 font-bold mt-1 truncate">
-                            ${(item.soThich || '').split(',')[0] || '—'} • ${(item.tinhCach || '').split(',')[0] || '—'}
+                        <div class="text-[10px] text-slate-400 font-bold mt-1 leading-tight">
+                            ${formattedHobby}${formattedPersonality ? (formattedHobby ? ' • ' : '') + formattedPersonality : ''}
                         </div>
                     </div>
                 `;
@@ -1788,14 +1803,15 @@
             mobile_vertical: { cardY: -67, cardScale: 0.86, reactionBottom: 156, controlsBottom: 86 },
             mobile_horizontal_rotated: { cardY: -14, cardScale: 0.97, reactionBottom: 121, controlsBottom: 59 },
             mobile_horizontal_flat: { cardY: -70, cardScale: 1.01, reactionBottom: 139, controlsBottom: 77 },
-            desktop_vertical: { cardY: 0, cardScale: 1, reactionBottom: 86, controlsBottom: 24 },
-            desktop_horizontal: { cardY: 0, cardScale: 1, reactionBottom: 86, controlsBottom: 24 }
+            desktop_vertical: { cardY: -55, cardScale: 0.82, reactionBottom: 105, controlsBottom: 28 },
+            desktop_horizontal: { cardY: -45, cardScale: 0.84, reactionBottom: 105, controlsBottom: 28 }
         };
 
         let devPopupConfig = JSON.parse(JSON.stringify(DEFAULT_POPUP_CONFIG));
         
         try {
-            const savedConfig = localStorage.getItem('smurf_popup_config_v2');
+            localStorage.removeItem('smurf_popup_config_v2'); // Reset stale layout cache to apply fresh fix
+            const savedConfig = localStorage.getItem('smurf_popup_config_v3');
             if (savedConfig) {
                 const parsed = JSON.parse(savedConfig);
                 for (let key in DEFAULT_POPUP_CONFIG) {
@@ -3089,11 +3105,11 @@
             const avatarUrl = item.avatar || `avatars/avatar_${item.telegramId}.png`;
             
             // Resolve fallbacks for property name formats (API vs cache)
-            const hobbiesText = item.hobbies || item.soThich || 'Cư dân';
-            const personalityText = item.personality || item.tinhCach || 'Vui vẻ';
-            const strengthText = item.strength || item.diemManh || '';
-            const weaknessText = item.weakness || item.diemYeu || '';
-            const bioText = item.bio || '';
+            const hobbiesText = formatEnneagramText(item.hobbies || item.soThich || 'Cư dân');
+            const personalityText = formatEnneagramText(item.personality || item.tinhCach || 'Vui vẻ');
+            const strengthText = formatEnneagramText(item.strength || item.diemManh || '');
+            const weaknessText = formatEnneagramText(item.weakness || item.diemYeu || '');
+            const bioText = formatEnneagramText(item.bio || '');
 
             // Set image sources and text contents
             const avatarImgModal = document.getElementById('m-card-avatar');
@@ -3134,20 +3150,11 @@
             
             adjustAllCardFonts('m-preview-');
             
-            if (tg) {
-                tg.showPopup({
-                    title: '📥 Đang xuất ảnh thẻ',
-                    message: 'Hệ thống đang chuẩn bị ảnh thẻ cư dân chất lượng cao, vui lòng đợi một chút...',
-                    buttons: [{ type: 'ok', text: 'Đóng' }]
-                });
-            }
-            
             // Get original parent and sibling to restore later
             const originalParent = cardEl.parentNode;
             const originalSibling = cardEl.nextSibling;
             
             const proceedToCapture = () => {
-                // Temporarily move to body and reset positioning/transforms for layout resolution
                 document.body.appendChild(cardEl);
                 const originalStyle = cardEl.getAttribute('style') || '';
                 
@@ -3172,7 +3179,6 @@
                             }
                         }
                     }).then(canvas => {
-                        // Restore original placement
                         cardEl.setAttribute('style', originalStyle);
                         if (originalSibling) {
                             originalParent.insertBefore(cardEl, originalSibling);
@@ -3186,7 +3192,6 @@
                         console.error('Error generating card image:', err);
                         alert('⚠️ Lỗi khi xuất ảnh thẻ: ' + err.message);
                         
-                        // Restore original placement on error
                         cardEl.setAttribute('style', originalStyle);
                         if (originalSibling) {
                             originalParent.insertBefore(cardEl, originalSibling);
@@ -3203,12 +3208,75 @@
                     proceedToCapture();
                 } else {
                     avatarImgPreview.onload = proceedToCapture;
-                    avatarImgPreview.onerror = proceedToCapture; // Capture anyway if load fails
+                    avatarImgPreview.onerror = proceedToCapture;
                 }
             } else {
                 proceedToCapture();
             }
         }
+
+        // ── IMAGE DOWNLOAD HELPERS FOR WEB & MOBILE ──
+        function showImageForDownload(dataUrl, filename) {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = filename || 'smurf_card.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            let previewModal = document.getElementById('image-download-modal');
+            if (!previewModal) {
+                previewModal = document.createElement('div');
+                previewModal.id = 'image-download-modal';
+                previewModal.className = 'fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-4';
+                previewModal.innerHTML = `
+                    <div class="bg-white rounded-3xl p-5 max-w-sm w-full flex flex-col items-center gap-3 shadow-2xl relative border-2 border-smurf-blueLight">
+                        <button onclick="document.getElementById('image-download-modal').classList.add('hidden')" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1">
+                            <span class="material-symbols-outlined text-xl">close</span>
+                        </button>
+                        <div class="flex items-center gap-2 text-smurf-blue font-fredoka text-base">
+                            <span class="material-symbols-outlined text-xl">download_done</span>
+                            <span>Ảnh Đã Sẵn Sàng!</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 font-bold text-center leading-relaxed">
+                            Nếu ảnh chưa tự động tải về, bạn hãy nhấn giữ vào hình bên dưới để lưu trực tiếp nhé! 📸
+                        </p>
+                        <img id="download-preview-img" class="w-full rounded-2xl border border-slate-200 shadow-md object-contain max-h-[55vh]" src="" alt="Download Preview">
+                        <a id="download-modal-link" href="" download="" class="w-full py-3 bg-smurf-blue hover:bg-sky-600 text-white font-bold text-xs rounded-xl text-center shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 mt-1">
+                            <span class="material-symbols-outlined text-base">file_download</span>
+                            <span>Tải Ảnh Về Máy</span>
+                        </a>
+                    </div>
+                `;
+                document.body.appendChild(previewModal);
+            }
+
+            const imgEl = document.getElementById('download-preview-img');
+            const linkEl = document.getElementById('download-modal-link');
+            if (imgEl) imgEl.src = dataUrl;
+            if (linkEl) {
+                linkEl.href = dataUrl;
+                linkEl.download = filename || 'smurf_card.png';
+            }
+            previewModal.classList.remove('hidden');
+        }
+
+        window.downloadResidentCard = function() {
+            if (typeof exportCardImage === 'function') {
+                exportCardImage();
+            } else {
+                alert("⚠️ Đang chuẩn bị tạo ảnh thẻ...");
+            }
+        };
+
+        window.downloadPortraitAvatar = function() {
+            if (currentUser && currentUser.avatar) {
+                const avatarUrl = currentUser.avatar.split('?')[0];
+                showImageForDownload(avatarUrl, `avatar_${currentUser.smurfName || 'smurf'}.png`);
+            } else {
+                alert("⚠️ Chưa tìm thấy ảnh avatar của bạn!");
+            }
+        };
 
         function handleSignpostClick() {
             if (currentUser) {
