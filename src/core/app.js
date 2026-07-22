@@ -106,7 +106,7 @@
                             diemYeu: r.weakness || '',
                             bio: r.bio || '',
                             telegramId: r.telegramId || '',
-                            avatar: `avatars/avatar_${r.telegramId}.png`,
+                            avatar: `avatars/avatar_${r.telegramId}.png?v=` + (r.timestamp ? new Date(r.timestamp).getTime() : Date.now()),
                             gender: r.gender || '',
                             hat: r.hat || '',
                             hatcolor: r.hatcolor || '',
@@ -2085,7 +2085,7 @@
             if (!item) return;
             activeModalItem = item;
             
-            const avatarUrl = item.avatar;
+            const avatarUrl = (item.avatar ? (item.avatar.split('?')[0] + '?v=' + Date.now()) : `avatars/avatar_${item.telegramId}.png?v=` + Date.now());
             document.getElementById('m-card-avatar').src = avatarUrl;
             document.getElementById('m-card-avatar').onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
             document.getElementById('m-preview-smurf-avatar').src = avatarUrl;
