@@ -136,7 +136,7 @@
                                 <button type="button" id="tab-design-upload" class="flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-smurf-blue">Upload ảnh</button>
                             </div>
 
-                             <!-- Manual Container -->
+                            <!-- Manual Container -->
                             <div class="flex flex-col gap-4" id="design-manual-container">
                                 <!-- Giới tính Smurf -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Giới Tính Xì Trum</label>
@@ -145,7 +145,7 @@
                                         <button type="button" data-val="Nữ (Smurfette)" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Nữ (Smurfette)</button>
                                     </div>
                                     <input type="text" id="custom-gender-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
-                                    <input type="hidden" id="input-gender" value="Nam (Smurf)"/>
+                                    <input type="hidden" id="input-gender" name="gender" value="Nam (Smurf)"/>
                                 </div>
                                 <!-- Kiểu Mũ -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Kiểu Mũ</label>
@@ -158,7 +158,7 @@
                                         <button type="button" data-val="Không mũ + tóc" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Không mũ + tóc</button>
                                     </div></div>
                                     <input type="text" id="custom-hat-input" placeholder="Mô tả kiểu mũ..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
-                                    <input type="hidden" id="input-hat" value="Không"/>
+                                    <input type="hidden" id="input-hat" name="hat" value="Không"/>
                                 </div>
                                 <!-- Màu mũ -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Màu Mũ</label>
@@ -173,7 +173,7 @@
                                         <button type="button" data-val="Xanh lá" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Xanh lá</button>
                                     </div></div>
                                     <input type="text" id="custom-hatcolor-input" placeholder="Nhập màu..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
-                                    <input type="hidden" id="input-hatcolor" value="Không"/>
+                                    <input type="hidden" id="input-hatcolor" name="hatColor" value="Không"/>
                                 </div>
                                 <!-- Màu tóc -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Màu Tóc</label>
@@ -186,7 +186,7 @@
                                         <button type="button" data-val="Đỏ" class="pill-btn px-3 py-1.5 rounded-xl text-xs">Đỏ</button>
                                     </div></div>
                                     <input type="text" id="custom-hair-input" placeholder="Mô tả tóc..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
-                                    <input type="hidden" id="input-hair" value="Không"/>
+                                    <input type="hidden" id="input-hair" name="hairColor" value="Không"/>
                                 </div>
                                 <!-- Phụ kiện mặt -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Phụ Kiện Mặt</label>
@@ -198,7 +198,7 @@
                                         <button type="button" data-val="Mặt nạ" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Mặt nạ</button>
                                     </div></div>
                                     <input type="text" id="custom-faceacc-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
-                                    <input type="hidden" id="input-faceacc" value="Không"/>
+                                    <input type="hidden" id="input-faceacc" name="faceAccessory" value="Không"/>
                                 </div>
                                 <!-- Trang phục -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Trang Phục</label>
@@ -211,7 +211,7 @@
                                         <button type="button" data-val="Cape choàng" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Cape choàng</button>
                                     </div></div>
                                     <input type="text" id="custom-outfit-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
-                                    <input type="hidden" id="input-outfit" value="Không"/>
+                                    <input type="hidden" id="input-outfit" name="outfit" value="Không"/>
                                 </div>
                                 <!-- Đạo cụ -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Đạo Cụ Cầm Tay</label>
@@ -225,7 +225,7 @@
                                         <button type="button" data-val="Cờ lê" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Cờ lê</button>
                                     </div></div>
                                     <input type="text" id="custom-prop-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
-                                    <input type="hidden" id="input-prop" value="Không"/>
+                                    <input type="hidden" id="input-prop" name="prop" value="Không"/>
                                 </div>
                                 <!-- Biểu cảm -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Biểu Cảm</label>
@@ -238,7 +238,7 @@
                                         <button type="button" data-val="Tinh nghịch" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Tinh nghịch</button>
                                     </div></div>
                                     <input type="text" id="custom-expression-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
-                                    <input type="hidden" id="input-expression" value="Không"/>
+                                    <input type="hidden" id="input-expression" name="expression" value="Không"/>
                                 </div>
                                 <!-- Pose -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Dáng Đứng (Pose)</label>
@@ -250,7 +250,7 @@
                                         <button type="button" data-val="Giơ ngón cái" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Giơ ngón cái</button>
                                     </div></div>
                                     <input type="text" id="custom-pose-input" placeholder="Mô tả..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
-                                    <input type="hidden" id="input-pose" value="Không"/>
+                                    <input type="hidden" id="input-pose" name="pose" value="Không"/>
                                 </div>
                                 <!-- Bối cảnh -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Bối Cảnh</label>
@@ -262,7 +262,7 @@
                                         <button type="button" data-val="Rừng nấm" class="pill-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">Rừng nấm</button>
                                     </div></div>
                                     <input type="text" id="custom-bg-input" placeholder="Mô tả bối cảnh..." class="hidden w-full bg-slate-50 border-2 border-slate-200 p-2 text-xs rounded-xl mt-2">
-                                    <input type="hidden" id="input-background" value="Không"/>
+                                    <input type="hidden" id="input-background" name="background" value="Không"/>
                                 </div>
                                 <!-- Chi tiết bổ sung -->
                                 <div><label class="text-xs font-bold text-slate-500 block mb-1">Chi Tiết Bổ Sung (Tùy chọn)</label>

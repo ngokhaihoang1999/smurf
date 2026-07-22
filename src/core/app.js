@@ -585,6 +585,18 @@
             const data = { action: 'register' };
             formData.forEach((value, key) => { data[key] = value; });
 
+            // Explicitly ensure avatar styling fields are extracted even if FormData missed any
+            data.gender = document.getElementById('input-gender')?.value || data.gender || 'Nam (Smurf)';
+            data.hat = document.getElementById('input-hat')?.value || data.hat || 'Không';
+            data.hatColor = document.getElementById('input-hatcolor')?.value || data.hatColor || 'Không';
+            data.hairColor = document.getElementById('input-hair')?.value || data.hairColor || 'Không';
+            data.faceAccessory = document.getElementById('input-faceacc')?.value || data.faceAccessory || 'Không';
+            data.outfit = document.getElementById('input-outfit')?.value || data.outfit || 'Không';
+            data.prop = document.getElementById('input-prop')?.value || data.prop || 'Không';
+            data.expression = document.getElementById('input-expression')?.value || data.expression || 'Không';
+            data.pose = document.getElementById('input-pose')?.value || data.pose || 'Không';
+            data.background = document.getElementById('input-background')?.value || data.background || 'Không';
+
             try {
                 const result = await gasRequest(data);
                 if (result.status === 'success') {
