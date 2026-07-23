@@ -1749,12 +1749,12 @@
                         <div onclick="openModal('${r2.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[100px] relative z-10">
                             <span class="text-[9px] bg-slate-200/90 text-slate-700 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 2</span>
                             <div class="relative w-22 h-22 flex items-center justify-center aspect-square">
-                                <!-- Inner Circular Avatar showing FULL Artwork & Title Logo -->
-                                <div class="w-16 h-16 rounded-full overflow-hidden shadow-md bg-white relative z-0 aspect-square border-2 border-slate-200">
+                                <!-- Inner Circular Avatar (Concentric Center, w-14 h-14) -->
+                                <div class="w-14 h-14 rounded-full overflow-hidden shadow-sm bg-white relative z-0 aspect-square border-2 border-slate-300/80 flex items-center justify-center">
                                     <img src="${r2.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
-                                <!-- Laurel Wreath Frame wrapping ON THE OUTSIDE -->
-                                <img src="src/assets/smurf_laurel_silver.png" class="absolute -inset-1.5 w-[114%] h-[114%] object-contain z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" alt="Silver Laurel Frame">
+                                <!-- Laurel Wreath Frame Overlay (Concentric Center, 100% Aligned) -->
+                                <img src="src/assets/smurf_laurel_silver.png" class="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" alt="Silver Laurel Frame">
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
                                 <span class="text-[11px] font-fredoka font-bold text-slate-800 truncate w-full px-0.5">${r2.smurfName}</span>
@@ -1772,12 +1772,12 @@
                                 <img src="src/assets/smurf_crown_gold.png" class="w-8 h-8 object-contain absolute -top-5 z-30 animate-bounce filter drop-shadow-sm" style="animation-duration: 2.2s;" alt="Gold Crown">
                                 <span class="text-[9px] bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-white px-2.5 py-0.5 rounded-full font-extrabold z-20 shadow-md uppercase tracking-wider mb-1 mt-1">TOP 1</span>
                                 <div class="relative w-28 h-28 flex items-center justify-center aspect-square">
-                                    <!-- Inner Circular Avatar showing FULL Artwork & Title Logo -->
-                                    <div class="w-20 h-20 rounded-full overflow-hidden shadow-lg ring-4 ring-amber-400/50 bg-white relative z-0 aspect-square border-2 border-amber-300">
+                                    <!-- Inner Circular Avatar (Concentric Center, w-18 h-18) -->
+                                    <div class="w-18 h-18 rounded-full overflow-hidden shadow-lg ring-4 ring-amber-400/50 bg-white relative z-0 aspect-square border-2 border-amber-300 flex items-center justify-center">
                                         <img src="${r1.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                     </div>
-                                    <!-- Laurel Wreath Frame wrapping ON THE OUTSIDE -->
-                                    <img src="src/assets/smurf_laurel_gold.png" class="absolute -inset-2 w-[114%] h-[114%] object-contain z-10 pointer-events-none filter drop-shadow-lg group-hover:scale-105 transition-transform" alt="Gold Laurel Frame">
+                                    <!-- Laurel Wreath Frame Overlay (Concentric Center, 100% Aligned) -->
+                                    <img src="src/assets/smurf_laurel_gold.png" class="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none filter drop-shadow-lg group-hover:scale-105 transition-transform" alt="Gold Laurel Frame">
                                 </div>
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
@@ -1794,12 +1794,12 @@
                         <div onclick="openModal('${r3.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[100px] relative z-10">
                             <span class="text-[9px] bg-amber-100/90 text-amber-800 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 3</span>
                             <div class="relative w-22 h-22 flex items-center justify-center aspect-square">
-                                <!-- Inner Circular Avatar showing FULL Artwork & Title Logo -->
-                                <div class="w-16 h-16 rounded-full overflow-hidden shadow-md bg-white relative z-0 aspect-square border-2 border-amber-600/40">
+                                <!-- Inner Circular Avatar (Concentric Center, w-14 h-14) -->
+                                <div class="w-14 h-14 rounded-full overflow-hidden shadow-sm bg-white relative z-0 aspect-square border-2 border-amber-600/40 flex items-center justify-center">
                                     <img src="${r3.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
-                                <!-- Laurel Wreath Frame wrapping ON THE OUTSIDE -->
-                                <img src="src/assets/smurf_laurel_bronze.png" class="absolute -inset-1.5 w-[114%] h-[114%] object-contain z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" alt="Bronze Laurel Frame">
+                                <!-- Laurel Wreath Frame Overlay (Concentric Center, 100% Aligned) -->
+                                <img src="src/assets/smurf_laurel_bronze.png" class="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" alt="Bronze Laurel Frame">
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
                                 <span class="text-[11px] font-fredoka font-bold text-slate-800 truncate w-full px-0.5">${r3.smurfName}</span>
