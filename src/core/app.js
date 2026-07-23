@@ -1753,11 +1753,11 @@
             const r2 = scored[1] || null;
             const r3 = scored[2] || null;
 
-            // Load interactive Tuner Config from localStorage if customized (Defaulted to 3:4 Rectangular Card Specs)
+            // Load interactive Tuner Config from localStorage if customized (Defaulted to 3:4 Rectangular Card Specs with Avatar Offset X, Y)
             const tc = JSON.parse(localStorage.getItem('smurf_tuner_config') || 'null') || {
-                t1_w: 115, t1_a: 84, t1_x: 0, t1_y: 0,
-                t2_w: 96,  t2_a: 70, t2_x: 0, t2_y: 0,
-                t3_w: 96,  t3_a: 70, t3_x: 0, t3_y: 0
+                t1_w: 115, t1_a: 84, t1_x: 0, t1_y: 0, t1_ax: 0, t1_ay: 0,
+                t2_w: 96,  t2_a: 70, t2_x: 0, t2_y: 0, t2_ax: 0, t2_ay: 0,
+                t3_w: 96,  t3_a: 70, t3_x: 0, t3_y: 0, t3_ax: 0, t3_ay: 0
             };
 
             // Calculate 3:4 vertical dimensions
@@ -1778,14 +1778,14 @@
             if (stage) {
                 let html = '';
 
-                // Rank 2 (Silver - Left, 3:4 Vertical Card)
+                // Rank 2 (Silver - Left, 3:4 Vertical Card with Avatar X, Y controls)
                 if (r2) {
                     html += `
                         <div onclick="openModal('${r2.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
                             <span class="text-[9px] bg-slate-200/90 text-slate-700 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 2</span>
                             <div class="relative flex items-center justify-center" style="width: ${t2_bw}px; height: ${t2_bh}px;">
-                                <!-- Inner 3:4 Vertical Resident Card -->
-                                <div class="rounded-xl overflow-hidden shadow-md bg-white relative z-0 border-2 border-slate-300/80 flex items-center justify-center" style="width: ${t2_cw}px; height: ${t2_ch}px;">
+                                <!-- Inner 3:4 Vertical Resident Card with Offset X, Y -->
+                                <div class="rounded-xl overflow-hidden shadow-md bg-white relative z-0 border-2 border-slate-300/80 flex items-center justify-center transition-transform" style="width: ${t2_cw}px; height: ${t2_ch}px; transform: translate(${tc.t2_ax || 0}px, ${tc.t2_ay || 0}px);">
                                     <img src="${r2.avatar}" class="w-full h-full object-cover rounded-xl" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
                                 <!-- 3:4 Rectangular Laurel Wreath Overlay -->
@@ -1799,7 +1799,7 @@
                     `;
                 }
 
-                // Rank 1 (Gold - Center, Tallest & Crown, 3:4 Vertical Card)
+                // Rank 1 (Gold - Center, Tallest & Crown, 3:4 Vertical Card with Avatar X, Y controls)
                 if (r1) {
                     html += `
                         <div onclick="openModal('${r1.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[130px] z-20 -mt-2">
@@ -1807,8 +1807,8 @@
                                 <img src="src/assets/smurf_crown_gold.png" class="w-8 h-8 object-contain absolute -top-5 z-30 animate-bounce filter drop-shadow-sm" style="animation-duration: 2.2s;" alt="Gold Crown">
                                 <span class="text-[9px] bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-white px-2.5 py-0.5 rounded-full font-extrabold z-20 shadow-md uppercase tracking-wider mb-1 mt-1">TOP 1</span>
                                 <div class="relative flex items-center justify-center" style="width: ${t1_bw}px; height: ${t1_bh}px;">
-                                    <!-- Inner 3:4 Vertical Resident Card -->
-                                    <div class="rounded-xl overflow-hidden shadow-lg ring-4 ring-amber-400/50 bg-white relative z-0 border-2 border-amber-300 flex items-center justify-center" style="width: ${t1_cw}px; height: ${t1_ch}px;">
+                                    <!-- Inner 3:4 Vertical Resident Card with Offset X, Y -->
+                                    <div class="rounded-xl overflow-hidden shadow-lg ring-4 ring-amber-400/50 bg-white relative z-0 border-2 border-amber-300 flex items-center justify-center transition-transform" style="width: ${t1_cw}px; height: ${t1_ch}px; transform: translate(${tc.t1_ax || 0}px, ${tc.t1_ay || 0}px);">
                                         <img src="${r1.avatar}" class="w-full h-full object-cover rounded-xl" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                     </div>
                                     <!-- 3:4 Rectangular Laurel Wreath Overlay -->
@@ -1823,7 +1823,7 @@
                     `;
                 }
 
-                // Rank 3 (Bronze - Right, 3:4 Vertical Card)
+                // Rank 3 (Bronze - Right, 3:4 Vertical Card with Avatar X, Y controls)
                 if (r3) {
                     const x3 = tc.t3_x || 0;
                     const y3 = tc.t3_y || 0;
@@ -1831,8 +1831,8 @@
                         <div onclick="openModal('${r3.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
                             <span class="text-[9px] bg-amber-100/90 text-amber-800 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 3</span>
                             <div class="relative flex items-center justify-center" style="width: ${t3_bw}px; height: ${t3_bh}px;">
-                                <!-- Inner 3:4 Vertical Resident Card -->
-                                <div class="rounded-xl overflow-hidden shadow-md bg-white relative z-0 border-2 border-amber-600/40 flex items-center justify-center" style="width: ${t3_cw}px; height: ${t3_ch}px;">
+                                <!-- Inner 3:4 Vertical Resident Card with Offset X, Y -->
+                                <div class="rounded-xl overflow-hidden shadow-md bg-white relative z-0 border-2 border-amber-600/40 flex items-center justify-center transition-transform" style="width: ${t3_cw}px; height: ${t3_ch}px; transform: translate(${tc.t3_ax || 0}px, ${tc.t3_ay || 0}px);">
                                     <img src="${r3.avatar}" class="w-full h-full object-cover rounded-xl" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
                                 <!-- 3:4 Rectangular Laurel Wreath Overlay -->
