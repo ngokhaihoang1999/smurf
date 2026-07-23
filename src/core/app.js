@@ -3489,12 +3489,7 @@
         function downloadResidentCardInternal() {
             if (!currentUser) return;
 
-            const originalCardEl = document.getElementById('modalCardScaleWrapper');
-            if (!originalCardEl) {
-                alert('⚠️ Không tìm thấy khung ảnh thẻ.');
-                return;
-            }
-
+            // 1. Populate live modal DOM elements first with user's details
             const item = currentUser;
             const userKey = getAvatarKeyByIdentifier(item.email);
             const avatarUrl = item.avatar || `avatars/avatar_${userKey}.png`;
@@ -3505,7 +3500,37 @@
             const weaknessText = formatEnneagramText(item.weakness || item.diemYeu || '');
             const bioText = formatEnneagramText(item.bio || '');
 
-            // Create off-screen container for clean rendering without disturbing live DOM
+            const avatarImgPreview = document.getElementById('m-preview-smurf-avatar');
+            if (avatarImgPreview) avatarImgPreview.src = avatarUrl;
+            
+            const groupPreview = document.getElementById('m-preview-group');
+            if (groupPreview) groupPreview.textContent = item.group || '';
+            
+            const realNamePreview = document.getElementById('m-preview-real-name');
+            if (realNamePreview) realNamePreview.textContent = item.realName || item.smurfName || '';
+
+            const previewTinhCach = document.getElementById('m-preview-tinh-cach');
+            const previewSoThich = document.getElementById('m-preview-so-thich');
+            const previewDiemManh = document.getElementById('m-preview-diem-manh');
+            const previewDiemYeu = document.getElementById('m-preview-diem-yeu');
+            const previewBio = document.getElementById('m-preview-bio');
+
+            if (previewTinhCach) previewTinhCach.textContent = personalityText;
+            if (previewSoThich) previewSoThich.textContent = hobbiesText;
+            if (previewDiemManh) previewDiemManh.textContent = strengthText;
+            if (previewDiemYeu) previewDiemYeu.textContent = weaknessText;
+            if (previewBio) previewBio.textContent = bioText;
+
+            // 2. Adjust font sizes on the template using official card font logic
+            adjustAllCardFonts('m-preview-');
+
+            const originalCardEl = document.getElementById('modalCardScaleWrapper');
+            if (!originalCardEl) {
+                alert('⚠️ Không tìm thấy khung ảnh thẻ.');
+                return;
+            }
+
+            // 3. Create off-screen container for exact 100% 1:1 render
             const container = document.createElement('div');
             container.style.position = 'fixed';
             container.style.left = '-9999px';
@@ -3516,7 +3541,7 @@
             container.style.zIndex = '-9999';
             document.body.appendChild(container);
 
-            // Clone original card element
+            // 4. Clone exact populated element with zero manual style modifications
             const clonedCard = originalCardEl.cloneNode(true);
             clonedCard.id = 'clonedCardExport';
             clonedCard.style.transform = 'none';
@@ -3527,80 +3552,6 @@
             clonedCard.style.height = '1038px';
 
             container.appendChild(clonedCard);
-
-            // Update Avatar
-            const cloneAvatar = clonedCard.querySelector('#m-preview-smurf-avatar');
-            if (cloneAvatar) cloneAvatar.src = avatarUrl;
-
-            // Real Name on Ribbon
-            const cloneRealNameWrapper = clonedCard.querySelector('#m-preview-real-name')?.parentNode;
-            if (cloneRealNameWrapper) {
-                cloneRealNameWrapper.style.top = '138px';
-                cloneRealNameWrapper.style.height = '100px';
-            }
-            const cloneRealName = clonedCard.querySelector('#m-preview-real-name');
-            if (cloneRealName) {
-                const nameStr = item.realName || item.smurfName || '';
-                cloneRealName.textContent = nameStr;
-                const nLen = nameStr.length;
-                cloneRealName.style.fontSize = nLen > 25 ? '32px' : nLen > 18 ? '38px' : nLen > 13 ? '44px' : '48px';
-                cloneRealName.style.lineHeight = '1.0';
-                cloneRealName.style.transform = 'none';
-            }
-
-            // Group Pill
-            const cloneGroup = clonedCard.querySelector('#m-preview-group');
-            if (cloneGroup) {
-                cloneGroup.textContent = item.group || '';
-                cloneGroup.style.top = '274px';
-                cloneGroup.style.paddingTop = '0px';
-                cloneGroup.style.fontSize = '30px';
-                cloneGroup.style.lineHeight = '42px';
-            }
-
-            // Personality / Hobbies / Strengths / Weaknesses Boxes
-            const getChipFontSize = (str) => {
-                const len = (str || '').length;
-                return len > 24 ? '23px' : len > 16 ? '28px' : len > 10 ? '34px' : '38px';
-            };
-
-            const cloneTinhCach = clonedCard.querySelector('#m-preview-tinh-cach');
-            if (cloneTinhCach) {
-                cloneTinhCach.textContent = personalityText;
-                cloneTinhCach.style.fontSize = getChipFontSize(personalityText);
-                cloneTinhCach.style.lineHeight = '1.2';
-            }
-
-            const cloneSoThich = clonedCard.querySelector('#m-preview-so-thich');
-            if (cloneSoThich) {
-                cloneSoThich.textContent = hobbiesText;
-                cloneSoThich.style.fontSize = getChipFontSize(hobbiesText);
-                cloneSoThich.style.lineHeight = '1.2';
-            }
-
-            const cloneDiemManh = clonedCard.querySelector('#m-preview-diem-manh');
-            if (cloneDiemManh) {
-                cloneDiemManh.textContent = strengthText;
-                cloneDiemManh.style.fontSize = getChipFontSize(strengthText);
-                cloneDiemManh.style.lineHeight = '1.2';
-            }
-
-            const cloneDiemYeu = clonedCard.querySelector('#m-preview-diem-yeu');
-            if (cloneDiemYeu) {
-                cloneDiemYeu.textContent = weaknessText;
-                cloneDiemYeu.style.fontSize = getChipFontSize(weaknessText);
-                cloneDiemYeu.style.lineHeight = '1.2';
-            }
-
-            // Bio Box
-            const cloneBio = clonedCard.querySelector('#m-preview-bio');
-            if (cloneBio) {
-                cloneBio.textContent = bioText;
-                const bLen = bioText.length;
-                cloneBio.style.fontSize = bLen > 80 ? '30px' : bLen > 60 ? '38px' : bLen > 35 ? '48px' : '54px';
-                cloneBio.style.fontStyle = 'italic';
-                cloneBio.style.lineHeight = '1.35';
-            }
 
             const captureCanvas = () => {
                 setTimeout(() => {
@@ -3622,6 +3573,7 @@
                 }, 150);
             };
 
+            const cloneAvatar = clonedCard.querySelector('#m-preview-smurf-avatar');
             if (cloneAvatar) {
                 if (cloneAvatar.complete) {
                     captureCanvas();
