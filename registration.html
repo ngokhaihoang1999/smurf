@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8"/>
@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784808382103" rel="stylesheet"/>
+    <link href="styles.css?v=1784811063201" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -708,19 +708,8 @@
                 <span class="font-fredoka text-base text-slate-800">Đăng Nhập Cư Dân</span>
             </div>
             
-            <p class="text-xs text-slate-600 font-bold leading-relaxed">Đăng nhập bằng Google hoặc nhập Email đã đăng ký để vào Làng Xì Trum.</p>
-
             <!-- Render Target for Google Button -->
             <div id="google-btn-wrapper" class="w-full flex justify-center py-1 min-h-[40px]"></div>
-
-            <!-- Fallback Direct Email Input (Always accessible if Google script is blocked) -->
-            <div id="manual-login-fallback" class="w-full flex flex-col gap-2 border-t border-slate-100 pt-3">
-                <p class="text-[11px] text-slate-400 font-bold text-left">Hoặc nhập Email cư dân:</p>
-                <div class="flex gap-1.5 w-full">
-                    <input type="email" id="fallback-email-input" placeholder="nhap.email@gmail.com" class="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-smurf-blue font-bold text-slate-700">
-                    <button onclick="submitFallbackEmail()" class="px-3.5 py-2 bg-smurf-blue text-white rounded-xl text-xs font-bold shadow-sm hover:bg-blue-600 active:scale-95 transition-all">Vào Làng</button>
-                </div>
-            </div>
 
             <p class="text-[10px] text-slate-400 font-bold italic mt-0.5">
                 🔒 Đăng nhập bảo mật để tự động nạp hồ sơ thẻ cư dân.
@@ -754,13 +743,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-100px)] min-h-[550px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784808382103');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784811063201');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784808382103" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784811063201" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -970,17 +959,7 @@
                 <input type="hidden" id="user-email" name="email" value=""/>
                 <input type="hidden" id="google-name" name="googleName" value=""/>
 
-                <!-- Banner xác thực Gmail -->
-                <div id="google-auth-status-banner" class="bg-blue-50 border-2 border-blue-200 p-3 rounded-2xl flex items-center justify-between shadow-sm">
-                    <div class="flex items-center gap-2.5">
-                        <span class="material-symbols-outlined text-smurf-blue text-xl">verified_user</span>
-                        <div class="flex flex-col">
-                            <span class="text-[11px] font-bold text-slate-500">Tài Khoản Đăng Nhập</span>
-                            <span class="text-xs font-bold text-smurf-blue truncate max-w-[200px]" id="auth-status-email">Đang xác thực Google...</span>
-                        </div>
-                    </div>
-                    <button type="button" onclick="signOutGoogle()" class="text-[11px] font-bold text-slate-400 hover:text-red-500 underline">Đổi TK</button>
-                </div>
+
 
                 <!-- Section 1: Thông Tin Cá Nhân -->
                 <section class="w-full">
@@ -6296,6 +6275,6 @@
         setupPopupDragToMove();
         setupChatKeyboardHandling();
 
-</script>
+    </script>
 </body>
 </html>
