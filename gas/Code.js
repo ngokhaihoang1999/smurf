@@ -4,7 +4,7 @@
  * 
  * API Endpoints (via doPost / doGet):
  *   action: "register" → Đăng ký cư dân mới (chặn trùng Email/ID)
- *   action: "lookup"   → Tra cứu cư dân theo Email/Gmail hoặc Telegram ID
+ *   action: "lookup"   → Tra cứu cư dân theo Email/Gmail
  *   action: "update"   → Cập nhật thông tin cá nhân (chỉ các cột editable)
  *   action: "listAll"  → Liệt kê toàn bộ cư dân (cho Village Square)
  * 
@@ -83,7 +83,7 @@ function ensureHeaders(sheet) {
   }
 }
 
-// Tìm hàng theo Identifier (Email hoặc Telegram ID) ở cột B (cột 2)
+// Tìm hàng theo Identifier (Email) ở cột B (cột 2)
 function findRowByIdentifier(sheet, idVal) {
   if (!idVal) return -1;
   var lastRow = sheet.getLastRow();
@@ -107,7 +107,7 @@ function rowToObject(sheet, rowNum) {
   // Map header → value
   obj.timestamp = values[0];
   obj.email = String(values[1]);
-  obj.telegramId = String(values[1]); // Alias for compatibility
+
   obj.googleName = values[2];
   obj.googlePicture = values[3];
   obj.smurfName = values[4];
@@ -142,9 +142,9 @@ function handleLookup(data) {
   var sheet = getSheet();
   ensureHeaders(sheet);
   
-  var identifier = data.email || data.telegramId || data.id;
+  var identifier = data.email || data.id;
   if (!identifier) {
-    return { exists: false, error: "Missing email or telegramId" };
+    return { exists: false, error: "Missing email" };
   }
   
   var rowNum = findRowByIdentifier(sheet, identifier);
@@ -163,7 +163,7 @@ function handleRegister(data) {
   var sheet = getSheet();
   ensureHeaders(sheet);
   
-  var identifier = data.email || data.telegramId || data.id;
+  var identifier = data.email || data.id;
   if (!identifier) {
     return { status: "error", message: "Missing email or identifier" };
   }
@@ -225,8 +225,8 @@ function handleRegister(data) {
   sheet.appendRow([
     sanitizeInput(data.timestamp || new Date().toISOString()),
     sanitizeInput(identifier),
-    sanitizeInput(data.googleName || data.telegramUsername || ""),
-    sanitizeInput(data.googlePicture || data.telegramFirstName || ""),
+    sanitizeInput(data.googleName || ""),
+    sanitizeInput(data.googlePicture || ""),
     sanitizeInput(data.smurfName),
     sanitizeInput(data.realName),
     sanitizeInput(data.group),
@@ -260,7 +260,7 @@ function handleRegister(data) {
 function handleUpdate(data) {
   var sheet = getSheet();
   
-  var identifier = data.email || data.telegramId || data.id;
+  var identifier = data.email || data.id;
   if (!identifier) {
     return { status: "error", message: "Missing email or identifier" };
   }
@@ -355,7 +355,7 @@ function doGet(e) {
     
     switch (action) {
       case "lookup":
-        result = handleLookup({ email: e.parameter.email || e.parameter.telegramId || "" });
+        result = handleLookup({ email: e.parameter.email || "" });
         break;
       case "listAll":
         result = handleListAll();
@@ -365,7 +365,7 @@ function doGet(e) {
         break;
       case "sendChat":
         result = handleSendChat({
-          email: e.parameter.email || e.parameter.telegramId || "",
+          email: e.parameter.email || "",
           smurfName: e.parameter.smurfName || "",
           message: e.parameter.message || "",
           mood: e.parameter.mood || ""
@@ -373,13 +373,13 @@ function doGet(e) {
         break;
       case "getReactions":
         result = handleGetReactions({
-          fromEmail: e.parameter.fromEmail || e.parameter.fromTelegramId || ""
+          fromEmail: e.parameter.fromEmail || ""
         });
         break;
       case "updateReaction":
         result = handleUpdateReaction({
-          fromEmail: e.parameter.fromEmail || e.parameter.fromTelegramId || "",
-          targetEmail: e.parameter.targetEmail || e.parameter.telegramId || "",
+          fromEmail: e.parameter.fromEmail || "",
+          targetEmail: e.parameter.targetEmail || e.parameter.email || "",
           smurfName: e.parameter.smurfName || "",
           type: e.parameter.type || "",
           isAdd: e.parameter.isAdd === "true"
@@ -427,7 +427,7 @@ function handleSendChat(data) {
   var sheet = getChatSheet();
   var cleanMsg = sanitizeInput(data.message || "");
   var cleanMood = sanitizeInput(data.mood || "normal");
-  var userKey = sanitizeInput(data.email || data.telegramId || "");
+  var userKey = sanitizeInput(data.email || "");
   
   if (cleanMsg.length > 50) cleanMsg = cleanMsg.substring(0, 50);
   
@@ -458,7 +458,7 @@ function handleGetChat() {
     messages.push({
       timestamp: data[i][0],
       email: data[i][1],
-      telegramId: data[i][1], // Alias
+
       smurfName: data[i][2],
       message: data[i][3],
       mood: data[i][4]
@@ -567,7 +567,7 @@ function handleGetReactions(data) {
   
   var myReactions = {};
   var userActiveArrayMap = {};
-  var fromEmail = data ? String(data.fromEmail || data.fromTelegramId || '').trim() : '';
+  var fromEmail = data ? String(data.fromEmail || '').trim() : '';
   if (fromEmail) {
     var uLast = userVotesSheet.getLastRow();
     if (uLast > 1) {
@@ -600,8 +600,8 @@ function handleGetReactions(data) {
 }
 
 function handleUpdateReaction(data) {
-  var fromEmail = String(data.fromEmail || data.fromTelegramId || '').trim();
-  var targetEmail = String(data.targetEmail || data.telegramId || '').trim();
+  var fromEmail = String(data.fromEmail || '').trim();
+  var targetEmail = String(data.targetEmail || data.email || '').trim();
   var smurfName = data.smurfName || "";
   var rawType = data.type || "like";
   var isAdd = (data.isAdd === true || data.isAdd === "true" || data.isAdd === 1 || data.isAdd === "1");

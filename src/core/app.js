@@ -17,9 +17,6 @@
 
         // ── STATE ──
         let currentUser = null;
-        let telegramId = '';
-        let telegramUsername = '';
-        let telegramFirstName = '';
         let RESIDENTS_DATA = [];
         let activeFilter = 'ALL';
         let searchQuery = '';
@@ -65,7 +62,7 @@
             tryAutoLogin();
         };
 
-        // Helper: Derive unique avatar filename key strictly from Column B Identifier (Gmail Primary Key or Telegram ID)
+        // Helper: Derive unique avatar filename key strictly from Column B Identifier (Gmail Primary Key)
         function getAvatarKeyByIdentifier(rawId) {
             if (!rawId) return 'smurf_basic_placeholder';
             const clean = String(rawId).trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
@@ -86,7 +83,7 @@
 
             // 1. Try finding resident in RESIDENTS_DATA (cached or loaded)
             const foundUser = (Array.isArray(RESIDENTS_DATA) ? RESIDENTS_DATA : []).find(r => 
-                String(r.email || r.telegramId || '').toLowerCase() === currentUserEmail.toLowerCase()
+                String(r.email || '').toLowerCase() === currentUserEmail.toLowerCase()
             );
 
             if (foundUser) {
@@ -116,7 +113,7 @@
             // 3. Background lookup to hydrate profile from GAS silently
             gasRequestJsonp({ action: 'lookup', email: currentUserEmail }, (resp) => {
                 if (resp && resp.exists && resp.data) {
-                    const freshKey = getAvatarKeyByIdentifier(resp.data.email || resp.data.telegramId);
+                    const freshKey = getAvatarKeyByIdentifier(resp.data.email);
                     currentUser = {
                         ...resp.data,
                         avatar: `avatars/avatar_${freshKey}.png`
@@ -252,7 +249,6 @@
         // ── INIT APP (Offline-First & Background Load) ──
         async function initApp() {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('tid')) telegramId = urlParams.get('tid');
 
             // Read saved email and google user info immediately on startup
             const savedEmail = localStorage.getItem('smurf_user_email');
@@ -292,7 +288,7 @@
             if (cachedUser) {
                 try {
                     currentUser = JSON.parse(cachedUser);
-                    if (telegramId) currentUser.telegramId = telegramId;
+                    if (currentUserEmail) currentUser.email = currentUserEmail;
                     if (currentUserEmail) currentUser.email = currentUserEmail;
                     
                     const tab = urlParams.get('tab');
@@ -322,19 +318,18 @@
                             const smurf = (r.smurfName || '').toLowerCase();
                             const real = (r.realName || '').toLowerCase();
                             const grp = (r.group || '').toLowerCase();
-                            const tid = String(r.telegramId || r.email || '');
+                            const tid = String(r.email || '');
                             if (smurf.includes('test') || real.includes('test') || grp.includes('nhóm a') || grp === 'a' || tid === '123456' || tid === '123') {
                                 return false;
                             }
                             return true;
                         })
                         .map(r => {
-                            const rawId = String(r.email || r.telegramId || r.id || '').trim();
+                            const rawId = String(r.email || r.id || '').trim();
                             const userKey = getAvatarKeyByIdentifier(rawId);
 
                             return {
                                 email: r.email || '',
-                                telegramId: r.telegramId || r.email || '',
                                 googleName: r.googleName || '',
                                 smurfName: r.smurfName || '',
                                 realName: r.realName || '',
@@ -373,11 +368,11 @@
                     // Initial render from local cache
                     updateLeaderboard();
 
-                    // Lookup current user in fresh data using Email or Telegram ID
-                    const lookupKey = (currentUserEmail || telegramId).toLowerCase();
+                    // Lookup current user in fresh data using Email
+                    const lookupKey = (currentUserEmail || '').toLowerCase();
                     if (lookupKey) {
                         const foundUser = RESIDENTS_DATA.find(r => 
-                            String(r.email || r.telegramId || '').toLowerCase() === lookupKey
+                            String(r.email || '').toLowerCase() === lookupKey
                         );
                         if (foundUser) {
                             currentUser = foundUser;
@@ -429,18 +424,17 @@
                     const smurf = (r.smurfName || '').toLowerCase();
                     const real = (r.realName || '').toLowerCase();
                     const grp = (r.group || '').toLowerCase();
-                    const tid = String(r.telegramId || r.email || '');
+                    const tid = String(r.email || '');
                     if (smurf.includes('test') || real.includes('test') || grp.includes('nhóm a') || grp === 'a' || tid === '123456' || tid === '123') {
                         return false;
                     }
                     return true;
                 })
                 .map(r => {
-                    const rawId = String(r.email || r.telegramId || r.id || '').trim();
+                    const rawId = String(r.email || r.id || '').trim();
                     const userKey = getAvatarKeyByIdentifier(rawId);
                     return {
                         email: r.email || '',
-                        telegramId: r.telegramId || r.email || '',
                         googleName: r.googleName || '',
                         smurfName: r.smurfName || '',
                         realName: r.realName || '',
@@ -475,10 +469,10 @@
             renderGrid();
 
             // Re-lookup current user in fresh data
-            const lookupKey = (currentUserEmail || telegramId || '').toLowerCase();
+            const lookupKey = (currentUserEmail || '').toLowerCase();
             if (lookupKey) {
                 const foundUser = RESIDENTS_DATA.find(r => 
-                    String(r.email || r.telegramId || '').toLowerCase() === lookupKey
+                    String(r.email || '').toLowerCase() === lookupKey
                 );
                 if (foundUser) {
                     currentUser = foundUser;
@@ -520,7 +514,7 @@
         function updateHeaderBadge() {
             const usernameSpan = document.getElementById('header-username');
             if (usernameSpan) {
-                usernameSpan.textContent = telegramUsername || telegramFirstName || (currentUser ? currentUser.smurfName : 'Khách');
+                usernameSpan.textContent = currentGoogleName || (currentUser ? currentUser.smurfName : 'Khách');
             }
         }
 
@@ -604,7 +598,7 @@
             updateHeaderBadge();
             const d = currentUser;
             if (!d) return;
-            const userKey = getAvatarKeyByIdentifier(d.email || d.telegramId || telegramId);
+            const userKey = getAvatarKeyByIdentifier(d.email);
             const avatarUrl = (d.avatar ? d.avatar.split('?')[0] : `avatars/avatar_${userKey}.png`) + '?v=' + Date.now();
             
             // Re-render elements for the vertical card face (back)
@@ -674,10 +668,7 @@
         function setupRegistrationForm() {
             if (document.getElementById('user-email')) document.getElementById('user-email').value = currentUserEmail;
             if (document.getElementById('google-name')) document.getElementById('google-name').value = currentGoogleName;
-            // Inject Telegram ID into form fields
-            if (document.getElementById('telegram-id')) document.getElementById('telegram-id').value = telegramId;
-            if (document.getElementById('telegram-username')) document.getElementById('telegram-username').value = telegramUsername;
-            if (document.getElementById('telegram-first-name')) document.getElementById('telegram-first-name').value = telegramFirstName;
+
             
             updateGoogleAuthBanner();
             setupCharCounters();
@@ -906,10 +897,9 @@
             const data = { action: 'register' };
             formData.forEach((value, key) => { data[key] = value; });
 
-            // Ensure email and telegramId are always populated for 100% GAS compatibility
-            const userIdentifier = data.email || currentUserEmail || telegramId || ('user_' + Date.now());
+            // Ensure email is always populated
+            const userIdentifier = data.email || currentUserEmail || ('user_' + Date.now());
             data.email = userIdentifier;
-            data.telegramId = userIdentifier;
             data.id = userIdentifier;
             data.googleName = data.googleName || currentGoogleName || data.smurfName || '';
 
@@ -965,11 +955,10 @@
             const saveBtn = document.getElementById('edit-save-btn');
             saveBtn.disabled = true; saveBtn.style.opacity = '0.7';
 
-            const userKey = currentUser ? (currentUser.email || currentUser.telegramId) : (currentUserEmail || telegramId);
+            const userKey = currentUser ? currentUser.email : currentUserEmail;
             const data = {
                 action: 'update',
                 email: userKey,
-                telegramId: userKey,
                 smurfName: document.getElementById('edit-smurf-name').value,
                 realName: document.getElementById('edit-real-name').value,
                 group: document.getElementById('edit-group').value,
@@ -1124,27 +1113,11 @@
         ];
 
         function showWishingWellMessage() {
-            if (tg?.showPopup) {
-                tg.showPopup({
-                    title: '⛲ Giếng Ước Nguyện',
-                    message: 'Giếng nước cổ kính của Làng Xì Trum. Nghe nói ném một đồng xu vàng vào đây sẽ mang lại may mắn lớn!',
-                    buttons: [{ type: 'ok', text: 'Tuyệt vời!' }]
-                });
-            } else {
-                alert('⛲ Giếng nước cổ kính của Làng Xì Trum. Nghe nói ném một đồng xu vàng vào đây sẽ mang lại may mắn lớn!');
-            }
+            alert('⛲ Giếng nước cổ kính của Làng Xì Trum. Nghe nói ném một đồng xu vàng vào đây sẽ mang lại may mắn lớn!');
         }
 
         function showGateMessage() {
-            if (tg?.showPopup) {
-                tg.showPopup({
-                    title: '🚧 Cổng Chào Làng Xì Trum',
-                    message: 'Chào mừng các cư dân và khách ghé thăm Làng Xì Trum đáng yêu!',
-                    buttons: [{ type: 'ok', text: 'Vào Làng thôi!' }]
-                });
-            } else {
-                alert('🚧 Chào mừng các cư dân và khách ghé thăm Làng Xì Trum đáng yêu!');
-            }
+            alert('🚧 Chào mừng các cư dân và khách ghé thăm Làng Xì Trum đáng yêu!');
         }
 
         function renderMapLandmarks() {
@@ -1321,10 +1294,6 @@
                         }, 300);
                     }, 2500);
                     
-                    // 4. Haptic Feedback
-                    if (tg?.HapticFeedback) {
-                        tg.HapticFeedback.impactOccurred('medium');
-                    }
                 };
                 
                 el.innerHTML = `
@@ -1826,6 +1795,12 @@
         }
 
         // ── VILLAGE GRID & FILTER LOGIC ──
+        function getResidentKey(r) {
+            if (!r) return '';
+            if (typeof r === 'string') return r.trim().toLowerCase();
+            return String(r.email || r.id || r.smurfName || '').trim().toLowerCase();
+        }
+
         function renderGrid() {
             const grid = document.getElementById('residents-grid');
             if (!grid) return;
@@ -2634,7 +2609,7 @@
             // Show devtools gear only if user is developer (ID: 1539535605) or running on localhost
             const devFab = document.getElementById('popup-devtools-fab');
             if (devFab) {
-                if (String(telegramId) === '1539535605' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                     devFab.classList.remove('hidden');
                 } else {
                     devFab.classList.add('hidden');
@@ -3178,9 +3153,9 @@
 
         function getDailyTeaching() {
             let seed = Date.now();
-            if (telegramId) {
+            if (currentUserEmail) {
                 const today = new Date().toDateString();
-                const str = today + String(telegramId);
+                const str = today + currentUserEmail;
                 let hash = 0;
                 for (let i = 0; i < str.length; i++) {
                     hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -3237,7 +3212,7 @@
             
             // 40% chance of adding a dynamic networking target if there are other residents
             if (RESIDENTS_DATA.length > 1 && currentUser && (seed % 10) < 4) {
-                const others = RESIDENTS_DATA.filter(r => String(r.telegramId) !== String(currentUser.telegramId));
+                const others = RESIDENTS_DATA.filter(r => r.email !== currentUser.email);
                 if (others.length > 0) {
                     const targetSmurf = others[seed % others.length];
                     return {
@@ -3325,10 +3300,6 @@
             }, 10);
             
             startConfetti();
-            
-            if (tg?.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred('success');
-            }
         }
 
         function closeFortuneModal() {
@@ -3377,7 +3348,7 @@
 
         function downloadPortraitAvatar() {
             if (!currentUser) return;
-            const userKey = getAvatarKeyByIdentifier(currentUser.email || currentUser.telegramId);
+            const userKey = getAvatarKeyByIdentifier(currentUser.email);
             const avatarUrl = `avatars/avatar_${userKey}.png`;
             showImageForDownload(avatarUrl, `avatar_${userKey}.png`);
         }
@@ -3393,7 +3364,7 @@
 
             // Populate the modal with the current user's details first
             const item = currentUser;
-            const userKey = getAvatarKeyByIdentifier(item.email || item.telegramId);
+            const userKey = getAvatarKeyByIdentifier(item.email);
             const avatarUrl = item.avatar || `avatars/avatar_${userKey}.png`;
             
             // Resolve fallbacks for property name formats (API vs cache)
@@ -3582,7 +3553,7 @@
         function getSocialKey(r) {
             if (!r) return '';
             if (typeof r === 'string') return r.trim().toLowerCase();
-            return String(r.email || r.telegramId || r.id || '').trim().toLowerCase();
+            return String(r.email || r.id || '').trim().toLowerCase();
         }
 
         function getSocialData(key) {
@@ -3617,10 +3588,9 @@
             
             // If key belongs to a resident in RESIDENTS_DATA, mirror under aliases as well
             if (Array.isArray(RESIDENTS_DATA)) {
-                const r = RESIDENTS_DATA.find(res => getSocialKey(res) === cleanKey || String(res.telegramId).toLowerCase() === cleanKey || String(res.email).toLowerCase() === cleanKey);
+                const r = RESIDENTS_DATA.find(res => getSocialKey(res) === cleanKey || String(res.email).toLowerCase() === cleanKey);
                 if (r) {
                     if (r.email) db[String(r.email).toLowerCase()] = data;
-                    if (r.telegramId) db[String(r.telegramId).toLowerCase()] = data;
                 }
             }
             
@@ -3628,7 +3598,7 @@
         }
 
         // ── HIGH-PERFORMANCE, SCALABLE EMOJI REACTION SYSTEM ──
-        let reactionQueue = {};       // key: targetId_type -> { activeFromId, telegramId, smurfName, type, isAdd }
+        let reactionQueue = {};       // key: targetId_type -> { activeFromId, email, smurfName, type, isAdd }
         let reactionSyncTimer = null;
         let isSyncingReactions = false;
 
@@ -3641,8 +3611,8 @@
             const isVillageActive = villageView && !villageView.classList.contains('hidden');
             if (!isVillageActive && !activeModalItem) return;
             
-            const activeFromId = telegramId || (currentUser ? String(currentUser.email || currentUser.telegramId || '') : '') || getDeviceId();
-            gasRequestJsonp({ action: 'getReactions', fromTelegramId: activeFromId }, (reactResp) => {
+            const activeFromId = currentUser ? String(currentUser.email || '') : currentUserEmail || getDeviceId();
+            gasRequestJsonp({ action: 'getReactions', fromEmail: activeFromId }, (reactResp) => {
                 if (reactResp && reactResp.status === 'success') {
                     let db = {};
                     try {
@@ -3659,7 +3629,7 @@
                             
                             const counts = serverReactions[sKey] || 
                                            serverReactions[String(r.email || '').toLowerCase()] || 
-                                           serverReactions[String(r.telegramId || '').toLowerCase()] || {};
+                                           serverReactions[String(r.email || '').toLowerCase()] || {};
                                            
                             const existing = db[sKey] || {};
                             const l = Number(counts.likes ?? counts.heart ?? counts.like ?? existing.likes ?? 0);
@@ -3670,7 +3640,6 @@
                             const itemData = { likes: l, funnys: f, stars: s, cools: c, comments: existing.comments || [] };
                             db[sKey] = itemData;
                             if (r.email) db[String(r.email).toLowerCase()] = itemData;
-                            if (r.telegramId) db[String(r.telegramId).toLowerCase()] = itemData;
                         });
                     }
                     
@@ -3697,7 +3666,7 @@
         }
 
         function loadSocialData() {
-            const targetId = String(activeModalItem?.telegramId || activeModalItem?.email || '').trim();
+            const targetId = String(activeModalItem?.email || '').trim();
             if (!targetId) return;
             
             const data = getSocialData(targetId);
@@ -3754,10 +3723,10 @@
         }
 
         function reactToResident(type) {
-            const targetId = String(activeModalItem?.telegramId || activeModalItem?.email || '').trim();
+            const targetId = String(activeModalItem?.email || '').trim();
             if (!targetId) return;
             
-            const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
+            const activeFromId = currentUser ? String(currentUser.email || '') : currentUserEmail || getDeviceId();
             if (!activeFromId) {
                 alert("📢 Không tìm thấy ID định danh để thực hiện tương tác!");
                 return;
@@ -3798,14 +3767,12 @@
             loadSocialData();
             updateLeaderboard();
             
-            if (window.Telegram?.WebApp?.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-            }
+
             
             // 2. QUEUE & DEBOUNCE ASYNC SERVER SYNC (Prevents API spamming & lag)
             reactionQueue[reactionKey] = {
                 activeFromId: activeFromId,
-                telegramId: targetId,
+                email: targetId,
                 smurfName: activeModalItem?.smurfName || '',
                 type: shortType,
                 isAdd: nextIsAdd
@@ -3828,15 +3795,15 @@
             
             gasRequestJsonp({
                 action: 'updateReaction',
-                fromTelegramId: item.activeFromId,
-                telegramId: item.telegramId,
+                fromEmail: item.activeFromId,
+                email: item.email,
                 smurfName: item.smurfName,
                 type: item.type,
                 isAdd: item.isAdd
             }, (reactResp) => {
                 isSyncingReactions = false;
                 if (reactResp && reactResp.status === 'success') {
-                    const tid = item.telegramId;
+                    const tid = item.email;
                     const latestData = getSocialData(tid);
                     const counts = reactResp.counts || reactResp;
                     if (typeof counts.likes === 'number') latestData.likes = counts.likes;
@@ -3939,7 +3906,7 @@
             }
 
             // Calculate scores for all other residents
-            const matches = RESIDENTS_DATA.filter(r => String(r.telegramId) !== String(currentUser.telegramId))
+            const matches = RESIDENTS_DATA.filter(r => r.email !== currentUser.email)
                 .map(target => {
                     let score = 10; // Baseline vibe is 10%
                     
@@ -4054,10 +4021,6 @@
             if (vibeModal) {
                 vibeModal.classList.remove('hidden');
                 vibeModal.classList.add('flex');
-            }
-            
-            if (tg?.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred('success');
             }
         }
 
@@ -4275,15 +4238,7 @@
                 }
             }
             
-            if (tg?.HapticFeedback) {
-                if (mood === 'earthquake') {
-                    tg.HapticFeedback.notificationOccurred('error');
-                } else if (mood === 'lightning') {
-                    tg.HapticFeedback.notificationOccurred('warning');
-                } else {
-                    tg.HapticFeedback.impactOccurred('medium');
-                }
-            }
+
             
             // Reset to normal after exactly 5 seconds
             if (effectTimeoutId) clearTimeout(effectTimeoutId);
@@ -4359,7 +4314,7 @@
                 }
             }
             
-            const telegramId = currentUser ? currentUser.telegramId : '';
+            const userEmail = currentUser ? currentUser.email : currentUserEmail;
             const smurfName = currentUser ? currentUser.smurfName : 'Khách Ghé Chơi';
             
             // optimistic local append
@@ -4368,7 +4323,7 @@
                 smurfName: smurfName,
                 message: message,
                 mood: activeMood,
-                telegramId: telegramId
+                email: userEmail
             });
             
             input.value = '';
@@ -4389,12 +4344,8 @@
             
             const script = document.createElement('script');
             script.id = callbackName;
-            script.src = `${GAS_WEBAPP_URL}?action=sendChat&telegramId=${encodeURIComponent(telegramId)}&smurfName=${encodeURIComponent(smurfName)}&message=${encodeURIComponent(message)}&mood=${encodeURIComponent(activeMood)}&callback=${callbackName}`;
+            script.src = `${GAS_WEBAPP_URL}?action=sendChat&email=${encodeURIComponent(userEmail)}&smurfName=${encodeURIComponent(smurfName)}&message=${encodeURIComponent(message)}&mood=${encodeURIComponent(activeMood)}&callback=${callbackName}`;
             document.body.appendChild(script);
-            
-            if (tg?.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred('success');
-            }
         }
 
         function appendLocalChatMessage(msg) {
@@ -4402,7 +4353,7 @@
             const emptyState = document.getElementById('chat-empty-state');
             if (emptyState) emptyState.style.display = 'none';
             
-            const isOwn = currentUser && (String(msg.telegramId) === String(currentUser.telegramId));
+            const isOwn = currentUser && (String(msg.email) === String(currentUser.email));
             
             // Map mood styles
             let effectClass = '';
