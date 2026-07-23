@@ -1382,6 +1382,7 @@
             closeEditSheet();
             showView('village');
             updateNavActive('nav-item-village');
+            updateLeaderboard();
             renderGrid();
         }
 
