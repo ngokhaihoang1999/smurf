@@ -236,7 +236,20 @@
                             return true;
                         })
                         .map(r => {
-                            const userKey = r.email || r.telegramId || '';
+                            let userKey = String(r.email || r.telegramId || '').trim();
+                            const rEmail = (r.email || '').toLowerCase();
+                            const rName = (r.realName || '').toLowerCase();
+                            const rTid = String(r.telegramId || '');
+
+                            // Explicit Avatar Mapping for 100% Reliability
+                            if (rEmail.includes('yenchinguyen') || rTid === '5538099304' || rName.includes('hồng trúc') || rName.includes('hong truc')) {
+                                userKey = '5538099304';
+                            } else if (rEmail.includes('ngokhaihoang') || rTid === '1539535605') {
+                                userKey = 'ngokhaihoang1999_gmail_com';
+                            } else {
+                                userKey = userKey.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_');
+                            }
+
                             return {
                                 email: r.email || '',
                                 telegramId: r.telegramId || r.email || '',
