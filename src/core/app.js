@@ -19,6 +19,7 @@
         let currentUser = null;
         let RESIDENTS_DATA = [];
         let activeFilter = 'ALL';
+        let currentVillageFilter = 'ALL';
         let searchQuery = '';
         let filteredResidentsList = [];
 
@@ -1855,59 +1856,80 @@
             const grid = document.getElementById('residents-grid');
             if (!grid) return;
 
-            const activeFilter = currentVillageFilter || 'ALL';
-            filteredResidentsList = RESIDENTS_DATA.filter(item => {
-                let matchesFilter = true;
-                if (activeFilter !== 'ALL') {
-                    matchesFilter = (item.group || '').toUpperCase().trim() === activeFilter.toUpperCase().trim();
-                }
-                let matchesSearch = true;
-                if (searchQuery.trim() !== '') {
-                    const q = searchQuery.toLowerCase().trim();
-                    matchesSearch = (item.smurfName || '').toLowerCase().includes(q) ||
-                                    (item.realName || '').toLowerCase().includes(q) ||
-                                    (item.group || '').toLowerCase().includes(q) ||
-                                    (item.tinhCach || '').toLowerCase().includes(q) ||
-                                    (item.soThich || '').toLowerCase().includes(q);
-                }
-                return matchesFilter && matchesSearch;
-            });
+            try {
+                const activeFilter = (currentVillageFilter || 'ALL').toUpperCase().trim();
+                const q = (searchQuery || '').toLowerCase().trim();
 
-            const countEl = document.getElementById('resident-count');
-            if (countEl) countEl.textContent = filteredResidentsList.length;
+                filteredResidentsList = (Array.isArray(RESIDENTS_DATA) ? RESIDENTS_DATA : []).filter(item => {
+                    if (!item) return false;
+                    let matchesFilter = true;
+                    if (activeFilter !== 'ALL') {
+                        matchesFilter = String(item.group || '').toUpperCase().trim() === activeFilter;
+                    }
+                    let matchesSearch = true;
+                    if (q !== '') {
+                        const smurf = String(item.smurfName || '').toLowerCase();
+                        const real = String(item.realName || '').toLowerCase();
+                        const grp = String(item.group || '').toLowerCase();
+                        const tc = String(item.tinhCach || item.personality || '').toLowerCase();
+                        const st = String(item.soThich || item.hobbies || '').toLowerCase();
+                        matchesSearch = smurf.includes(q) || real.includes(q) || grp.includes(q) || tc.includes(q) || st.includes(q);
+                    }
+                    return matchesFilter && matchesSearch;
+                });
 
-            if (filteredResidentsList.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 font-bold">Không tìm thấy cư dân nào...</div>`;
-                return;
+                const countEl = document.getElementById('resident-count');
+                if (countEl) countEl.textContent = filteredResidentsList.length;
+
+                if (filteredResidentsList.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 font-bold">Không tìm thấy cư dân nào...</div>`;
+                    return;
+                }
+
+                const fragment = document.createDocumentFragment();
+                filteredResidentsList.forEach(item => {
+                    try {
+                        const cardEl = document.createElement('div');
+                        cardEl.className = 'w-full max-w-[260px] bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200/80 cursor-pointer hover:shadow-lg transition-all flex flex-col active:scale-95';
+                        const key = getResidentKey(item);
+                        cardEl.setAttribute('data-resident-key', key);
+                        cardEl.onclick = function() { openModal(key, this); };
+
+                        const rawTinhCach = String(item.tinhCach || item.personality || '');
+                        const rawSoThich = String(item.soThich || item.hobbies || '');
+
+                        const firstPersonality = rawTinhCach ? rawTinhCach.split(',')[0].trim() : '';
+                        const formattedPersonality = typeof formatEnneagramText === 'function' ? formatEnneagramText(firstPersonality) : firstPersonality;
+                        const formattedHobby = rawSoThich ? rawSoThich.split(',')[0].trim() : '';
+
+                        const displayName = item.realName || item.smurfName || 'Cư dân Xì Trum';
+                        const displayGroup = item.group || 'Cư dân';
+                        const avatarUrl = item.avatar || 'avatars/smurf_basic_placeholder.png';
+
+                        cardEl.innerHTML = `
+                            <div class="w-full relative overflow-hidden bg-sky-50" style="aspect-ratio: 3/4;">
+                                <img src="${avatarUrl}" alt="${displayName}" class="w-full h-full object-cover" style="object-position: center top;" loading="lazy" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                            </div>
+                            <div class="w-full py-2.5 px-3 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 62px;">
+                                <div class="flex justify-between items-start w-full gap-1">
+                                    <span class="font-bold text-[12px] text-slate-800 leading-snug block break-words flex-1">${displayName}</span>
+                                    <span class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase shrink-0 mt-0.5">${displayGroup}</span>
+                                </div>
+                                <div class="text-[10px] text-slate-400 font-bold mt-1 leading-tight truncate">
+                                    ${formattedHobby}${formattedPersonality ? (formattedHobby ? ' • ' : '') + formattedPersonality : ''}
+                                </div>
+                            </div>
+                        `;
+                        fragment.appendChild(cardEl);
+                    } catch(err) {
+                        console.error('Error rendering individual card:', err, item);
+                    }
+                });
+                grid.innerHTML = '';
+                grid.appendChild(fragment);
+            } catch(err) {
+                console.error('Error rendering grid:', err);
             }
-
-            const fragment = document.createDocumentFragment();
-            filteredResidentsList.forEach(item => {
-                const cardEl = document.createElement('div');
-                cardEl.className = 'card-scene smurf-card flex flex-col overflow-hidden';
-                const key = getResidentKey(item);
-                cardEl.setAttribute('data-resident-key', key);
-                cardEl.onclick = function() { openModal(key, this); };
-                const formattedPersonality = formatEnneagramText(item.tinhCach ? item.tinhCach.split(',')[0] : '');
-                const formattedHobby = item.soThich ? item.soThich.split(',')[0] : '';
-                cardEl.innerHTML = `
-                    <div class="w-full relative overflow-hidden" style="aspect-ratio: 3/4;">
-                        <img src="${item.avatar}" alt="Avatar" class="w-full h-full object-cover" style="object-position: center top;" loading="lazy" onerror="this.src='avatars/smurf_basic_placeholder.png'">
-                    </div>
-                    <div class="w-full py-2.5 px-3 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 62px;">
-                        <div class="flex justify-between items-start w-full gap-1">
-                            <span class="font-bold text-[12px] text-slate-800 leading-snug block break-words flex-1">${item.realName}</span>
-                            <span class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase shrink-0 mt-0.5">${item.group}</span>
-                        </div>
-                        <div class="text-[10px] text-slate-400 font-bold mt-1 leading-tight">
-                            ${formattedHobby}${formattedPersonality ? (formattedHobby ? ' • ' : '') + formattedPersonality : ''}
-                        </div>
-                    </div>
-                `;
-                fragment.appendChild(cardEl);
-            });
-            grid.innerHTML = '';
-            grid.appendChild(fragment);
         }
 
         function filterResidentsByGroup(filter) {
@@ -1925,6 +1947,10 @@
 
             renderGrid();
         }
+
+        window.setFilter = function(filterGroup) {
+            filterResidentsByGroup(filterGroup);
+        };
 
         function filterResidents() {
             searchQuery = document.getElementById('search-input')?.value || '';
