@@ -62,6 +62,28 @@
             updateGoogleAuthBanner();
             updateHeaderBadge();
 
+            tryAutoLogin();
+        };
+
+        // Helper: Derive unique avatar filename key strictly from Column B Identifier (Gmail Primary Key or Telegram ID)
+        function getAvatarKeyByIdentifier(rawId) {
+            if (!rawId) return 'smurf_basic_placeholder';
+            const clean = String(rawId).trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+            // Legacy alias mappings to ensure older device/script links resolve to correct file
+            if (clean === '5538099304') return 'yenchinguyen1012_gmail_com';
+            if (clean === '1539535605') return 'ngokhaihoang1999_gmail_com';
+            return clean;
+        }
+
+        // ── AUTO LOGIN & DATA HYDRATION ──
+        function tryAutoLogin() {
+            const currentUserEmail = localStorage.getItem('smurf_user_email');
+            if (!currentUserEmail) {
+                showView('register');
+                setupRegistrationForm();
+                return;
+            }
+
             // Lookup resident in local RESIDENTS_DATA or via GAS
             const foundUser = RESIDENTS_DATA.find(r => 
                 String(r.email || r.telegramId || '').toLowerCase() === currentUserEmail.toLowerCase()
@@ -74,9 +96,10 @@
             } else {
                 gasRequestJsonp({ action: 'lookup', email: currentUserEmail }, (resp) => {
                     if (resp && resp.exists && resp.data) {
+                        const userKey = getAvatarKeyByIdentifier(resp.data.email || resp.data.telegramId);
                         currentUser = {
                             ...resp.data,
-                            avatar: `avatars/avatar_${resp.data.email || resp.data.telegramId}.png?v=` + Date.now()
+                            avatar: `avatars/avatar_${userKey}.png?v=` + Date.now()
                         };
                         localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                         showHomeTab();
@@ -236,19 +259,8 @@
                             return true;
                         })
                         .map(r => {
-                            let userKey = String(r.email || r.telegramId || '').trim();
-                            const rEmail = (r.email || '').toLowerCase();
-                            const rName = (r.realName || '').toLowerCase();
-                            const rTid = String(r.telegramId || '');
-
-                            // Explicit Avatar Mapping for 100% Reliability
-                            if (rEmail.includes('yenchinguyen') || rTid === '5538099304' || rName.includes('hồng trúc') || rName.includes('hong truc')) {
-                                userKey = '5538099304';
-                            } else if (rEmail.includes('ngokhaihoang') || rTid === '1539535605') {
-                                userKey = 'ngokhaihoang1999_gmail_com';
-                            } else {
-                                userKey = userKey.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_');
-                            }
+                            const rawId = String(r.email || r.telegramId || r.id || '').trim();
+                            const userKey = getAvatarKeyByIdentifier(rawId);
 
                             return {
                                 email: r.email || '',
@@ -445,7 +457,7 @@
             updateHeaderBadge();
             const d = currentUser;
             if (!d) return;
-            const userKey = (d.email || d.telegramId || telegramId || '').replace(/[^a-zA-Z0-9]/g, '_');
+            const userKey = getAvatarKeyByIdentifier(d.email || d.telegramId || telegramId);
             const avatarUrl = (d.avatar ? d.avatar.split('?')[0] : `avatars/avatar_${userKey}.png`) + '?v=' + Date.now();
             
             // Re-render elements for the vertical card face (back)
@@ -3181,8 +3193,9 @@
 
         function downloadPortraitAvatar() {
             if (!currentUser) return;
-            const avatarUrl = `avatars/avatar_${currentUser.telegramId}.png`;
-            showImageForDownload(avatarUrl, `avatar_${currentUser.smurfName}.png`);
+            const userKey = getAvatarKeyByIdentifier(currentUser.email || currentUser.telegramId);
+            const avatarUrl = `avatars/avatar_${userKey}.png`;
+            showImageForDownload(avatarUrl, `avatar_${userKey}.png`);
         }
 
         function downloadResidentCard() {
@@ -3196,7 +3209,8 @@
 
             // Populate the modal with the current user's details first
             const item = currentUser;
-            const avatarUrl = item.avatar || `avatars/avatar_${item.telegramId}.png`;
+            const userKey = getAvatarKeyByIdentifier(item.email || item.telegramId);
+            const avatarUrl = item.avatar || `avatars/avatar_${userKey}.png`;
             
             // Resolve fallbacks for property name formats (API vs cache)
             const hobbiesText = formatEnneagramText(item.hobbies || item.soThich || 'Cư dân');
