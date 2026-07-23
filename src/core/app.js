@@ -1681,32 +1681,39 @@
         function renderGrid() {
             const grid = document.getElementById('residents-grid');
             if (!grid) return;
-            grid.innerHTML = '';
-            
-            updateLeaderboard();
-            
-            const filtered = RESIDENTS_DATA.filter(item => {
-                const matchesSearch = item.smurfName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                      item.realName.toLowerCase().includes(searchQuery.toLowerCase());
-                
-                let matchesGroup = true;
+
+            const activeFilter = currentVillageFilter || 'ALL';
+            filteredResidentsList = RESIDENTS_DATA.filter(item => {
+                let matchesFilter = true;
                 if (activeFilter !== 'ALL') {
-                    matchesGroup = (item.group || '').toUpperCase().trim() === activeFilter.toUpperCase().trim();
+                    matchesFilter = (item.group || '').toUpperCase().trim() === activeFilter.toUpperCase().trim();
                 }
-                
-                return matchesSearch && matchesGroup;
+                let matchesSearch = true;
+                if (searchQuery.trim() !== '') {
+                    const q = searchQuery.toLowerCase().trim();
+                    matchesSearch = (item.smurfName || '').toLowerCase().includes(q) ||
+                                    (item.realName || '').toLowerCase().includes(q) ||
+                                    (item.group || '').toLowerCase().includes(q) ||
+                                    (item.tinhCach || '').toLowerCase().includes(q) ||
+                                    (item.soThich || '').toLowerCase().includes(q);
+                }
+                return matchesFilter && matchesSearch;
             });
 
-            if (filtered.length === 0) {
+            const countEl = document.getElementById('resident-count');
+            if (countEl) countEl.textContent = filteredResidentsList.length;
+
+            if (filteredResidentsList.length === 0) {
                 grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 font-bold">Không tìm thấy cư dân nào...</div>`;
                 return;
             }
 
             const fragment = document.createDocumentFragment();
-            filtered.forEach(item => {
+            filteredResidentsList.forEach(item => {
                 const cardEl = document.createElement('div');
                 cardEl.className = 'card-scene smurf-card flex flex-col overflow-hidden';
-                cardEl.onclick = function() { openModal(item.smurfName, this); };
+                const key = getResidentKey(item);
+                cardEl.onclick = function() { openModal(key, this); };
                 const formattedPersonality = formatEnneagramText(item.tinhCach ? item.tinhCach.split(',')[0] : '');
                 const formattedHobby = item.soThich ? item.soThich.split(',')[0] : '';
                 cardEl.innerHTML = `
@@ -1725,12 +1732,12 @@
                 `;
                 fragment.appendChild(cardEl);
             });
+            grid.innerHTML = '';
             grid.appendChild(fragment);
-            filteredResidentsList = filtered;
         }
 
-        function setFilter(filter) {
-            activeFilter = filter;
+        function filterResidentsByGroup(filter) {
+            currentVillageFilter = filter;
             
             // Update active state on group filter pill buttons
             const pills = document.querySelectorAll('#village-group-pills button');
@@ -1769,35 +1776,30 @@
             const r2 = scored[1] || null;
             const r3 = scored[2] || null;
 
-            // Load interactive Tuner Config from localStorage if customized (Defaulted to 3:4 Rectangular Card Specs with Avatar Offset X, Y)
+            // Load interactive Tuner Config from localStorage if customized
             const tc = JSON.parse(localStorage.getItem('smurf_tuner_config') || 'null') || {
                 t1_w: 115, t1_a: 84, t1_x: 0, t1_y: 0, t1_ax: 0, t1_ay: 0,
                 t2_w: 96,  t2_a: 70, t2_x: 0, t2_y: 0, t2_ax: 0, t2_ay: 0,
                 t3_w: 96,  t3_a: 70, t3_x: 0, t3_y: 0, t3_ax: 0, t3_ay: 0
             };
 
-            // Calculate 3:4 vertical dimensions
-            const t1_cw = tc.t1_a, t1_ch = Math.round(tc.t1_a * 4 / 3);
-            const t1_ww = tc.t1_w, t1_wh = Math.round(tc.t1_w * 4 / 3);
-            const t1_bw = Math.max(t1_cw, t1_ww), t1_bh = Math.max(t1_ch, t1_wh);
-
-            const t2_cw = tc.t2_a, t2_ch = Math.round(tc.t2_a * 4 / 3);
-            const t2_ww = tc.t2_w, t2_wh = Math.round(tc.t2_w * 4 / 3);
-            const t2_bw = Math.max(t2_cw, t2_ww), t2_bh = Math.max(t2_ch, t2_wh);
-
-            const t3_a = tc.t3_a || tc.t2_a || 70;
-            const t3_w = tc.t3_w || tc.t2_w || 96;
-            const t3_cw = t3_a, t3_ch = Math.round(t3_a * 4 / 3);
-            const t3_ww = t3_w, t3_wh = Math.round(t3_w * 4 / 3);
-            const t3_bw = Math.max(t3_cw, t3_ww), t3_bh = Math.max(t3_ch, t3_wh);
+            const t1_ww = tc.t1_w; const t1_wh = Math.round(tc.t1_w * 4 / 3);
+            const t1_cw = tc.t1_a; const t1_ch = Math.round(tc.t1_a * 4 / 3); const t1_bw = Math.max(t1_ww, t1_cw); const t1_bh = Math.max(t1_wh, t1_ch);
+            
+            const t2_ww = tc.t2_w; const t2_wh = Math.round(tc.t2_w * 4 / 3);
+            const t2_cw = tc.t2_a; const t2_ch = Math.round(tc.t2_a * 4 / 3); const t2_bw = Math.max(t2_ww, t2_cw); const t2_bh = Math.max(t2_wh, t2_ch);
+            
+            const t3_ww = tc.t3_w; const t3_wh = Math.round(tc.t3_w * 4 / 3);
+            const t3_cw = tc.t3_a; const t3_ch = Math.round(tc.t3_a * 4 / 3); const t3_bw = Math.max(t3_ww, t3_cw); const t3_bh = Math.max(t3_wh, t3_ch);
 
             if (stage) {
                 let html = '';
 
                 // Rank 2 (Silver - Left, 3:4 Vertical Card with Avatar X, Y controls)
                 if (r2) {
+                    const k2 = getResidentKey(r2);
                     html += `
-                        <div onclick="openModal('${r2.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
+                        <div onclick="openModal('${k2}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
                             <span class="text-[9px] bg-slate-200/90 text-slate-700 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 2</span>
                             <div class="relative flex items-center justify-center" style="width: ${t2_bw}px; height: ${t2_bh}px;">
                                 <!-- Inner 3:4 Vertical Resident Card with Offset X, Y -->
@@ -1817,8 +1819,9 @@
 
                 // Rank 1 (Gold - Center, Tallest & Crown, 3:4 Vertical Card with Avatar X, Y controls)
                 if (r1) {
+                    const k1 = getResidentKey(r1);
                     html += `
-                        <div onclick="openModal('${r1.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[130px] z-20 -mt-2">
+                        <div onclick="openModal('${k1}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[130px] z-20 -mt-2">
                             <div class="relative flex flex-col items-center w-full">
                                 <img src="src/assets/smurf_crown_gold.png" class="w-8 h-8 object-contain absolute -top-5 z-30 animate-bounce filter drop-shadow-sm" style="animation-duration: 2.2s;" alt="Gold Crown">
                                 <span class="text-[9px] bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-white px-2.5 py-0.5 rounded-full font-extrabold z-20 shadow-md uppercase tracking-wider mb-1 mt-1">TOP 1</span>
@@ -1841,10 +1844,11 @@
 
                 // Rank 3 (Bronze - Right, 3:4 Vertical Card with Avatar X, Y controls)
                 if (r3) {
+                    const k3 = getResidentKey(r3);
                     const x3 = tc.t3_x || 0;
                     const y3 = tc.t3_y || 0;
                     html += `
-                        <div onclick="openModal('${r3.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
+                        <div onclick="openModal('${k3}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
                             <span class="text-[9px] bg-amber-100/90 text-amber-800 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 3</span>
                             <div class="relative flex items-center justify-center" style="width: ${t3_bw}px; height: ${t3_bh}px;">
                                 <!-- Inner 3:4 Vertical Resident Card with Offset X, Y -->
@@ -1864,7 +1868,6 @@
 
                 stage.innerHTML = html;
             }
-        }
 
         // ── 3D DETAIL CARD FLIP & ASPECT MORPH LOGIC ──
         let modalFlipped = false;
@@ -2340,13 +2343,14 @@
             }
         }
 
-        function openModal(smurfName, clickedElement) {
+        function openModal(identifier, clickedElement) {
             if (closeTimeoutId) {
                 clearTimeout(closeTimeoutId);
                 closeTimeoutId = null;
             }
             
-            const item = RESIDENTS_DATA.find(r => r.smurfName === smurfName);
+            const targetKey = getResidentKey(identifier);
+            const item = RESIDENTS_DATA.find(r => getResidentKey(r) === targetKey);
             if (!item) return;
             activeModalItem = item;
             
@@ -2646,7 +2650,8 @@
         function updatePageIndicator() {
             const indicator = document.getElementById('modal-page-indicator');
             if (!indicator || !activeModalItem) return;
-            const index = filteredResidentsList.findIndex(r => r.smurfName === activeModalItem.smurfName);
+            const activeKey = getResidentKey(activeModalItem);
+            const index = filteredResidentsList.findIndex(r => getResidentKey(r) === activeKey);
             if (index !== -1) {
                 indicator.textContent = `${index + 1} / ${filteredResidentsList.length}`;
             }
@@ -2655,7 +2660,8 @@
         function navigateModal(direction) {
             if (filteredResidentsList.length <= 1 || isNavigating) return;
             
-            const currentIndex = filteredResidentsList.findIndex(r => r.smurfName === activeModalItem.smurfName);
+            const activeKey = getResidentKey(activeModalItem);
+            const currentIndex = filteredResidentsList.findIndex(r => getResidentKey(r) === activeKey);
             if (currentIndex === -1) return;
             
             let nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
@@ -3692,7 +3698,7 @@
             dummy.style.opacity = '0';
             document.body.appendChild(dummy);
             
-            openModal(currentUser.smurfName, dummy);
+            openModal(getResidentKey(currentUser), dummy);
             
             setTimeout(() => {
                 if (dummy.parentNode) document.body.removeChild(dummy);
