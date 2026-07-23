@@ -132,9 +132,36 @@
             });
         };
 
+        window.submitFallbackEmail = function() {
+            const input = document.getElementById('fallback-email-input');
+            const email = input ? input.value.trim().toLowerCase() : '';
+            if (!email || !email.includes('@')) {
+                alert('⚠️ Vui lòng nhập địa chỉ Email hợp lệ!');
+                return;
+            }
+            currentUserEmail = email;
+            currentGoogleName = email.split('@')[0];
+            localStorage.setItem('smurf_user_email', email);
+            localStorage.setItem('smurf_google_user', JSON.stringify({
+                email: email,
+                name: currentGoogleName,
+                picture: ''
+            }));
+            updateGoogleAuthBanner();
+            updateHeaderBadge();
+            tryAutoLogin();
+        };
+
         function initGoogleSignIn() {
             const wrapper = document.getElementById('google-btn-wrapper');
             if (!wrapper) return;
+
+            // Pre-fill email input if user previously attempted
+            const savedEmail = localStorage.getItem('smurf_user_email');
+            const fallbackInput = document.getElementById('fallback-email-input');
+            if (savedEmail && fallbackInput && !fallbackInput.value) {
+                fallbackInput.value = savedEmail;
+            }
 
             const renderBtn = () => {
                 if (window.google && window.google.accounts && window.google.accounts.id) {
