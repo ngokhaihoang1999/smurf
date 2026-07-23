@@ -56,10 +56,8 @@
                 picture: currentGooglePicture
             }));
 
-            updateGoogleAuthBanner();
             updateHeaderBadge();
-
-            tryAutoLogin();
+            checkResidentStatus(currentUserEmail);
         };
 
         // Helper: Derive unique avatar filename key strictly from Column B Identifier (Gmail Primary Key)
@@ -72,61 +70,69 @@
             return clean;
         }
 
-        // ── AUTO LOGIN & DATA HYDRATION ──
-        function tryAutoLogin() {
-            const savedEmail = localStorage.getItem('smurf_user_email');
-            if (!savedEmail) {
+        // ── UI LOADING / SCANNING INDICATOR ──
+        function showScanningStatus(isScanning) {
+            const spinner = document.getElementById('loading-spinner-circle');
+            const title = document.getElementById('loading-status-title');
+            const sub = document.getElementById('loading-status-sub');
+            const box = document.getElementById('google-signin-box');
+            if (isScanning) {
+                if (spinner) spinner.classList.remove('hidden');
+                if (title) title.classList.remove('hidden');
+                if (sub) sub.classList.remove('hidden');
+                if (box) box.classList.add('hidden');
+            } else {
+                if (spinner) spinner.classList.add('hidden');
+                if (title) title.classList.add('hidden');
+                if (sub) sub.classList.add('hidden');
+                if (box) box.classList.remove('hidden');
+            }
+        }
+
+        // ── AUTO LOGIN & SHEET COLUMN B RESIDENT ROUTING ──
+        function checkResidentStatus(email) {
+            if (!email) {
                 showView('loading');
+                showScanningStatus(false);
                 setTimeout(initGoogleSignIn, 150);
                 return;
             }
 
-            currentUserEmail = savedEmail;
+            currentUserEmail = email;
 
-            // 1. Try finding resident in RESIDENTS_DATA (cached or loaded)
-            const foundUser = (Array.isArray(RESIDENTS_DATA) ? RESIDENTS_DATA : []).find(r => 
-                String(r.email || '').toLowerCase() === currentUserEmail.toLowerCase()
+            // 1. Check in local RESIDENTS_DATA if already loaded
+            const cleanEmail = String(email).trim().toLowerCase();
+            const foundInLocal = (Array.isArray(RESIDENTS_DATA) ? RESIDENTS_DATA : []).find(r =>
+                String(r.email || '').trim().toLowerCase() === cleanEmail
             );
 
-            if (foundUser) {
-                currentUser = foundUser;
+            if (foundInLocal) {
+                currentUser = foundInLocal;
                 localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                 showHomeTab();
+
+                // Background lookup to keep data fresh from Sheet
+                gasRequestJsonp({ action: 'lookup', email: email }, (resp) => {
+                    if (resp && resp.exists && resp.data) {
+                        const freshKey = getAvatarKeyByIdentifier(resp.data.email);
+                        currentUser = {
+                            ...resp.data,
+                            avatar: `avatars/avatar_${freshKey}.png`
+                        };
+                        localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                        updateHeaderBadge();
+                    }
+                });
                 return;
             }
 
-            // 2. Try loaded cached user
-            const cachedUser = localStorage.getItem('smurf_user_cache');
-            if (cachedUser) {
-                try {
-                    currentUser = JSON.parse(cachedUser);
-                    if (currentUser && currentUser.email) {
-                        showHomeTab();
-                        return;
-                    }
-                } catch(e) {}
-            }
+            // 2. Not found in local RESIDENTS_DATA -> Show scanning status & query GAS lookup
+            showView('loading');
+            showScanningStatus(true);
 
-            // 3. Fallback: construct resident from Google Auth info so logged-in user enters 0ms
-            let googleUser = {};
-            try {
-                googleUser = JSON.parse(localStorage.getItem('smurf_google_user')) || {};
-            } catch(e) {}
-
-            const userKey = getAvatarKeyByIdentifier(currentUserEmail);
-            currentUser = {
-                email: currentUserEmail,
-                realName: googleUser.name || currentUserEmail.split('@')[0],
-                smurfName: googleUser.name || currentUserEmail.split('@')[0],
-                group: 'Cư dân',
-                avatar: `avatars/avatar_${userKey}.png`
-            };
-            localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
-            showHomeTab();
-
-            // 4. Background lookup to hydrate profile from GAS silently
-            gasRequestJsonp({ action: 'lookup', email: currentUserEmail }, (resp) => {
+            gasRequestJsonp({ action: 'lookup', email: email }, (resp) => {
                 if (resp && resp.exists && resp.data) {
+                    // Resident EXISTS in Column B -> Go to Home View (Trang Chủ)
                     const freshKey = getAvatarKeyByIdentifier(resp.data.email);
                     currentUser = {
                         ...resp.data,
@@ -134,13 +140,31 @@
                     };
                     localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                     updateHeaderBadge();
-                    if (getActiveView() === 'profile') {
-                        showProfileView();
-                    }
+                    showHomeTab();
+                } else {
+                    // Resident DOES NOT EXIST in Column B -> Go to Register View (Trang Đăng Ký)
+                    showScanningStatus(false);
+                    showView('register');
+                    setupRegistrationForm();
                 }
             }, (err) => {
-                console.warn('Background lookup notice:', err);
+                console.warn('Resident lookup error:', err);
+                showScanningStatus(false);
+                showView('register');
+                setupRegistrationForm();
             });
+        }
+
+        function tryAutoLogin() {
+            const savedEmail = localStorage.getItem('smurf_user_email');
+            if (!savedEmail) {
+                showView('loading');
+                showScanningStatus(false);
+                setTimeout(initGoogleSignIn, 150);
+                return;
+            }
+
+            checkResidentStatus(savedEmail);
         };
 
         window.submitFallbackEmail = function() {
@@ -414,6 +438,13 @@
                                 showProfileView();
                             } else if (activeView === 'home') {
                                 showHomeTab();
+                            }
+                        } else {
+                            const activeView = getActiveView();
+                            if (activeView === 'loading') {
+                                showScanningStatus(false);
+                                showView('register');
+                                setupRegistrationForm();
                             }
                         }
                     }
@@ -932,24 +963,31 @@
                 if (result.status === 'success') {
                     alert("🎉 Đăng ký thành công! Chào mừng bạn vào Làng Xì Trum.");
                     localStorage.removeItem('smurf_registration_draft');
-                    currentUser = { 
-                        ...data, 
-                        email: data.email,
-                        hobbies: data.hobbies, 
-                        strength: data.strength, 
-                        weakness: data.weakness, 
-                        personality: data.personality 
-                    };
-                    localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
-                    showProfileView();
-                } else if (result.status === 'duplicate') {
-                    alert("⚠️ Tài khoản Gmail/ID này đã đăng ký rồi!");
+                    
+                    // Verify Column B entry via lookup
                     const lookup = await gasRequest({ action: 'lookup', email: data.email });
-                    if (lookup.exists) { 
+                    if (lookup && lookup.exists && lookup.data) {
+                        currentUser = lookup.data;
+                    } else {
+                        currentUser = { 
+                            ...data, 
+                            email: data.email,
+                            hobbies: data.hobbies, 
+                            strength: data.strength, 
+                            weakness: data.weakness, 
+                            personality: data.personality 
+                        };
+                    }
+                    localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                    showHomeTab();
+                } else if (result.status === 'duplicate') {
+                    alert("⚠️ Tài khoản Gmail này đã đăng ký cư dân rồi!");
+                    const lookup = await gasRequest({ action: 'lookup', email: data.email });
+                    if (lookup && lookup.exists) { 
                         currentUser = lookup.data; 
                         localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
-                        showProfileView(); 
                     }
+                    showHomeTab();
                 } else {
                     alert("⚠️ " + (result.message || "Có lỗi xảy ra."));
                 }

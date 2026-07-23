@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784811063201" rel="stylesheet"/>
+    <link href="styles.css?v=1784811299713" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -696,23 +696,24 @@
     <!-- VIEW: LOADING & GOOGLE SIGN-IN         -->
     <!-- ═══════════════════════════════════════ -->
     <div id="view-loading" class="loading-spinner w-full flex flex-col items-center justify-center p-6 text-center">
-        <!-- Initial Connect Spinner (Hidden when login box is active) -->
+        <!-- Status indicator (shown when checking Column B status) -->
         <div class="spinner mb-3 hidden" id="loading-spinner-circle"></div>
-        <p class="font-fredoka text-xl text-smurf-blue drop-shadow-sm mb-1 hidden" id="loading-status-title">Đang kết nối Làng Xì Trum...</p>
-        <p class="text-xs text-slate-500 font-bold mb-5 hidden" id="loading-status-sub">Định danh cư dân bằng Tài khoản Google</p>
+        <p class="font-fredoka text-lg text-smurf-blue drop-shadow-sm mb-1 hidden" id="loading-status-title">Đang rà soát dữ liệu cư dân...</p>
+        <p class="text-xs text-slate-500 font-bold mb-5 hidden" id="loading-status-sub">Vui lòng đợi trong giây lát</p>
 
-        <!-- Google Sign-In & Instant Fallback Box -->
+        <!-- Google Sign-In Box (shown when not logged in) -->
         <div id="google-signin-box" class="w-full max-w-xs bg-white/95 backdrop-blur-md p-5 rounded-2xl border-2 border-smurf-blueLight shadow-xl flex flex-col items-center gap-3 transition-all">
             <div class="flex items-center gap-2 text-slate-700">
                 <span class="material-symbols-outlined text-smurf-blue text-2xl">account_circle</span>
                 <span class="font-fredoka text-base text-slate-800">Đăng Nhập Cư Dân</span>
             </div>
+            <p class="text-xs text-slate-600 font-bold leading-relaxed">Đăng nhập bằng Google để vào Làng Xì Trum</p>
             
             <!-- Render Target for Google Button -->
             <div id="google-btn-wrapper" class="w-full flex justify-center py-1 min-h-[40px]"></div>
 
             <p class="text-[10px] text-slate-400 font-bold italic mt-0.5">
-                🔒 Đăng nhập bảo mật để tự động nạp hồ sơ thẻ cư dân.
+                🔒 Tự động rà soát thẻ cư dân trên hệ thống.
             </p>
         </div>
     </div>
@@ -743,13 +744,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-100px)] min-h-[550px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784811063201');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784811299713');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784811063201" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784811299713" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -1855,10 +1856,8 @@
                 picture: currentGooglePicture
             }));
 
-            updateGoogleAuthBanner();
             updateHeaderBadge();
-
-            tryAutoLogin();
+            checkResidentStatus(currentUserEmail);
         };
 
         // Helper: Derive unique avatar filename key strictly from Column B Identifier (Gmail Primary Key)
@@ -1871,61 +1870,69 @@
             return clean;
         }
 
-        // ── AUTO LOGIN & DATA HYDRATION ──
-        function tryAutoLogin() {
-            const savedEmail = localStorage.getItem('smurf_user_email');
-            if (!savedEmail) {
+        // ── UI LOADING / SCANNING INDICATOR ──
+        function showScanningStatus(isScanning) {
+            const spinner = document.getElementById('loading-spinner-circle');
+            const title = document.getElementById('loading-status-title');
+            const sub = document.getElementById('loading-status-sub');
+            const box = document.getElementById('google-signin-box');
+            if (isScanning) {
+                if (spinner) spinner.classList.remove('hidden');
+                if (title) title.classList.remove('hidden');
+                if (sub) sub.classList.remove('hidden');
+                if (box) box.classList.add('hidden');
+            } else {
+                if (spinner) spinner.classList.add('hidden');
+                if (title) title.classList.add('hidden');
+                if (sub) sub.classList.add('hidden');
+                if (box) box.classList.remove('hidden');
+            }
+        }
+
+        // ── AUTO LOGIN & SHEET COLUMN B RESIDENT ROUTING ──
+        function checkResidentStatus(email) {
+            if (!email) {
                 showView('loading');
+                showScanningStatus(false);
                 setTimeout(initGoogleSignIn, 150);
                 return;
             }
 
-            currentUserEmail = savedEmail;
+            currentUserEmail = email;
 
-            // 1. Try finding resident in RESIDENTS_DATA (cached or loaded)
-            const foundUser = (Array.isArray(RESIDENTS_DATA) ? RESIDENTS_DATA : []).find(r => 
-                String(r.email || '').toLowerCase() === currentUserEmail.toLowerCase()
+            // 1. Check in local RESIDENTS_DATA if already loaded
+            const cleanEmail = String(email).trim().toLowerCase();
+            const foundInLocal = (Array.isArray(RESIDENTS_DATA) ? RESIDENTS_DATA : []).find(r =>
+                String(r.email || '').trim().toLowerCase() === cleanEmail
             );
 
-            if (foundUser) {
-                currentUser = foundUser;
+            if (foundInLocal) {
+                currentUser = foundInLocal;
                 localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                 showHomeTab();
+
+                // Background lookup to keep data fresh from Sheet
+                gasRequestJsonp({ action: 'lookup', email: email }, (resp) => {
+                    if (resp && resp.exists && resp.data) {
+                        const freshKey = getAvatarKeyByIdentifier(resp.data.email);
+                        currentUser = {
+                            ...resp.data,
+                            avatar: `avatars/avatar_${freshKey}.png`
+                        };
+                        localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                        updateHeaderBadge();
+                    }
+                });
                 return;
             }
 
-            // 2. Try loaded cached user
-            const cachedUser = localStorage.getItem('smurf_user_cache');
-            if (cachedUser) {
-                try {
-                    currentUser = JSON.parse(cachedUser);
-                    if (currentUser && currentUser.email) {
-                        showHomeTab();
-                        return;
-                    }
-                } catch(e) {}
-            }
+            // 2. Not found in local RESIDENTS_DATA -> Show scanning status & query GAS lookup
+            showView('loading');
+            showScanningStatus(true);
 
-            // 3. Fallback: construct resident from Google Auth info so logged-in user enters 0ms
-            let googleUser = {};
-            try {
-                googleUser = JSON.parse(localStorage.getItem('smurf_google_user')) || {};
-            } catch(e) {}
-
-            const userKey = getAvatarKeyByIdentifier(currentUserEmail);
-            currentUser = {
-                email: currentUserEmail,
-                realName: googleUser.name || currentUserEmail.split('@')[0],
-                smurfName: googleUser.name || currentUserEmail.split('@')[0],
-                group: 'Cư dân',
-                avatar: `avatars/avatar_${userKey}.png`
-            };
-            localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
-            showHomeTab();
-
-            // 4. Background lookup to hydrate profile from GAS silently
-            gasRequestJsonp({ action: 'lookup', email: currentUserEmail }, (resp) => {
+            gasRequestJsonp({ action: 'lookup', email: email }, (resp) => {
                 if (resp && resp.exists && resp.data) {
+                    // Resident EXISTS in Column B -> Go to Home View (Trang Chủ)
                     const freshKey = getAvatarKeyByIdentifier(resp.data.email);
                     currentUser = {
                         ...resp.data,
@@ -1933,13 +1940,31 @@
                     };
                     localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                     updateHeaderBadge();
-                    if (getActiveView() === 'profile') {
-                        showProfileView();
-                    }
+                    showHomeTab();
+                } else {
+                    // Resident DOES NOT EXIST in Column B -> Go to Register View (Trang Đăng Ký)
+                    showScanningStatus(false);
+                    showView('register');
+                    setupRegistrationForm();
                 }
             }, (err) => {
-                console.warn('Background lookup notice:', err);
+                console.warn('Resident lookup error:', err);
+                showScanningStatus(false);
+                showView('register');
+                setupRegistrationForm();
             });
+        }
+
+        function tryAutoLogin() {
+            const savedEmail = localStorage.getItem('smurf_user_email');
+            if (!savedEmail) {
+                showView('loading');
+                showScanningStatus(false);
+                setTimeout(initGoogleSignIn, 150);
+                return;
+            }
+
+            checkResidentStatus(savedEmail);
         };
 
         window.submitFallbackEmail = function() {
@@ -2213,6 +2238,13 @@
                                 showProfileView();
                             } else if (activeView === 'home') {
                                 showHomeTab();
+                            }
+                        } else {
+                            const activeView = getActiveView();
+                            if (activeView === 'loading') {
+                                showScanningStatus(false);
+                                showView('register');
+                                setupRegistrationForm();
                             }
                         }
                     }
@@ -2731,24 +2763,31 @@
                 if (result.status === 'success') {
                     alert("🎉 Đăng ký thành công! Chào mừng bạn vào Làng Xì Trum.");
                     localStorage.removeItem('smurf_registration_draft');
-                    currentUser = { 
-                        ...data, 
-                        email: data.email,
-                        hobbies: data.hobbies, 
-                        strength: data.strength, 
-                        weakness: data.weakness, 
-                        personality: data.personality 
-                    };
-                    localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
-                    showProfileView();
-                } else if (result.status === 'duplicate') {
-                    alert("⚠️ Tài khoản Gmail/ID này đã đăng ký rồi!");
+                    
+                    // Verify Column B entry via lookup
                     const lookup = await gasRequest({ action: 'lookup', email: data.email });
-                    if (lookup.exists) { 
+                    if (lookup && lookup.exists && lookup.data) {
+                        currentUser = lookup.data;
+                    } else {
+                        currentUser = { 
+                            ...data, 
+                            email: data.email,
+                            hobbies: data.hobbies, 
+                            strength: data.strength, 
+                            weakness: data.weakness, 
+                            personality: data.personality 
+                        };
+                    }
+                    localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                    showHomeTab();
+                } else if (result.status === 'duplicate') {
+                    alert("⚠️ Tài khoản Gmail này đã đăng ký cư dân rồi!");
+                    const lookup = await gasRequest({ action: 'lookup', email: data.email });
+                    if (lookup && lookup.exists) { 
                         currentUser = lookup.data; 
                         localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
-                        showProfileView(); 
                     }
+                    showHomeTab();
                 } else {
                     alert("⚠️ " + (result.message || "Có lỗi xảy ra."));
                 }

@@ -2,23 +2,24 @@
     <!-- VIEW: LOADING & GOOGLE SIGN-IN         -->
     <!-- ═══════════════════════════════════════ -->
     <div id="view-loading" class="loading-spinner w-full flex flex-col items-center justify-center p-6 text-center">
-        <!-- Initial Connect Spinner (Hidden when login box is active) -->
+        <!-- Status indicator (shown when checking Column B status) -->
         <div class="spinner mb-3 hidden" id="loading-spinner-circle"></div>
-        <p class="font-fredoka text-xl text-smurf-blue drop-shadow-sm mb-1 hidden" id="loading-status-title">Đang kết nối Làng Xì Trum...</p>
-        <p class="text-xs text-slate-500 font-bold mb-5 hidden" id="loading-status-sub">Định danh cư dân bằng Tài khoản Google</p>
+        <p class="font-fredoka text-lg text-smurf-blue drop-shadow-sm mb-1 hidden" id="loading-status-title">Đang rà soát dữ liệu cư dân...</p>
+        <p class="text-xs text-slate-500 font-bold mb-5 hidden" id="loading-status-sub">Vui lòng đợi trong giây lát</p>
 
-        <!-- Google Sign-In & Instant Fallback Box -->
+        <!-- Google Sign-In Box (shown when not logged in) -->
         <div id="google-signin-box" class="w-full max-w-xs bg-white/95 backdrop-blur-md p-5 rounded-2xl border-2 border-smurf-blueLight shadow-xl flex flex-col items-center gap-3 transition-all">
             <div class="flex items-center gap-2 text-slate-700">
                 <span class="material-symbols-outlined text-smurf-blue text-2xl">account_circle</span>
                 <span class="font-fredoka text-base text-slate-800">Đăng Nhập Cư Dân</span>
             </div>
+            <p class="text-xs text-slate-600 font-bold leading-relaxed">Đăng nhập bằng Google để vào Làng Xì Trum</p>
             
             <!-- Render Target for Google Button -->
             <div id="google-btn-wrapper" class="w-full flex justify-center py-1 min-h-[40px]"></div>
 
             <p class="text-[10px] text-slate-400 font-bold italic mt-0.5">
-                🔒 Đăng nhập bảo mật để tự động nạp hồ sơ thẻ cư dân.
+                🔒 Tự động rà soát thẻ cư dân trên hệ thống.
             </p>
         </div>
     </div>
