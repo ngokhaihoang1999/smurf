@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784815404745" rel="stylesheet"/>
+    <link href="styles.css?v=1784815648710" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -744,13 +744,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-100px)] min-h-[550px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784815404745');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784815648710');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784815404745" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784815648710" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -1635,10 +1635,10 @@
                         <div id="m-preview-group" style="position: absolute; left: 1130px; top: 276px; width: 194px; height: 42px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', cursive; font-size: 36px; font-weight: 800; color: #0b4375; text-align: center; padding-top: 5px; line-height: 1;">Nhóm</div>
 
                         <!-- Hobbies & Personality Tags on the Card -->
-                        <div id="m-preview-tinh-cach" style="position: absolute; left: 879px; top: 395px; width: 188px; height: 115px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 40px; font-weight: 700; color: #111111; text-align: center; line-height: 1.25; word-break: normal; overflow-wrap: break-word;">Tính cách</div>
-                        <div id="m-preview-so-thich" style="position: absolute; left: 1236px; top: 395px; width: 185px; height: 115px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 40px; font-weight: 700; color: #111111; text-align: center; line-height: 1.25; word-break: normal; overflow-wrap: break-word;">Sở thích</div>
-                        <div id="m-preview-diem-manh" style="position: absolute; left: 880px; top: 605px; width: 185px; height: 115px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 40px; font-weight: 700; color: #111111; text-align: center; line-height: 1.25; word-break: normal; overflow-wrap: break-word;">Điểm mạnh</div>
-                        <div id="m-preview-diem-yeu" style="position: absolute; left: 1225px; top: 605px; width: 200px; height: 115px; z-index: 20; display: flex; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 40px; font-weight: 700; color: #111111; text-align: center; line-height: 1.25; word-break: normal; overflow-wrap: break-word;">Điểm yếu</div>
+                        <div id="m-preview-tinh-cach" style="position: absolute; left: 879px; top: 395px; width: 188px; height: 115px; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 40px; font-weight: 700; color: #111111; text-align: center; line-height: 1.25; white-space: normal; word-break: break-word; overflow-wrap: break-word;">Tính cách</div>
+                        <div id="m-preview-so-thich" style="position: absolute; left: 1236px; top: 395px; width: 185px; height: 115px; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 40px; font-weight: 700; color: #111111; text-align: center; line-height: 1.25; white-space: normal; word-break: break-word; overflow-wrap: break-word;">Sở thích</div>
+                        <div id="m-preview-diem-manh" style="position: absolute; left: 880px; top: 605px; width: 185px; height: 115px; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 40px; font-weight: 700; color: #111111; text-align: center; line-height: 1.25; white-space: normal; word-break: break-word; overflow-wrap: break-word;">Điểm mạnh</div>
+                        <div id="m-preview-diem-yeu" style="position: absolute; left: 1225px; top: 605px; width: 200px; height: 115px; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Quicksand', sans-serif; font-size: 40px; font-weight: 700; color: #111111; text-align: center; line-height: 1.25; white-space: normal; word-break: break-word; overflow-wrap: break-word;">Điểm yếu</div>
 
                         <!-- Bio text -->
                         <div style="position: absolute; left: 738px; top: 778px; width: 696px; height: 194px; z-index: 20; display: flex; align-items: center; justify-content: center; padding-left: 65px; padding-right: 40px;">
@@ -5360,7 +5360,27 @@
                         useCORS: true,
                         backgroundColor: null,
                         width: 1516,
-                        height: 1038
+                        height: 1038,
+                        onclone: (clonedDoc) => {
+                            if (document.fonts) {
+                                document.fonts.forEach(font => {
+                                    try { clonedDoc.fonts.add(font); } catch(e) {}
+                                });
+                            }
+                            ['m-preview-tinh-cach', 'm-preview-so-thich', 'm-preview-diem-manh', 'm-preview-diem-yeu', 'm-preview-bio'].forEach(id => {
+                                const target = clonedDoc.querySelector('#' + id);
+                                if (target) {
+                                    target.style.whiteSpace = 'normal';
+                                    target.style.wordBreak = 'break-word';
+                                    target.style.overflowWrap = 'break-word';
+                                    target.style.display = 'flex';
+                                    target.style.flexDirection = 'column';
+                                    target.style.alignItems = 'center';
+                                    target.style.justifyContent = 'center';
+                                    target.style.textAlign = 'center';
+                                }
+                            });
+                        }
                     }).then(canvas => {
                         container.remove();
                         const dataUrl = canvas.toDataURL('image/png');

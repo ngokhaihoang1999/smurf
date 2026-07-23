@@ -3560,7 +3560,27 @@
                         useCORS: true,
                         backgroundColor: null,
                         width: 1516,
-                        height: 1038
+                        height: 1038,
+                        onclone: (clonedDoc) => {
+                            if (document.fonts) {
+                                document.fonts.forEach(font => {
+                                    try { clonedDoc.fonts.add(font); } catch(e) {}
+                                });
+                            }
+                            ['m-preview-tinh-cach', 'm-preview-so-thich', 'm-preview-diem-manh', 'm-preview-diem-yeu', 'm-preview-bio'].forEach(id => {
+                                const target = clonedDoc.querySelector('#' + id);
+                                if (target) {
+                                    target.style.whiteSpace = 'normal';
+                                    target.style.wordBreak = 'break-word';
+                                    target.style.overflowWrap = 'break-word';
+                                    target.style.display = 'flex';
+                                    target.style.flexDirection = 'column';
+                                    target.style.alignItems = 'center';
+                                    target.style.justifyContent = 'center';
+                                    target.style.textAlign = 'center';
+                                }
+                            });
+                        }
                     }).then(canvas => {
                         container.remove();
                         const dataUrl = canvas.toDataURL('image/png');
