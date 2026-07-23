@@ -122,6 +122,14 @@
                         };
                         localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                         updateHeaderBadge();
+                    } else if (resp && resp.exists === false) {
+                        // Email was deleted from Google Sheet -> Force user back to Register View
+                        console.warn("Resident email not found in Google Sheet - clearing local state and opening Register View");
+                        localStorage.removeItem('smurf_user_cache');
+                        currentUser = null;
+                        updateHeaderBadge();
+                        showView('register');
+                        setupRegistrationForm();
                     }
                 });
                 return;
@@ -143,8 +151,10 @@
                     updateHeaderBadge();
                     showHomeTab();
                 } else {
-                    // Resident DOES NOT EXIST in Column B -> Go to Register View (Trang Đăng Ký)
-                    showScanningStatus(false);
+                    // Resident MISSING from Column B -> Clear cache and Go to Register View (Trang Đăng Ký)
+                    localStorage.removeItem('smurf_user_cache');
+                    currentUser = null;
+                    updateHeaderBadge();
                     showView('register');
                     setupRegistrationForm();
                 }

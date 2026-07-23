@@ -14,47 +14,45 @@
 var SHEET_ID = "1Sgb2kddv3-DSgA5IZZhexZf4d-ZFjFuBwIYS56JLJPI";
 var DRIVE_FOLDER_ID = "1aLOyh5r1PJqgfpSfNqj37mGNZJ18Ctyi";
 
-// Cột header chuẩn
+// Cột header chuẩn (24 cột sau khi xóa 2 cột Telegram C-D)
 var HEADERS = [
-  "Timestamp",            // A (1)
-  "Email (Gmail)",        // B (2) ← PRIMARY KEY
-  "Tên Google",           // C (3)
-  "Avatar Google",        // D (4)
-  "Tên Xì Trum",         // E (5)  ← editable
-  "Tên Thật",            // F (6)  ← editable
-  "Nhóm",                // G (7)  ← editable
-  "Giới Tính",           // H (8)  ← editable
-  "Sở Thích",            // I (9)  ← editable
-  "Điểm Mạnh",           // J (10) ← editable
-  "Điểm Yếu",            // K (11) ← editable
-  "Tính Cách",           // L (12) ← editable
-  "Bio - Tự Bạch",       // M (13) ← editable
-  "Giới Tính Xì Trum",   // N (14) ← locked (avatar)
-  "Kiểu Mũ",             // O (15) ← locked
-  "Màu Mũ",              // P (16) ← locked
-  "Màu Tóc",             // Q (17) ← locked
-  "Phụ Kiện Mặt",        // R (18) ← locked
-  "Trang Phục",           // S (19) ← locked
-  "Đạo Cụ Cầm Tay",     // T (20) ← locked
-  "Biểu Cảm",            // U (21) ← locked
-  "Dáng Đứng (Pose)",    // V (22) ← locked
-  "Bối Cảnh",            // W (23) ← locked
-  "Chi Tiết Bổ Sung",    // X (24) ← locked
-  "Ảnh Tham Khảo Link Drive", // Y (25) ← locked
-  "Ghi Chú Ảnh"          // Z (26) ← locked
+  "Timestamp",                // A (1)
+  "Email (Gmail)",            // B (2) ← PRIMARY KEY
+  "Tên Xì Trum",             // C (3)  ← editable
+  "Tên Thật",                // D (4)  ← editable
+  "Nhóm",                    // E (5)  ← editable
+  "Giới Tính",               // F (6)  ← editable
+  "Sở Thích",                // G (7)  ← editable
+  "Điểm Mạnh",               // H (8)  ← editable
+  "Điểm Yếu",                // I (9)  ← editable
+  "Tính Cách",               // J (10) ← editable
+  "Bio - Tự Bạch",           // K (11) ← editable
+  "Giới Tính Xì Trum",       // L (12) ← locked (avatar)
+  "Kiểu Mũ",                 // M (13) ← locked
+  "Màu Mũ",                  // N (14) ← locked
+  "Màu Tóc",                 // O (15) ← locked
+  "Phụ Kiện Mặt",            // P (16) ← locked
+  "Trang Phục",               // Q (17) ← locked
+  "Đạo Cụ Cầm Tay",         // R (18) ← locked
+  "Biểu Cảm",                // S (19) ← locked
+  "Dáng Đứng (Pose)",        // T (20) ← locked
+  "Bối Cảnh",                // U (21) ← locked
+  "Chi Tiết Bổ Sung",        // V (22) ← locked
+  "Ảnh Tham Khảo Link Drive",// W (23) ← locked
+  "Ghi Chú Ảnh"              // X (24) ← locked
 ];
 
 // Các cột cho phép chỉnh sửa (index 1-based trong sheet)
 var EDITABLE_COLS = {
-  "smurfName": 5,     // E
-  "realName": 6,      // F
-  "group": 7,         // G
-  "personalGender": 8,// H
-  "hobbies": 9,       // I
-  "strength": 10,     // J
-  "weakness": 11,     // K
-  "personality": 12,  // L
-  "bio": 13           // M
+  "smurfName": 3,      // C
+  "realName": 4,       // D
+  "group": 5,          // E
+  "personalGender": 6, // F
+  "hobbies": 7,        // G
+  "strength": 8,       // H
+  "weakness": 9,       // I
+  "personality": 10,   // J
+  "bio": 11            // K
 };
 
 // Tiền xử lý chống Formula Injection (CWE-1236)
@@ -100,38 +98,34 @@ function findRowByIdentifier(sheet, idVal) {
   return -1;
 }
 
-// Chuyển hàng sheet thành object
+// Chuyển hàng sheet thành object (24 cột chuẩn)
 function rowToObject(sheet, rowNum) {
   var values = sheet.getRange(rowNum, 1, 1, HEADERS.length).getValues()[0];
   var obj = {};
-  // Map header → value
   obj.timestamp = values[0];
-  obj.email = String(values[1]);
-
-  obj.googleName = values[2];
-  obj.googlePicture = values[3];
-  obj.smurfName = values[4];
-  obj.realName = values[5];
-  obj.group = values[6];
-  obj.personalGender = values[7];
-  obj.hobbies = values[8];
-  obj.strength = values[9];
-  obj.weakness = values[10];
-  obj.personality = values[11];
-  obj.bio = values[12];
-  obj.gender = values[13];
-  obj.hat = values[14];
-  obj.hatColor = values[15];
-  obj.hairColor = values[16];
-  obj.faceAccessory = values[17];
-  obj.outfit = values[18];
-  obj.prop = values[19];
-  obj.expression = values[20];
-  obj.pose = values[21];
-  obj.background = values[22];
-  obj.additionalInfo = values[23];
-  obj.referenceImageUrl = values[24];
-  obj.referenceNotes = values[25];
+  obj.email = String(values[1] || "");
+  obj.smurfName = values[2] || "";
+  obj.realName = values[3] || "";
+  obj.group = values[4] || "";
+  obj.personalGender = values[5] || "";
+  obj.hobbies = values[6] || "";
+  obj.strength = values[7] || "";
+  obj.weakness = values[8] || "";
+  obj.personality = values[9] || "";
+  obj.bio = values[10] || "";
+  obj.gender = values[11] || "";
+  obj.hat = values[12] || "";
+  obj.hatColor = values[13] || "";
+  obj.hairColor = values[14] || "";
+  obj.faceAccessory = values[15] || "";
+  obj.outfit = values[16] || "";
+  obj.prop = values[17] || "";
+  obj.expression = values[18] || "";
+  obj.pose = values[19] || "";
+  obj.background = values[20] || "";
+  obj.additionalInfo = values[21] || "";
+  obj.referenceImageUrl = values[22] || "";
+  obj.referenceNotes = values[23] || "";
   return obj;
 }
 
@@ -221,12 +215,10 @@ function handleRegister(data) {
     }
   }
   
-  // Ghi dòng mới
+  // Ghi dòng mới (24 cột chuẩn)
   sheet.appendRow([
     sanitizeInput(data.timestamp || new Date().toISOString()),
     sanitizeInput(identifier),
-    sanitizeInput(data.googleName || ""),
-    sanitizeInput(data.googlePicture || ""),
     sanitizeInput(data.smurfName),
     sanitizeInput(data.realName),
     sanitizeInput(data.group),
@@ -541,14 +533,15 @@ function handleGetReactions(data) {
   if (sLast > 1) {
     var sData = summarySheet.getRange(2, 1, sLast - 1, 6).getValues();
     for (var i = 0; i < sData.length; i++) {
-      var emailKey = String(sData[i][0]).trim();
-      if (!emailKey) continue;
+      var rawEmailKey = String(sData[i][0]).trim();
+      if (!rawEmailKey) continue;
+      var emailKeyLower = rawEmailKey.toLowerCase();
       var likesCount = Number(sData[i][2]) || 0;
       var funnysCount = Number(sData[i][3]) || 0;
       var starsCount = Number(sData[i][4]) || 0;
       var coolsCount = Number(sData[i][5]) || 0;
       
-      summaryMap[emailKey] = {
+      var itemObj = {
         likes: likesCount,
         funnys: funnysCount,
         stars: starsCount,
@@ -562,6 +555,9 @@ function handleGetReactions(data) {
         funny: funnysCount,
         cool: coolsCount
       };
+
+      summaryMap[emailKeyLower] = itemObj;
+      summaryMap[rawEmailKey] = itemObj;
     }
   }
   
@@ -577,7 +573,7 @@ function handleGetReactions(data) {
       for (var j = 0; j < uData.length; j++) {
         var logFrom = String(uData[j][0]).trim().toLowerCase();
         if (logFrom === fromKeyLower) {
-          var targetKey = String(uData[j][1]).trim();
+          var targetKey = String(uData[j][1]).trim().toLowerCase();
           var typeProp = normalizeReactionType(uData[j][2]);
           var shortType = typeProp === 'likes' ? 'like' : (typeProp === 'funnys' ? 'funny' : (typeProp === 'stars' ? 'star' : 'cool'));
           
