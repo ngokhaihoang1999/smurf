@@ -253,15 +253,27 @@
         async function initApp() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('tid')) telegramId = urlParams.get('tid');
+
+            // Read saved email and google user info immediately on startup
+            const savedEmail = localStorage.getItem('smurf_user_email');
+            if (savedEmail) currentUserEmail = savedEmail;
             if (urlParams.get('email')) currentUserEmail = urlParams.get('email');
+
+            const savedGoogleUser = localStorage.getItem('smurf_google_user');
+            if (savedGoogleUser) {
+                try {
+                    const g = JSON.parse(savedGoogleUser);
+                    currentGoogleName = g.name || '';
+                    currentGooglePicture = g.picture || '';
+                } catch(e){}
+            }
 
             // Fail-safe timeout: Guarantee loading screen is hidden within 3s under any network condition
             setTimeout(() => {
                 const loadingView = document.getElementById('view-loading');
                 if (loadingView && !loadingView.classList.contains('hidden')) {
-                    console.warn("Loading timeout reached - redirecting to registration screen");
-                    showView('register');
-                    setupRegistrationForm();
+                    console.warn("Loading timeout reached - checking auto-login status");
+                    tryAutoLogin();
                 }
             }, 3000);
 

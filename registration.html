@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784807331774" rel="stylesheet"/>
+    <link href="styles.css?v=1784807456800" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -754,13 +754,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-100px)] min-h-[550px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784807331774');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784807456800');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784807331774" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784807456800" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -2073,15 +2073,27 @@
         async function initApp() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('tid')) telegramId = urlParams.get('tid');
+
+            // Read saved email and google user info immediately on startup
+            const savedEmail = localStorage.getItem('smurf_user_email');
+            if (savedEmail) currentUserEmail = savedEmail;
             if (urlParams.get('email')) currentUserEmail = urlParams.get('email');
+
+            const savedGoogleUser = localStorage.getItem('smurf_google_user');
+            if (savedGoogleUser) {
+                try {
+                    const g = JSON.parse(savedGoogleUser);
+                    currentGoogleName = g.name || '';
+                    currentGooglePicture = g.picture || '';
+                } catch(e){}
+            }
 
             // Fail-safe timeout: Guarantee loading screen is hidden within 3s under any network condition
             setTimeout(() => {
                 const loadingView = document.getElementById('view-loading');
                 if (loadingView && !loadingView.classList.contains('hidden')) {
-                    console.warn("Loading timeout reached - redirecting to registration screen");
-                    showView('register');
-                    setupRegistrationForm();
+                    console.warn("Loading timeout reached - checking auto-login status");
+                    tryAutoLogin();
                 }
             }, 3000);
 
