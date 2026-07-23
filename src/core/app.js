@@ -1011,7 +1011,7 @@
                 }
             } catch (err) {
                 console.error('Submit error:', err);
-                alert("⚠️ Lỗi kết nối. Thử lại sau.");
+                alert("⚠️ Lỗi gửi dữ liệu: " + (err.message || "Vui lòng kiểm tra lại kết nối mạng!"));
             } finally {
                 btn.disabled = false; btnText.textContent = "GỬI ĐĂNG KÝ VỀ LÀNG"; btn.style.opacity = '1';
             }
@@ -1598,22 +1598,37 @@
         // ── GAS REQUEST POST ──
         async function gasRequest(data) {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            const timeoutId = setTimeout(() => controller.abort(), 35000);
             try {
+                // Filter out raw File/Blob objects to prevent JSON serialization failure
+                const cleanData = {};
+                if (data && typeof data === 'object') {
+                    for (const k in data) {
+                        if (data[k] instanceof File || data[k] instanceof Blob) continue;
+                        cleanData[k] = data[k];
+                    }
+                }
+
                 const response = await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
                     redirect: 'follow',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(data),
+                    body: JSON.stringify(cleanData),
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                return response.json();
+                const text = await response.text();
+                try {
+                    return JSON.parse(text);
+                } catch(e) {
+                    console.error("GAS returned non-JSON response:", text);
+                    return { status: "error", message: text || "Hệ thống đang xử lý, vui lòng thử lại!" };
+                }
             } catch (err) {
                 clearTimeout(timeoutId);
                 if (err.name === 'AbortError') {
-                    console.warn('GAS request timed out (30s)');
-                    throw new Error('Request timeout');
+                    console.warn('GAS request timed out (35s)');
+                    throw new Error('Hệ thống phản hồi chậm (Timeout 35s)');
                 }
                 throw err;
             }
