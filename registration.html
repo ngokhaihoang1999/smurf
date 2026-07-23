@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784772121950" rel="stylesheet"/>
+    <link href="styles.css?v=1784772479303" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -744,13 +744,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-100px)] min-h-[550px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784772121950');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784772479303');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784772121950" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784772479303" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -3563,32 +3563,43 @@
             const r2 = scored[1] || null;
             const r3 = scored[2] || null;
 
-            // Load interactive Tuner Config from localStorage if customized (Defaulted to User Tuned Specs)
+            // Load interactive Tuner Config from localStorage if customized (Defaulted to 3:4 Rectangular Card Specs)
             const tc = JSON.parse(localStorage.getItem('smurf_tuner_config') || 'null') || {
-                t1_w: 121, t1_a: 81, t1_x: 0, t1_y: 3,
-                t2_w: 106, t2_a: 72, t2_x: 0, t2_y: 1,
-                t3_w: 88,  t3_a: 60, t3_x: 0, t3_y: 1
+                t1_w: 115, t1_a: 84, t1_x: 0, t1_y: 0,
+                t2_w: 96,  t2_a: 70, t2_x: 0, t2_y: 0,
+                t3_w: 96,  t3_a: 70, t3_x: 0, t3_y: 0
             };
 
-            const t1Box = Math.max(tc.t1_w, tc.t1_a);
-            const t2Box = Math.max(tc.t2_w, tc.t2_a);
-            const t3Box = Math.max(tc.t3_w || tc.t2_w || 88, tc.t3_a || tc.t2_a || 60);
+            // Calculate 3:4 vertical dimensions
+            const t1_cw = tc.t1_a, t1_ch = Math.round(tc.t1_a * 4 / 3);
+            const t1_ww = tc.t1_w, t1_wh = Math.round(tc.t1_w * 4 / 3);
+            const t1_bw = Math.max(t1_cw, t1_ww), t1_bh = Math.max(t1_ch, t1_wh);
+
+            const t2_cw = tc.t2_a, t2_ch = Math.round(tc.t2_a * 4 / 3);
+            const t2_ww = tc.t2_w, t2_wh = Math.round(tc.t2_w * 4 / 3);
+            const t2_bw = Math.max(t2_cw, t2_ww), t2_bh = Math.max(t2_ch, t2_wh);
+
+            const t3_a = tc.t3_a || tc.t2_a || 70;
+            const t3_w = tc.t3_w || tc.t2_w || 96;
+            const t3_cw = t3_a, t3_ch = Math.round(t3_a * 4 / 3);
+            const t3_ww = t3_w, t3_wh = Math.round(t3_w * 4 / 3);
+            const t3_bw = Math.max(t3_cw, t3_ww), t3_bh = Math.max(t3_ch, t3_wh);
 
             if (stage) {
                 let html = '';
 
-                // Rank 2 (Silver - Left)
+                // Rank 2 (Silver - Left, 3:4 Vertical Card)
                 if (r2) {
                     html += `
                         <div onclick="openModal('${r2.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
                             <span class="text-[9px] bg-slate-200/90 text-slate-700 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 2</span>
-                            <div class="relative flex items-center justify-center aspect-square" style="width: ${t2Box}px; height: ${t2Box}px;">
-                                <!-- Inner Circular Avatar with Full Card & Title Logo Visibility -->
-                                <div class="rounded-full overflow-hidden shadow-sm bg-white relative z-0 aspect-square border-2 border-slate-300/80 flex items-center justify-center p-1" style="width: ${tc.t2_a}px; height: ${tc.t2_a}px;">
-                                    <img src="${r2.avatar}" class="w-full h-full object-contain" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                            <div class="relative flex items-center justify-center" style="width: ${t2_bw}px; height: ${t2_bh}px;">
+                                <!-- Inner 3:4 Vertical Resident Card -->
+                                <div class="rounded-xl overflow-hidden shadow-md bg-white relative z-0 border-2 border-slate-300/80 flex items-center justify-center" style="width: ${t2_cw}px; height: ${t2_ch}px;">
+                                    <img src="${r2.avatar}" class="w-full h-full object-cover rounded-xl" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
-                                <!-- Laurel Wreath Overlay -->
-                                <img src="src/assets/smurf_laurel_silver.png" class="absolute z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" style="width: ${tc.t2_w}px; height: ${tc.t2_w}px; transform: translate(${tc.t2_x}px, ${tc.t2_y}px);" alt="Silver Laurel Frame">
+                                <!-- 3:4 Rectangular Laurel Wreath Overlay -->
+                                <img src="src/assets/smurf_laurel_silver.png" class="absolute z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" style="width: ${t2_ww}px; height: ${t2_wh}px; transform: translate(${tc.t2_x || 0}px, ${tc.t2_y || 0}px);" alt="Silver Laurel Frame">
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
                                 <span class="text-[11px] font-fredoka font-bold text-slate-800 truncate w-full px-0.5">${r2.smurfName}</span>
@@ -3598,20 +3609,20 @@
                     `;
                 }
 
-                // Rank 1 (Gold - Center, Tallest & Crown, Shifted Slightly Right for Visual Balance)
+                // Rank 1 (Gold - Center, Tallest & Crown, 3:4 Vertical Card)
                 if (r1) {
                     html += `
-                        <div onclick="openModal('${r1.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[130px] z-20 -mt-2 translate-x-[5px]">
+                        <div onclick="openModal('${r1.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[130px] z-20 -mt-2">
                             <div class="relative flex flex-col items-center w-full">
                                 <img src="src/assets/smurf_crown_gold.png" class="w-8 h-8 object-contain absolute -top-5 z-30 animate-bounce filter drop-shadow-sm" style="animation-duration: 2.2s;" alt="Gold Crown">
                                 <span class="text-[9px] bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-white px-2.5 py-0.5 rounded-full font-extrabold z-20 shadow-md uppercase tracking-wider mb-1 mt-1">TOP 1</span>
-                                <div class="relative flex items-center justify-center aspect-square" style="width: ${t1Box}px; height: ${t1Box}px;">
-                                    <!-- Inner Circular Avatar with Full Card & Title Logo Visibility -->
-                                    <div class="rounded-full overflow-hidden shadow-lg ring-4 ring-amber-400/50 bg-white relative z-0 aspect-square border-2 border-amber-300 flex items-center justify-center p-1" style="width: ${tc.t1_a}px; height: ${tc.t1_a}px;">
-                                        <img src="${r1.avatar}" class="w-full h-full object-contain" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                <div class="relative flex items-center justify-center" style="width: ${t1_bw}px; height: ${t1_bh}px;">
+                                    <!-- Inner 3:4 Vertical Resident Card -->
+                                    <div class="rounded-xl overflow-hidden shadow-lg ring-4 ring-amber-400/50 bg-white relative z-0 border-2 border-amber-300 flex items-center justify-center" style="width: ${t1_cw}px; height: ${t1_ch}px;">
+                                        <img src="${r1.avatar}" class="w-full h-full object-cover rounded-xl" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                     </div>
-                                    <!-- Laurel Wreath Overlay -->
-                                    <img src="src/assets/smurf_laurel_gold.png" class="absolute z-10 pointer-events-none filter drop-shadow-lg group-hover:scale-105 transition-transform" style="width: ${tc.t1_w}px; height: ${tc.t1_w}px; transform: translate(${tc.t1_x}px, ${tc.t1_y}px);" alt="Gold Laurel Frame">
+                                    <!-- 3:4 Rectangular Laurel Wreath Overlay -->
+                                    <img src="src/assets/smurf_laurel_gold.png" class="absolute z-10 pointer-events-none filter drop-shadow-lg group-hover:scale-105 transition-transform" style="width: ${t1_ww}px; height: ${t1_wh}px; transform: translate(${tc.t1_x || 0}px, ${tc.t1_y || 0}px);" alt="Gold Laurel Frame">
                                 </div>
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
@@ -3622,22 +3633,20 @@
                     `;
                 }
 
-                // Rank 3 (Bronze - Right)
+                // Rank 3 (Bronze - Right, 3:4 Vertical Card)
                 if (r3) {
-                    const w3 = tc.t3_w || tc.t2_w || 88;
-                    const a3 = tc.t3_a || tc.t2_a || 60;
                     const x3 = tc.t3_x || 0;
-                    const y3 = tc.t3_y || 1;
+                    const y3 = tc.t3_y || 0;
                     html += `
                         <div onclick="openModal('${r3.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
                             <span class="text-[9px] bg-amber-100/90 text-amber-800 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 3</span>
-                            <div class="relative flex items-center justify-center aspect-square" style="width: ${t3Box}px; height: ${t3Box}px;">
-                                <!-- Inner Circular Avatar with Full Card & Title Logo Visibility -->
-                                <div class="rounded-full overflow-hidden shadow-sm bg-white relative z-0 aspect-square border-2 border-amber-600/40 flex items-center justify-center p-1" style="width: ${a3}px; height: ${a3}px;">
-                                    <img src="${r3.avatar}" class="w-full h-full object-contain" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                            <div class="relative flex items-center justify-center" style="width: ${t3_bw}px; height: ${t3_bh}px;">
+                                <!-- Inner 3:4 Vertical Resident Card -->
+                                <div class="rounded-xl overflow-hidden shadow-md bg-white relative z-0 border-2 border-amber-600/40 flex items-center justify-center" style="width: ${t3_cw}px; height: ${t3_ch}px;">
+                                    <img src="${r3.avatar}" class="w-full h-full object-cover rounded-xl" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
-                                <!-- Laurel Wreath Overlay -->
-                                <img src="src/assets/smurf_laurel_bronze.png" class="absolute z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" style="width: ${w3}px; height: ${w3}px; transform: translate(${x3}px, ${y3}px);" alt="Bronze Laurel Frame">
+                                <!-- 3:4 Rectangular Laurel Wreath Overlay -->
+                                <img src="src/assets/smurf_laurel_bronze.png" class="absolute z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" style="width: ${t3_ww}px; height: ${t3_wh}px; transform: translate(${x3}px, ${y3}px);" alt="Bronze Laurel Frame">
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
                                 <span class="text-[11px] font-fredoka font-bold text-slate-800 truncate w-full px-0.5">${r3.smurfName}</span>
