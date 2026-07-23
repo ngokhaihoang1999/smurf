@@ -873,7 +873,7 @@
                     localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                     
                     // Silently sync local entry in residents data
-                    const idx = RESIDENTS_DATA.findIndex(r => String(r.telegramId) === String(currentUser.telegramId));
+                    const idx = RESIDENTS_DATA.findIndex(r => getResidentKey(r) === getResidentKey(currentUser));
                     if (idx !== -1) {
                         Object.assign(RESIDENTS_DATA[idx], {
                             ...data,
