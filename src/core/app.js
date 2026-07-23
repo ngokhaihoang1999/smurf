@@ -61,42 +61,19 @@
             checkResidentStatus(currentUserEmail);
         };
 
-        // Helper: Derive unique avatar filename key strictly from Column B Identifier (Gmail Primary Key)
+        // ── DETERMINISTIC AVATAR FILENAME CONVENTION ──
+        // Formula: email.trim().toLowerCase().replace(/[^a-z0-9]/g, '_')
         function getAvatarKeyByIdentifier(rawId) {
             if (!rawId) return 'smurf_basic_placeholder';
-            const rawStr = String(rawId).trim().toLowerCase();
-            if (rawStr.includes('hungtran.160513')) return 'hungtran.160513_gmail_com';
-            if (rawStr.includes('ngocthaotrinh4120')) return 'ngocthaotrinh4120_gmail_com';
-            const clean = rawStr.replace(/[^a-z0-9]/g, '_');
+            const clean = String(rawId).trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+            // Numerical ID aliases for legacy users
             if (clean === '5538099304') return 'yenchinguyen1012_gmail_com';
             if (clean === '1539535605') return 'ngokhaihoang1999_gmail_com';
             return clean;
         }
 
-        window.handleAvatarError = function(imgEl, userEmail) {
-            if (!imgEl) return;
-            const step = parseInt(imgEl.getAttribute('data-avatar-step') || '0');
-            if (!userEmail) {
-                imgEl.src = 'avatars/smurf_basic_placeholder.png';
-                return;
-            }
-            const cleanEmail = String(userEmail).trim().toLowerCase();
-            const userKey = getAvatarKeyByIdentifier(cleanEmail);
-            const prefix = cleanEmail.split('@')[0];
-
-            const fallbacks = [
-                `avatars/avatar_${userKey}.png`,
-                `avatars/avatar_${cleanEmail}.png`,
-                `avatars/avatar_${prefix}.png`,
-                `avatars/avatar_${cleanEmail.replace(/[^a-z0-9]/g, '_')}.png`,
-                `avatars/smurf_basic_placeholder.png`
-            ];
-
-            const nextStep = step + 1;
-            if (nextStep < fallbacks.length) {
-                imgEl.setAttribute('data-avatar-step', nextStep);
-                imgEl.src = fallbacks[nextStep];
-            } else {
+        window.handleAvatarError = function(imgEl) {
+            if (imgEl && imgEl.src !== 'avatars/smurf_basic_placeholder.png') {
                 imgEl.src = 'avatars/smurf_basic_placeholder.png';
             }
         };
