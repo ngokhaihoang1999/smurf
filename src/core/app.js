@@ -84,8 +84,8 @@
                 return;
             }
 
-            // Lookup resident in local RESIDENTS_DATA or via GAS
-            const foundUser = RESIDENTS_DATA.find(r => 
+            // 1. Try finding resident in RESIDENTS_DATA (cached or loaded)
+            const foundUser = (Array.isArray(RESIDENTS_DATA) ? RESIDENTS_DATA : []).find(r => 
                 String(r.email || r.telegramId || '').toLowerCase() === currentUserEmail.toLowerCase()
             );
 
@@ -93,23 +93,43 @@
                 currentUser = foundUser;
                 localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                 showHomeTab();
-            } else {
-                gasRequestJsonp({ action: 'lookup', email: currentUserEmail }, (resp) => {
-                    if (resp && resp.exists && resp.data) {
-                        const userKey = getAvatarKeyByIdentifier(resp.data.email || resp.data.telegramId);
-                        currentUser = {
-                            ...resp.data,
-                            avatar: `avatars/avatar_${userKey}.png?v=` + Date.now()
-                        };
-                        localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
-                        showHomeTab();
-                    } else {
-                        // Not registered yet -> show Registration screen with email prefilled
-                        showView('register');
-                        setupRegistrationForm();
-                    }
-                });
+                return;
             }
+
+            // 2. Instant fallback: construct resident from Google Auth info so logged-in user enters 0ms
+            let googleUser = {};
+            try {
+                googleUser = JSON.parse(localStorage.getItem('smurf_google_user')) || {};
+            } catch(e) {}
+
+            const userKey = getAvatarKeyByIdentifier(currentUserEmail);
+            currentUser = {
+                email: currentUserEmail,
+                realName: googleUser.name || currentUserEmail.split('@')[0],
+                smurfName: googleUser.name || currentUserEmail.split('@')[0],
+                group: 'Cư dân',
+                avatar: `avatars/avatar_${userKey}.png`
+            };
+            localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+            showHomeTab();
+
+            // 3. Background lookup to hydrate profile from GAS silently
+            gasRequestJsonp({ action: 'lookup', email: currentUserEmail }, (resp) => {
+                if (resp && resp.exists && resp.data) {
+                    const freshKey = getAvatarKeyByIdentifier(resp.data.email || resp.data.telegramId);
+                    currentUser = {
+                        ...resp.data,
+                        avatar: `avatars/avatar_${freshKey}.png`
+                    };
+                    localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                    updateHeaderBadge();
+                    if (document.getElementById('profile-avatar')) {
+                        loadProfileView();
+                    }
+                }
+            }, (err) => {
+                console.warn('Background lookup notice:', err);
+            });
         };
 
         function initGoogleSignIn() {
