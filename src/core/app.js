@@ -208,6 +208,16 @@
             if (urlParams.get('tid')) telegramId = urlParams.get('tid');
             if (urlParams.get('email')) currentUserEmail = urlParams.get('email');
 
+            // Fail-safe timeout: Guarantee loading screen is hidden within 3s under any network condition
+            setTimeout(() => {
+                const loadingView = document.getElementById('view-loading');
+                if (loadingView && !loadingView.classList.contains('hidden')) {
+                    console.warn("Loading timeout reached - redirecting to registration screen");
+                    showView('register');
+                    setupRegistrationForm();
+                }
+            }, 3000);
+
             // 1. Load from Cache immediately (0ms delay)
             const cachedUser = localStorage.getItem('smurf_user_cache');
             const cachedResidents = localStorage.getItem('smurf_residents_cache');
@@ -234,9 +244,10 @@
                     }
                 } catch(e) {
                     console.warn('Failed to parse cached user');
+                    tryAutoLogin();
                 }
             } else {
-                // Initialize Google Sign-In UI on loading screen
+                tryAutoLogin();
                 setTimeout(initGoogleSignIn, 200);
             }
 
