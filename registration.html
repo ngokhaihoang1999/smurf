@@ -1837,7 +1837,6 @@
 
         // ── STATE ──
         let currentUser = null;
-        
         let RESIDENTS_DATA = [];
         let activeFilter = 'ALL';
         let searchQuery = '';
@@ -1895,12 +1894,14 @@
 
         // ── AUTO LOGIN & DATA HYDRATION ──
         function tryAutoLogin() {
-            const currentUserEmail = localStorage.getItem('smurf_user_email');
-            if (!currentUserEmail) {
-                showView('register');
-                setupRegistrationForm();
+            const savedEmail = localStorage.getItem('smurf_user_email');
+            if (!savedEmail) {
+                showView('loading');
+                setTimeout(initGoogleSignIn, 150);
                 return;
             }
+
+            currentUserEmail = savedEmail;
 
             // 1. Try finding resident in RESIDENTS_DATA (cached or loaded)
             const foundUser = (Array.isArray(RESIDENTS_DATA) ? RESIDENTS_DATA : []).find(r => 
@@ -1914,7 +1915,19 @@
                 return;
             }
 
-            // 2. Instant fallback: construct resident from Google Auth info so logged-in user enters 0ms
+            // 2. Try loaded cached user
+            const cachedUser = localStorage.getItem('smurf_user_cache');
+            if (cachedUser) {
+                try {
+                    currentUser = JSON.parse(cachedUser);
+                    if (currentUser && currentUser.email) {
+                        showHomeTab();
+                        return;
+                    }
+                } catch(e) {}
+            }
+
+            // 3. Fallback: construct resident from Google Auth info so logged-in user enters 0ms
             let googleUser = {};
             try {
                 googleUser = JSON.parse(localStorage.getItem('smurf_google_user')) || {};
@@ -1931,7 +1944,7 @@
             localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
             showHomeTab();
 
-            // 3. Background lookup to hydrate profile from GAS silently
+            // 4. Background lookup to hydrate profile from GAS silently
             gasRequestJsonp({ action: 'lookup', email: currentUserEmail }, (resp) => {
                 if (resp && resp.exists && resp.data) {
                     const freshKey = getAvatarKeyByIdentifier(resp.data.email);
@@ -1941,8 +1954,8 @@
                     };
                     localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                     updateHeaderBadge();
-                    if (document.getElementById('profile-avatar')) {
-                        loadProfileView();
+                    if (getActiveView() === 'profile') {
+                        showProfileView();
                     }
                 }
             }, (err) => {
@@ -1972,14 +1985,24 @@
 
         function initGoogleSignIn() {
             const wrapper = document.getElementById('google-btn-wrapper');
-            if (!wrapper) return;
+            const fallbackInput = document.getElementById('fallback-email-input');
 
             // Pre-fill email input if user previously attempted
             const savedEmail = localStorage.getItem('smurf_user_email');
-            const fallbackInput = document.getElementById('fallback-email-input');
             if (savedEmail && fallbackInput && !fallbackInput.value) {
                 fallbackInput.value = savedEmail;
             }
+
+            if (fallbackInput && !fallbackInput.onkeydown) {
+                fallbackInput.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        submitFallbackEmail();
+                    }
+                };
+            }
+
+            if (!wrapper) return;
 
             const renderBtn = () => {
                 if (window.google && window.google.accounts && window.google.accounts.id) {
@@ -2070,7 +2093,6 @@
         // ── INIT APP (Offline-First & Background Load) ──
         async function initApp() {
             const urlParams = new URLSearchParams(window.location.search);
-            
 
             // Read saved email and google user info immediately on startup
             const savedEmail = localStorage.getItem('smurf_user_email');
@@ -2191,7 +2213,7 @@
                     updateLeaderboard();
 
                     // Lookup current user in fresh data using Email
-                    const lookupKey = (currentUserEmail || '').toLowerCase();
+                    const lookupKey = (currentUserEmail || localStorage.getItem('smurf_user_email') || '').toLowerCase();
                     if (lookupKey) {
                         const foundUser = RESIDENTS_DATA.find(r => 
                             String(r.email || '').toLowerCase() === lookupKey
@@ -2201,7 +2223,7 @@
                             localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                             
                             const activeView = getActiveView();
-                            if (activeView === 'loading' || activeView === 'register') {
+                            if (activeView === 'loading') {
                                 const tab = urlParams.get('tab');
                                 if (tab === 'village') {
                                     showVillageTab();
@@ -2213,18 +2235,6 @@
                             } else if (activeView === 'home') {
                                 showHomeTab();
                             }
-                        } else {
-                            // User not registered -> prompt registration with pre-filled email
-                            if (!currentUser) {
-                                showView('register');
-                                setupRegistrationForm();
-                            }
-                        }
-                    } else {
-                        // Not logged in -> render Google Sign-In button
-                        if (!currentUser) {
-                            showView('loading');
-                            setTimeout(initGoogleSignIn, 150);
                         }
                     }
 
@@ -2490,7 +2500,7 @@
         function setupRegistrationForm() {
             if (document.getElementById('user-email')) document.getElementById('user-email').value = currentUserEmail;
             if (document.getElementById('google-name')) document.getElementById('google-name').value = currentGoogleName;
-            
+
             
             updateGoogleAuthBanner();
             setupCharCounters();
@@ -2722,7 +2732,7 @@
             // Ensure email is always populated
             const userIdentifier = data.email || currentUserEmail || ('user_' + Date.now());
             data.email = userIdentifier;
-                        data.id = userIdentifier;
+            data.id = userIdentifier;
             data.googleName = data.googleName || currentGoogleName || data.smurfName || '';
 
             // Explicitly ensure avatar styling fields are extracted even if FormData missed any
@@ -2777,11 +2787,10 @@
             const saveBtn = document.getElementById('edit-save-btn');
             saveBtn.disabled = true; saveBtn.style.opacity = '0.7';
 
-            const userKey = currentUser ? (currentUser.email) : (currentUserEmail || '');
+            const userKey = currentUser ? currentUser.email : currentUserEmail;
             const data = {
                 action: 'update',
                 email: userKey,
-                
                 smurfName: document.getElementById('edit-smurf-name').value,
                 realName: document.getElementById('edit-real-name').value,
                 group: document.getElementById('edit-group').value,
@@ -2935,9 +2944,13 @@
             }
         ];
 
-        function showWishingWellMessage() { alert('⛲ Giếng nước cổ kính của Làng Xì Trum. Nghe nói ném một đồng xu vàng vào đây sẽ mang lại may mắn lớn!'); }
+        function showWishingWellMessage() {
+            alert('⛲ Giếng nước cổ kính của Làng Xì Trum. Nghe nói ném một đồng xu vàng vào đây sẽ mang lại may mắn lớn!');
+        }
 
-        function showGateMessage() { alert('🚧 Chào mừng các cư dân và khách ghé thăm Làng Xì Trum đáng yêu!'); }
+        function showGateMessage() {
+            alert('🚧 Chào mừng các cư dân và khách ghé thăm Làng Xì Trum đáng yêu!');
+        }
 
         function renderMapLandmarks() {
             const container = document.getElementById('map-landmarks-layer');
@@ -3112,8 +3125,6 @@
                             el.style.zIndex = ''; // Restore normal stacking order
                         }, 300);
                     }, 2500);
-                    
-                    // 4. Haptic Feedback
                     
                 };
                 
@@ -5121,8 +5132,6 @@
             }, 10);
             
             startConfetti();
-            
-            
         }
 
         function closeFortuneModal() {
@@ -5414,7 +5423,6 @@
                 const r = RESIDENTS_DATA.find(res => getSocialKey(res) === cleanKey || String(res.email).toLowerCase() === cleanKey);
                 if (r) {
                     if (r.email) db[String(r.email).toLowerCase()] = data;
-                    
                 }
             }
             
@@ -5464,7 +5472,6 @@
                             const itemData = { likes: l, funnys: f, stars: s, cools: c, comments: existing.comments || [] };
                             db[sKey] = itemData;
                             if (r.email) db[String(r.email).toLowerCase()] = itemData;
-                            
                         });
                     }
                     
@@ -5592,7 +5599,7 @@
             loadSocialData();
             updateLeaderboard();
             
-            
+
             
             // 2. QUEUE & DEBOUNCE ASYNC SERVER SYNC (Prevents API spamming & lag)
             reactionQueue[reactionKey] = {
@@ -5847,8 +5854,6 @@
                 vibeModal.classList.remove('hidden');
                 vibeModal.classList.add('flex');
             }
-            
-            
         }
 
         function closeTrumVibeModal() {
@@ -6065,12 +6070,7 @@
                 }
             }
             
-             else if (mood === 'lightning') {
-                    tg.HapticFeedback.notificationOccurred('warning');
-                } else {
-                    tg.HapticFeedback.impactOccurred('medium');
-                }
-            }
+
             
             // Reset to normal after exactly 5 seconds
             if (effectTimeoutId) clearTimeout(effectTimeoutId);
@@ -6178,8 +6178,6 @@
             script.id = callbackName;
             script.src = `${GAS_WEBAPP_URL}?action=sendChat&email=${encodeURIComponent(userEmail)}&smurfName=${encodeURIComponent(smurfName)}&message=${encodeURIComponent(message)}&mood=${encodeURIComponent(activeMood)}&callback=${callbackName}`;
             document.body.appendChild(script);
-            
-            
         }
 
         function appendLocalChatMessage(msg) {
@@ -6298,6 +6296,6 @@
         setupPopupDragToMove();
         setupChatKeyboardHandling();
 
-    </script>
+</script>
 </body>
 </html>

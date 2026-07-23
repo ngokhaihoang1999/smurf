@@ -74,12 +74,14 @@
 
         // ── AUTO LOGIN & DATA HYDRATION ──
         function tryAutoLogin() {
-            const currentUserEmail = localStorage.getItem('smurf_user_email');
-            if (!currentUserEmail) {
-                showView('register');
-                setupRegistrationForm();
+            const savedEmail = localStorage.getItem('smurf_user_email');
+            if (!savedEmail) {
+                showView('loading');
+                setTimeout(initGoogleSignIn, 150);
                 return;
             }
+
+            currentUserEmail = savedEmail;
 
             // 1. Try finding resident in RESIDENTS_DATA (cached or loaded)
             const foundUser = (Array.isArray(RESIDENTS_DATA) ? RESIDENTS_DATA : []).find(r => 
@@ -93,7 +95,19 @@
                 return;
             }
 
-            // 2. Instant fallback: construct resident from Google Auth info so logged-in user enters 0ms
+            // 2. Try loaded cached user
+            const cachedUser = localStorage.getItem('smurf_user_cache');
+            if (cachedUser) {
+                try {
+                    currentUser = JSON.parse(cachedUser);
+                    if (currentUser && currentUser.email) {
+                        showHomeTab();
+                        return;
+                    }
+                } catch(e) {}
+            }
+
+            // 3. Fallback: construct resident from Google Auth info so logged-in user enters 0ms
             let googleUser = {};
             try {
                 googleUser = JSON.parse(localStorage.getItem('smurf_google_user')) || {};
@@ -110,7 +124,7 @@
             localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
             showHomeTab();
 
-            // 3. Background lookup to hydrate profile from GAS silently
+            // 4. Background lookup to hydrate profile from GAS silently
             gasRequestJsonp({ action: 'lookup', email: currentUserEmail }, (resp) => {
                 if (resp && resp.exists && resp.data) {
                     const freshKey = getAvatarKeyByIdentifier(resp.data.email);
@@ -120,8 +134,8 @@
                     };
                     localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                     updateHeaderBadge();
-                    if (document.getElementById('profile-avatar')) {
-                        loadProfileView();
+                    if (getActiveView() === 'profile') {
+                        showProfileView();
                     }
                 }
             }, (err) => {
@@ -151,14 +165,24 @@
 
         function initGoogleSignIn() {
             const wrapper = document.getElementById('google-btn-wrapper');
-            if (!wrapper) return;
+            const fallbackInput = document.getElementById('fallback-email-input');
 
             // Pre-fill email input if user previously attempted
             const savedEmail = localStorage.getItem('smurf_user_email');
-            const fallbackInput = document.getElementById('fallback-email-input');
             if (savedEmail && fallbackInput && !fallbackInput.value) {
                 fallbackInput.value = savedEmail;
             }
+
+            if (fallbackInput && !fallbackInput.onkeydown) {
+                fallbackInput.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        submitFallbackEmail();
+                    }
+                };
+            }
+
+            if (!wrapper) return;
 
             const renderBtn = () => {
                 if (window.google && window.google.accounts && window.google.accounts.id) {
@@ -369,7 +393,7 @@
                     updateLeaderboard();
 
                     // Lookup current user in fresh data using Email
-                    const lookupKey = (currentUserEmail || '').toLowerCase();
+                    const lookupKey = (currentUserEmail || localStorage.getItem('smurf_user_email') || '').toLowerCase();
                     if (lookupKey) {
                         const foundUser = RESIDENTS_DATA.find(r => 
                             String(r.email || '').toLowerCase() === lookupKey
@@ -379,7 +403,7 @@
                             localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
                             
                             const activeView = getActiveView();
-                            if (activeView === 'loading' || activeView === 'register') {
+                            if (activeView === 'loading') {
                                 const tab = urlParams.get('tab');
                                 if (tab === 'village') {
                                     showVillageTab();
@@ -391,18 +415,6 @@
                             } else if (activeView === 'home') {
                                 showHomeTab();
                             }
-                        } else {
-                            // User not registered -> prompt registration with pre-filled email
-                            if (!currentUser) {
-                                showView('register');
-                                setupRegistrationForm();
-                            }
-                        }
-                    } else {
-                        // Not logged in -> render Google Sign-In button
-                        if (!currentUser) {
-                            showView('loading');
-                            setTimeout(initGoogleSignIn, 150);
                         }
                     }
 
