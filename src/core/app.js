@@ -423,16 +423,93 @@
             });
         }
 
-        function handleFetchError() {
-            // Fallback: If network is offline/CORS error, force register screen
-            if (!currentUser) {
-                showView('register');
-                setupRegistrationForm();
+        function processResidentsData(resp) {
+            RESIDENTS_DATA = resp.residents
+                .filter(r => {
+                    const smurf = (r.smurfName || '').toLowerCase();
+                    const real = (r.realName || '').toLowerCase();
+                    const grp = (r.group || '').toLowerCase();
+                    const tid = String(r.telegramId || r.email || '');
+                    if (smurf.includes('test') || real.includes('test') || grp.includes('nhóm a') || grp === 'a' || tid === '123456' || tid === '123') {
+                        return false;
+                    }
+                    return true;
+                })
+                .map(r => {
+                    const rawId = String(r.email || r.telegramId || r.id || '').trim();
+                    const userKey = getAvatarKeyByIdentifier(rawId);
+                    return {
+                        email: r.email || '',
+                        telegramId: r.telegramId || r.email || '',
+                        googleName: r.googleName || '',
+                        smurfName: r.smurfName || '',
+                        realName: r.realName || '',
+                        group: r.group || '',
+                        personality: r.personality || '',
+                        tinhCach: r.personality || '',
+                        hobbies: r.hobbies || '',
+                        soThich: r.hobbies || '',
+                        strength: r.strength || '',
+                        diemManh: r.strength || '',
+                        weakness: r.weakness || '',
+                        diemYeu: r.weakness || '',
+                        bio: r.bio || '',
+                        avatar: `avatars/avatar_${userKey}.png?v=` + (r.timestamp ? new Date(r.timestamp).getTime() : Date.now()),
+                        gender: r.gender || '',
+                        hat: r.hat || '',
+                        hatcolor: r.hatcolor || '',
+                        hair: r.hair || '',
+                        faceacc: r.faceacc || '',
+                        outfit: r.outfit || '',
+                        prop: r.prop || '',
+                        expression: r.expression || '',
+                        pose: r.pose || '',
+                        background: r.background || '',
+                        cardFront: ''
+                    };
+                });
+
+            localStorage.setItem('smurf_residents_cache', JSON.stringify(RESIDENTS_DATA));
+            fetchFreshReactions();
+            updateLeaderboard();
+            renderGrid();
+
+            // Re-lookup current user in fresh data
+            const lookupKey = (currentUserEmail || telegramId || '').toLowerCase();
+            if (lookupKey) {
+                const foundUser = RESIDENTS_DATA.find(r => 
+                    String(r.email || r.telegramId || '').toLowerCase() === lookupKey
+                );
+                if (foundUser) {
+                    currentUser = foundUser;
+                    localStorage.setItem('smurf_user_cache', JSON.stringify(currentUser));
+                    updateHeaderBadge();
+                }
             }
         }
 
+        function handleFetchError() {
+            // If user is logged in but data is empty, retry after 3s
+            if (currentUser && RESIDENTS_DATA.length === 0) {
+                console.warn('Data fetch failed, retrying in 3s...');
+                setTimeout(() => {
+                    gasRequestJsonp({ action: 'listAll' }, (resp) => {
+                        if (resp && resp.status === 'success' && resp.residents) {
+                            processResidentsData(resp);
+                        }
+                    });
+                }, 3000);
+            } else if (!currentUser) {
+                showView('register');
+                setupRegistrationForm();
+            }
+            // Still render whatever cache we have
+            updateLeaderboard();
+            renderGrid();
+        }
+
         function getActiveView() {
-            const views = ['loading', 'register', 'profile', 'village'];
+            const views = ['loading', 'home', 'register', 'profile', 'village'];
             for (let v of views) {
                 const el = document.getElementById('view-' + v);
                 if (el && !el.classList.contains('hidden')) return v;
