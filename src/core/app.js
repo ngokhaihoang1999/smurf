@@ -1713,6 +1713,7 @@
                 const cardEl = document.createElement('div');
                 cardEl.className = 'card-scene smurf-card flex flex-col overflow-hidden';
                 const key = getResidentKey(item);
+                cardEl.setAttribute('data-resident-key', key);
                 cardEl.onclick = function() { openModal(key, this); };
                 const formattedPersonality = formatEnneagramText(item.tinhCach ? item.tinhCach.split(',')[0] : '');
                 const formattedHobby = item.soThich ? item.soThich.split(',')[0] : '';
@@ -1799,7 +1800,7 @@
                 if (r2) {
                     const k2 = getResidentKey(r2);
                     html += `
-                        <div onclick="openModal('${k2}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
+                        <div data-podium-key="${k2}" onclick="openModal('${k2}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
                             <span class="text-[9px] bg-slate-200/90 text-slate-700 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 2</span>
                             <div class="relative flex items-center justify-center" style="width: ${t2_bw}px; height: ${t2_bh}px;">
                                 <!-- Inner 3:4 Vertical Resident Card with Offset X, Y -->
@@ -1821,7 +1822,7 @@
                 if (r1) {
                     const k1 = getResidentKey(r1);
                     html += `
-                        <div onclick="openModal('${k1}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[130px] z-20 -mt-2">
+                        <div data-podium-key="${k1}" onclick="openModal('${k1}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[130px] z-20 -mt-2">
                             <div class="relative flex flex-col items-center w-full">
                                 <img src="src/assets/smurf_crown_gold.png" class="w-8 h-8 object-contain absolute -top-5 z-30 animate-bounce filter drop-shadow-sm" style="animation-duration: 2.2s;" alt="Gold Crown">
                                 <span class="text-[9px] bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-white px-2.5 py-0.5 rounded-full font-extrabold z-20 shadow-md uppercase tracking-wider mb-1 mt-1">TOP 1</span>
@@ -1848,7 +1849,7 @@
                     const x3 = tc.t3_x || 0;
                     const y3 = tc.t3_y || 0;
                     html += `
-                        <div onclick="openModal('${k3}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
+                        <div data-podium-key="${k3}" onclick="openModal('${k3}', this)" class="flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-all w-[110px] relative z-10">
                             <span class="text-[9px] bg-amber-100/90 text-amber-800 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 3</span>
                             <div class="relative flex items-center justify-center" style="width: ${t3_bw}px; height: ${t3_bh}px;">
                                 <!-- Inner 3:4 Vertical Resident Card with Offset X, Y -->
@@ -2343,6 +2344,28 @@
             }
         }
 
+        function updateActiveGridCardTarget(item) {
+            if (!item) return;
+            const resKey = getResidentKey(item);
+            
+            // Restore previous clicked card opacity if changed
+            if (lastClickedElement && lastClickedElement !== document.body) {
+                try { lastClickedElement.style.opacity = '1'; } catch(e) {}
+            }
+            
+            // Find current active card in the grid or podium
+            const escapeKey = window.CSS && CSS.escape ? CSS.escape(resKey) : resKey;
+            const gridCard = document.querySelector(`.smurf-card[data-resident-key="${escapeKey}"]`) ||
+                             document.querySelector(`[data-podium-key="${escapeKey}"]`);
+                             
+            if (gridCard) {
+                lastClickedElement = gridCard;
+                try { gridCard.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch(e) {}
+                lastClickedRect = gridCard.getBoundingClientRect();
+                gridCard.style.opacity = '0';
+            }
+        }
+
         function openModal(identifier, clickedElement) {
             if (closeTimeoutId) {
                 clearTimeout(closeTimeoutId);
@@ -2354,7 +2377,8 @@
             if (!item) return;
             activeModalItem = item;
             
-            const avatarUrl = (item.avatar ? (item.avatar.split('?')[0] + '?v=' + Date.now()) : `avatars/avatar_${item.telegramId}.png?v=` + Date.now());
+            // Fast instant cache avatar resolution without forcing Date.now() cache-busting to prevent flash
+            const avatarUrl = item.avatar || 'avatars/smurf_basic_placeholder.png';
             document.getElementById('m-card-avatar').src = avatarUrl;
             document.getElementById('m-card-avatar').onerror = function() { this.src = 'avatars/smurf_basic_placeholder.png'; };
             document.getElementById('m-preview-smurf-avatar').src = avatarUrl;
@@ -2375,9 +2399,10 @@
             
             adjustAllCardFonts('m-preview-');
             
-            const rect = clickedElement.getBoundingClientRect();
+            const rect = (clickedElement && clickedElement.getBoundingClientRect) ? clickedElement.getBoundingClientRect() : (lastClickedRect || { top: window.innerHeight/2 - 100, left: window.innerWidth/2 - 75, width: 150, height: 200 });
             lastClickedRect = rect;
             lastClickedElement = clickedElement;
+            updateActiveGridCardTarget(item);
             
             modalFlipped = false;
             manualRotateLandscape = false;
@@ -2589,6 +2614,9 @@
             const desktopNext = document.querySelector('button[onclick="navigateModal(\'next\')"]');
 
             if (lastClickedRect && lastClickedElement) {
+                try {
+                    lastClickedRect = lastClickedElement.getBoundingClientRect();
+                } catch(e) {}
                 const card3d = document.getElementById('modalCard3d');
                 card3d.classList.remove('flipped');
                 
@@ -2680,6 +2708,7 @@
             
             setTimeout(() => {
                 activeModalItem = nextItem;
+                updateActiveGridCardTarget(nextItem);
                 
                 const avatarUrl = nextItem.avatar;
                 document.getElementById('m-card-avatar').src = avatarUrl;
