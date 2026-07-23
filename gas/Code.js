@@ -532,6 +532,9 @@ function handleGetReactions(data) {
   var summaryMap = {};
   if (sLast > 1) {
     var sData = summarySheet.getRange(2, 1, sLast - 1, 6).getValues();
+    var rowsToDelete = [];
+    var rowMap = {};
+
     for (var i = 0; i < sData.length; i++) {
       var rawEmailKey = String(sData[i][0]).trim();
       if (!rawEmailKey) continue;
@@ -541,23 +544,53 @@ function handleGetReactions(data) {
       var starsCount = Number(sData[i][4]) || 0;
       var coolsCount = Number(sData[i][5]) || 0;
       
-      var itemObj = {
-        likes: likesCount,
-        funnys: funnysCount,
-        stars: starsCount,
-        cools: coolsCount,
-        // Full Backward Compatibility aliases
-        heart: likesCount,
-        party: funnysCount,
-        star: starsCount,
-        fire: coolsCount,
-        like: likesCount,
-        funny: funnysCount,
-        cool: coolsCount
-      };
+      if (!summaryMap[emailKeyLower]) {
+        var itemObj = {
+          likes: likesCount,
+          funnys: funnysCount,
+          stars: starsCount,
+          cools: coolsCount,
+          heart: likesCount,
+          party: funnysCount,
+          star: starsCount,
+          fire: coolsCount,
+          like: likesCount,
+          funny: funnysCount,
+          cool: coolsCount
+        };
+        summaryMap[emailKeyLower] = itemObj;
+        summaryMap[rawEmailKey] = itemObj;
+        rowMap[emailKeyLower] = i + 2;
+      } else {
+        // Accumulate duplicate row counts and queue extra row for deletion
+        var existing = summaryMap[emailKeyLower];
+        existing.likes += likesCount;
+        existing.funnys += funnysCount;
+        existing.stars += starsCount;
+        existing.cools += coolsCount;
+        existing.heart = existing.likes;
+        existing.party = existing.funnys;
+        existing.star = existing.stars;
+        existing.fire = existing.cools;
+        existing.like = existing.likes;
+        existing.funny = existing.funnys;
+        existing.cool = existing.cools;
+        rowsToDelete.push(i + 2);
+      }
+    }
 
-      summaryMap[emailKeyLower] = itemObj;
-      summaryMap[rawEmailKey] = itemObj;
+    // Clean up duplicate rows if any exist
+    if (rowsToDelete.length > 0) {
+      for (var d = rowsToDelete.length - 1; d >= 0; d--) {
+        summarySheet.deleteRow(rowsToDelete[d]);
+      }
+      for (var k in rowMap) {
+        var rNum = rowMap[k];
+        var tot = summaryMap[k];
+        if (tot && rNum > 1) {
+          summarySheet.getRange(rNum, 3, 1, 4).setValues([[tot.likes, tot.funnys, tot.stars, tot.cools]]);
+        }
+      }
     }
   }
   
@@ -638,7 +671,7 @@ function handleUpdateReaction(data) {
     logsSheet.appendRow([new Date(), sanitizeInput(fromEmail), sanitizeInput(targetEmail), sanitizeInput(smurfName), typeProp, isAdd ? "ADD" : "REMOVE"]);
   } catch (e) {}
   
-  // Update Summary Sheet
+  // Update Summary Sheet with automatic deduplication
   var summarySheet = getReactionsSummarySheet();
   var sLast = summarySheet.getLastRow();
   var targetRow = -1;
@@ -647,14 +680,29 @@ function handleUpdateReaction(data) {
   
   if (sLast > 1) {
     var sData = summarySheet.getRange(2, 1, sLast - 1, 6).getValues();
+    var duplicateRowsToDelete = [];
     for (var i = 0; i < sData.length; i++) {
       if (String(sData[i][0]).trim().toLowerCase() === tKeyLower) {
-        targetRow = i + 2;
-        counts.likes = Number(sData[i][2]) || 0;
-        counts.funnys = Number(sData[i][3]) || 0;
-        counts.stars = Number(sData[i][4]) || 0;
-        counts.cools = Number(sData[i][5]) || 0;
-        break;
+        if (targetRow === -1) {
+          targetRow = i + 2;
+          counts.likes = Number(sData[i][2]) || 0;
+          counts.funnys = Number(sData[i][3]) || 0;
+          counts.stars = Number(sData[i][4]) || 0;
+          counts.cools = Number(sData[i][5]) || 0;
+        } else {
+          // Accumulate counts from legacy duplicate row and queue for deletion
+          counts.likes += Number(sData[i][2]) || 0;
+          counts.funnys += Number(sData[i][3]) || 0;
+          counts.stars += Number(sData[i][4]) || 0;
+          counts.cools += Number(sData[i][5]) || 0;
+          duplicateRowsToDelete.push(i + 2);
+        }
+      }
+    }
+    
+    if (duplicateRowsToDelete.length > 0) {
+      for (var d = duplicateRowsToDelete.length - 1; d >= 0; d--) {
+        summarySheet.deleteRow(duplicateRowsToDelete[d]);
       }
     }
   }
@@ -664,7 +712,7 @@ function handleUpdateReaction(data) {
   counts[typeProp] = newCount;
   
   if (targetRow !== -1) {
-    summarySheet.getRange(targetRow, targetCol).setValue(newCount);
+    summarySheet.getRange(targetRow, 3, 1, 4).setValues([[counts.likes, counts.funnys, counts.stars, counts.cools]]);
     if (smurfName) summarySheet.getRange(targetRow, 2).setValue(sanitizeInput(smurfName));
   } else {
     counts[typeProp] = isAdd ? 1 : 0;

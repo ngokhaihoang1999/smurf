@@ -3480,7 +3480,7 @@
             showImageForDownload(avatarUrl, `avatar_${userKey}.png`);
         }
 
-        function downloadResidentCard() {
+        function downloadResidentCardInternal() {
             if (!currentUser) return;
 
             const cardEl = document.getElementById('modalCardScaleWrapper');
@@ -3651,13 +3651,7 @@
             previewModal.classList.remove('hidden');
         }
 
-        window.downloadResidentCard = function() {
-            if (typeof exportCardImage === 'function') {
-                exportCardImage();
-            } else {
-                alert("⚠️ Đang chuẩn bị tạo ảnh thẻ...");
-            }
-        };
+        window.downloadResidentCard = downloadResidentCardInternal;
 
         window.downloadPortraitAvatar = function() {
             if (currentUser && currentUser.avatar) {
