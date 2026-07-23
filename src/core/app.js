@@ -1757,7 +1757,7 @@
             
             // Calculate total reactions for each resident
             const scored = RESIDENTS_DATA.map(r => {
-                const social = getSocialData(r.telegramId);
+                const social = getSocialData(getSocialKey(r));
                 const score = (social.likes || 0) + (social.funnys || 0) + (social.stars || 0) + (social.cools || 0);
                 return { ...r, score };
             });
@@ -3395,25 +3395,51 @@
             }
         }
 
-        function getSocialData(tid) {
-            let db = {};
-            try {
-                const cached = localStorage.getItem('smurf_social_db');
-                if (cached) db = JSON.parse(cached);
-            } catch(e) {}
-            if (!db[tid]) {
-                db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
-            }
-            return db[tid];
+        function getSocialKey(r) {
+            if (!r) return '';
+            if (typeof r === 'string') return r.trim().toLowerCase();
+            return String(r.email || r.telegramId || r.id || '').trim().toLowerCase();
         }
 
-        function saveSocialData(tid, data) {
+        function getSocialData(key) {
+            if (!key) return { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
+            const cleanKey = typeof key === 'object' ? getSocialKey(key) : String(key).trim().toLowerCase();
             let db = {};
             try {
                 const cached = localStorage.getItem('smurf_social_db');
                 if (cached) db = JSON.parse(cached);
             } catch(e) {}
-            db[tid] = data;
+            
+            if (db[cleanKey]) return db[cleanKey];
+            
+            for (let k in db) {
+                if (k.toLowerCase() === cleanKey) return db[k];
+            }
+            
+            db[cleanKey] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
+            return db[cleanKey];
+        }
+
+        function saveSocialData(key, data) {
+            if (!key) return;
+            const cleanKey = typeof key === 'object' ? getSocialKey(key) : String(key).trim().toLowerCase();
+            let db = {};
+            try {
+                const cached = localStorage.getItem('smurf_social_db');
+                if (cached) db = JSON.parse(cached);
+            } catch(e) {}
+            
+            db[cleanKey] = data;
+            
+            // If key belongs to a resident in RESIDENTS_DATA, mirror under aliases as well
+            if (Array.isArray(RESIDENTS_DATA)) {
+                const r = RESIDENTS_DATA.find(res => getSocialKey(res) === cleanKey || String(res.telegramId).toLowerCase() === cleanKey || String(res.email).toLowerCase() === cleanKey);
+                if (r) {
+                    if (r.email) db[String(r.email).toLowerCase()] = data;
+                    if (r.telegramId) db[String(r.telegramId).toLowerCase()] = data;
+                }
+            }
+            
             localStorage.setItem('smurf_social_db', JSON.stringify(db));
         }
 
@@ -3431,7 +3457,7 @@
             const isVillageActive = villageView && !villageView.classList.contains('hidden');
             if (!isVillageActive && !activeModalItem) return;
             
-            const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
+            const activeFromId = telegramId || (currentUser ? String(currentUser.email || currentUser.telegramId || '') : '') || getDeviceId();
             gasRequestJsonp({ action: 'getReactions', fromTelegramId: activeFromId }, (reactResp) => {
                 if (reactResp && reactResp.status === 'success') {
                     let db = {};
@@ -3444,16 +3470,23 @@
                     
                     if (Array.isArray(RESIDENTS_DATA) && RESIDENTS_DATA.length > 0) {
                         RESIDENTS_DATA.forEach(r => {
-                            const tid = String(r.telegramId || r.email || '');
-                            if (!tid) return;
-                            if (!db[tid]) {
-                                db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
-                            }
-                            const counts = serverReactions[tid] || serverReactions[tid.toLowerCase()] || serverReactions[r.email] || serverReactions[(r.email||'').toLowerCase()] || {};
-                            db[tid].likes = Number(counts.likes ?? counts.heart ?? counts.like ?? db[tid].likes ?? 0);
-                            db[tid].funnys = Number(counts.funnys ?? counts.party ?? counts.funny ?? db[tid].funnys ?? 0);
-                            db[tid].stars = Number(counts.stars ?? counts.star ?? db[tid].stars ?? 0);
-                            db[tid].cools = Number(counts.cools ?? counts.fire ?? counts.cool ?? db[tid].cools ?? 0);
+                            const sKey = getSocialKey(r);
+                            if (!sKey) return;
+                            
+                            const counts = serverReactions[sKey] || 
+                                           serverReactions[String(r.email || '').toLowerCase()] || 
+                                           serverReactions[String(r.telegramId || '').toLowerCase()] || {};
+                                           
+                            const existing = db[sKey] || {};
+                            const l = Number(counts.likes ?? counts.heart ?? counts.like ?? existing.likes ?? 0);
+                            const f = Number(counts.funnys ?? counts.party ?? counts.funny ?? existing.funnys ?? 0);
+                            const s = Number(counts.stars ?? counts.star ?? existing.stars ?? 0);
+                            const c = Number(counts.cools ?? counts.fire ?? counts.cool ?? existing.cools ?? 0);
+                            
+                            const itemData = { likes: l, funnys: f, stars: s, cools: c, comments: existing.comments || [] };
+                            db[sKey] = itemData;
+                            if (r.email) db[String(r.email).toLowerCase()] = itemData;
+                            if (r.telegramId) db[String(r.telegramId).toLowerCase()] = itemData;
                         });
                     }
                     
