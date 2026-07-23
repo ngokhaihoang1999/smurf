@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784811531473" rel="stylesheet"/>
+    <link href="styles.css?v=1784811839910" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -744,13 +744,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-100px)] min-h-[550px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784811531473');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784811839910');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784811531473" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784811839910" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -3690,7 +3690,7 @@
                 filteredResidentsList.forEach(item => {
                     try {
                         const cardEl = document.createElement('div');
-                        cardEl.className = 'w-full max-w-[260px] bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200/80 cursor-pointer hover:shadow-lg transition-all flex flex-col active:scale-95';
+                        cardEl.className = 'card-scene smurf-card w-full max-w-[260px] bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200/80 cursor-pointer hover:shadow-lg transition-all flex flex-col active:scale-95';
                         const key = getResidentKey(item);
                         cardEl.setAttribute('data-resident-key', key);
                         cardEl.onclick = function() { openModal(key, this); };
@@ -4353,9 +4353,20 @@
                 try { lastClickedElement.style.opacity = '1'; } catch(e) {}
             }
             
+            // If lastClickedElement was explicitly clicked and belongs to this resident, retain it!
+            if (lastClickedElement && lastClickedElement.getAttribute) {
+                const clickResKey = getResidentKey(lastClickedElement.getAttribute('data-resident-key') || lastClickedElement.getAttribute('data-podium-key'));
+                if (clickResKey === resKey) {
+                    lastClickedRect = lastClickedElement.getBoundingClientRect();
+                    lastClickedElement.style.opacity = '0';
+                    return;
+                }
+            }
+
             // Find current active card in the grid or podium
             const escapeKey = window.CSS && CSS.escape ? CSS.escape(resKey) : resKey;
-            const gridCard = document.querySelector(`.smurf-card[data-resident-key="${escapeKey}"]`) ||
+            const gridCard = document.querySelector(`#residents-grid [data-resident-key="${escapeKey}"]`) ||
+                             document.querySelector(`[data-resident-key="${escapeKey}"]`) ||
                              document.querySelector(`[data-podium-key="${escapeKey}"]`);
                              
             if (gridCard) {
@@ -4641,6 +4652,14 @@
                 container.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
 
                 lastClickedElement.style.opacity = '1';
+
+                // Safety restore: Ensure all elements matching resident key are visible
+                if (activeModalItem) {
+                    const activeKey = getResidentKey(activeModalItem);
+                    document.querySelectorAll(`[data-resident-key="${activeKey}"], [data-podium-key="${activeKey}"]`).forEach(el => {
+                        el.style.opacity = '1';
+                    });
+                }
 
                 closeTimeoutId = setTimeout(() => {
                     container.style.willChange = '';

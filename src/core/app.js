@@ -1890,7 +1890,7 @@
                 filteredResidentsList.forEach(item => {
                     try {
                         const cardEl = document.createElement('div');
-                        cardEl.className = 'w-full max-w-[260px] bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200/80 cursor-pointer hover:shadow-lg transition-all flex flex-col active:scale-95';
+                        cardEl.className = 'card-scene smurf-card w-full max-w-[260px] bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200/80 cursor-pointer hover:shadow-lg transition-all flex flex-col active:scale-95';
                         const key = getResidentKey(item);
                         cardEl.setAttribute('data-resident-key', key);
                         cardEl.onclick = function() { openModal(key, this); };
@@ -2553,9 +2553,20 @@
                 try { lastClickedElement.style.opacity = '1'; } catch(e) {}
             }
             
+            // If lastClickedElement was explicitly clicked and belongs to this resident, retain it!
+            if (lastClickedElement && lastClickedElement.getAttribute) {
+                const clickResKey = getResidentKey(lastClickedElement.getAttribute('data-resident-key') || lastClickedElement.getAttribute('data-podium-key'));
+                if (clickResKey === resKey) {
+                    lastClickedRect = lastClickedElement.getBoundingClientRect();
+                    lastClickedElement.style.opacity = '0';
+                    return;
+                }
+            }
+
             // Find current active card in the grid or podium
             const escapeKey = window.CSS && CSS.escape ? CSS.escape(resKey) : resKey;
-            const gridCard = document.querySelector(`.smurf-card[data-resident-key="${escapeKey}"]`) ||
+            const gridCard = document.querySelector(`#residents-grid [data-resident-key="${escapeKey}"]`) ||
+                             document.querySelector(`[data-resident-key="${escapeKey}"]`) ||
                              document.querySelector(`[data-podium-key="${escapeKey}"]`);
                              
             if (gridCard) {
@@ -2841,6 +2852,14 @@
                 container.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
 
                 lastClickedElement.style.opacity = '1';
+
+                // Safety restore: Ensure all elements matching resident key are visible
+                if (activeModalItem) {
+                    const activeKey = getResidentKey(activeModalItem);
+                    document.querySelectorAll(`[data-resident-key="${activeKey}"], [data-podium-key="${activeKey}"]`).forEach(el => {
+                        el.style.opacity = '1';
+                    });
+                }
 
                 closeTimeoutId = setTimeout(() => {
                     container.style.willChange = '';
