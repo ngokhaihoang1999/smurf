@@ -468,7 +468,7 @@ function handleGetChat() {
 }
 
 // ═══════════════════════════════════════
-// EMOJI REACTIONS FUNCTIONALITY
+// EMOJI REACTIONS FUNCTIONALITY (OPTIMIZED FOR HIGH-SCALE & HIGH-SPEED)
 // ═══════════════════════════════════════
 function getReactionLogsSheet() {
   var ss;
@@ -495,14 +495,46 @@ function getReactionsSummarySheet() {
   var sheet = ss.getSheetByName("Reactions");
   if (!sheet) {
     sheet = ss.insertSheet("Reactions");
-    sheet.appendRow(["TargetEmail", "TargetSmurfName", "Heart", "Star", "Party", "Fire"]);
+    sheet.appendRow(["TargetEmail", "TargetSmurfName", "Likes", "Funnys", "Stars", "Cools"]);
   }
   return sheet;
 }
 
+function getUserVotesSheet() {
+  var ss;
+  try {
+    ss = SpreadsheetApp.openById(SHEET_ID);
+  } catch (err) {
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  }
+  var sheet = ss.getSheetByName("UserVotes");
+  if (!sheet) {
+    sheet = ss.insertSheet("UserVotes");
+    sheet.appendRow(["FromKey", "TargetKey", "Type", "VoteKey"]);
+  }
+  return sheet;
+}
+
+function normalizeReactionType(t) {
+  var str = String(t || '').trim().toLowerCase();
+  if (str === 'like' || str === 'likes' || str === 'heart') return 'likes';
+  if (str === 'funny' || str === 'funnys' || str === 'party') return 'funnys';
+  if (str === 'star' || str === 'stars') return 'stars';
+  if (str === 'cool' || str === 'cools' || str === 'fire') return 'cools';
+  return 'likes';
+}
+
+function getColIndexForType(typeProp) {
+  if (typeProp === 'likes') return 3;  // Cột C
+  if (typeProp === 'funnys') return 4; // Cột D
+  if (typeProp === 'stars') return 5;  // Cột E
+  if (typeProp === 'cools') return 6;  // Cột F
+  return 3;
+}
+
 function handleGetReactions(data) {
   var summarySheet = getReactionsSummarySheet();
-  var logsSheet = getReactionLogsSheet();
+  var userVotesSheet = getUserVotesSheet();
   
   var sLast = summarySheet.getLastRow();
   var summaryMap = {};
@@ -510,45 +542,50 @@ function handleGetReactions(data) {
     var sData = summarySheet.getRange(2, 1, sLast - 1, 6).getValues();
     for (var i = 0; i < sData.length; i++) {
       var emailKey = String(sData[i][0]).trim();
+      if (!emailKey) continue;
+      var likesCount = Number(sData[i][2]) || 0;
+      var funnysCount = Number(sData[i][3]) || 0;
+      var starsCount = Number(sData[i][4]) || 0;
+      var coolsCount = Number(sData[i][5]) || 0;
+      
       summaryMap[emailKey] = {
-        targetEmail: emailKey,
-        targetTelegramId: emailKey,
-        targetSmurfName: sData[i][1],
-        heart: Number(sData[i][2]) || 0,
-        star: Number(sData[i][3]) || 0,
-        party: Number(sData[i][4]) || 0,
-        fire: Number(sData[i][5]) || 0
+        likes: likesCount,
+        funnys: funnysCount,
+        stars: starsCount,
+        cools: coolsCount,
+        // Full Backward Compatibility aliases
+        heart: likesCount,
+        party: funnysCount,
+        star: starsCount,
+        fire: coolsCount,
+        like: likesCount,
+        funny: funnysCount,
+        cool: coolsCount
       };
     }
   }
   
-  var userActiveReactions = {};
-  var fromEmail = data ? (data.fromEmail || data.fromTelegramId) : "";
+  var myReactions = {};
+  var userActiveArrayMap = {};
+  var fromEmail = data ? String(data.fromEmail || data.fromTelegramId || '').trim() : '';
   if (fromEmail) {
-    var lLast = logsSheet.getLastRow();
-    if (lLast > 1) {
-      var lData = logsSheet.getRange(2, 1, lLast - 1, 6).getValues();
-      var fromKey = String(fromEmail).trim();
+    var uLast = userVotesSheet.getLastRow();
+    if (uLast > 1) {
+      var uData = userVotesSheet.getRange(2, 1, uLast - 1, 4).getValues();
+      var fromKeyLower = fromEmail.toLowerCase();
       
-      var stateTracker = {};
-      for (var j = 0; j < lData.length; j++) {
-        var logFrom = String(lData[j][1]).trim();
-        if (logFrom === fromKey) {
-          var targetKey = String(lData[j][2]).trim();
-          var type = String(lData[j][4]).trim();
-          var act = String(lData[j][5]).trim();
+      for (var j = 0; j < uData.length; j++) {
+        var logFrom = String(uData[j][0]).trim().toLowerCase();
+        if (logFrom === fromKeyLower) {
+          var targetKey = String(uData[j][1]).trim();
+          var typeProp = normalizeReactionType(uData[j][2]);
+          var shortType = typeProp === 'likes' ? 'like' : (typeProp === 'funnys' ? 'funny' : (typeProp === 'stars' ? 'star' : 'cool'));
           
-          if (!stateTracker[targetKey]) stateTracker[targetKey] = {};
-          stateTracker[targetKey][type] = (act === "ADD");
-        }
-      }
-      
-      for (var tKey in stateTracker) {
-        userActiveReactions[tKey] = [];
-        for (var rxType in stateTracker[tKey]) {
-          if (stateTracker[tKey][rxType] === true) {
-            userActiveReactions[tKey].push(rxType);
-          }
+          myReactions[targetKey + '_' + shortType] = true;
+          myReactions[targetKey + '_' + typeProp] = true;
+          
+          if (!userActiveArrayMap[targetKey]) userActiveArrayMap[targetKey] = [];
+          userActiveArrayMap[targetKey].push(shortType);
         }
       }
     }
@@ -557,71 +594,103 @@ function handleGetReactions(data) {
   return {
     status: "success",
     reactions: summaryMap,
-    userActiveReactions: userActiveReactions
+    myReactions: myReactions,
+    userActiveReactions: userActiveArrayMap
   };
 }
 
 function handleUpdateReaction(data) {
-  var fromEmail = data.fromEmail || data.fromTelegramId;
-  var targetEmail = data.targetEmail || data.telegramId;
+  var fromEmail = String(data.fromEmail || data.fromTelegramId || '').trim();
+  var targetEmail = String(data.targetEmail || data.telegramId || '').trim();
   var smurfName = data.smurfName || "";
-  var rxType = data.type || "heart";
-  var isAdd = data.isAdd === true || data.isAdd === "true";
+  var rawType = data.type || "like";
+  var isAdd = (data.isAdd === true || data.isAdd === "true" || data.isAdd === 1 || data.isAdd === "1");
   
   if (!fromEmail || !targetEmail) {
     return { status: "error", message: "Missing fromEmail or targetEmail" };
   }
   
-  var logsSheet = getReactionLogsSheet();
-  logsSheet.appendRow([
-    new Date(),
-    sanitizeInput(fromEmail),
-    sanitizeInput(targetEmail),
-    sanitizeInput(smurfName),
-    sanitizeInput(rxType),
-    isAdd ? "ADD" : "REMOVE"
-  ]);
+  var typeProp = normalizeReactionType(rawType);
+  var shortType = typeProp === 'likes' ? 'like' : (typeProp === 'funnys' ? 'funny' : (typeProp === 'stars' ? 'star' : 'cool'));
+  var targetCol = getColIndexForType(typeProp);
   
-  var summarySheet = getReactionsSummarySheet();
-  var sLast = summarySheet.getLastRow();
-  var targetRow = -1;
-  var currentCounts = { heart: 0, star: 0, party: 0, fire: 0 };
+  var userVotesSheet = getUserVotesSheet();
+  var voteKey = fromEmail.toLowerCase() + "_" + targetEmail.toLowerCase() + "_" + typeProp;
   
-  if (sLast > 1) {
-    var sData = summarySheet.getRange(2, 1, sLast - 1, 6).getValues();
-    var tKey = String(targetEmail).trim();
-    for (var i = 0; i < sData.length; i++) {
-      if (String(sData[i][0]).trim() === tKey) {
-        targetRow = i + 2;
-        currentCounts.heart = Number(sData[i][2]) || 0;
-        currentCounts.star = Number(sData[i][3]) || 0;
-        currentCounts.party = Number(sData[i][4]) || 0;
-        currentCounts.fire = Number(sData[i][5]) || 0;
+  var uLast = userVotesSheet.getLastRow();
+  var existingVoteRow = -1;
+  if (uLast > 1) {
+    var uData = userVotesSheet.getRange(2, 4, uLast - 1, 1).getValues();
+    for (var u = 0; u < uData.length; u++) {
+      if (String(uData[u][0]).trim().toLowerCase() === voteKey) {
+        existingVoteRow = u + 2;
         break;
       }
     }
   }
   
-  var colMap = { "heart": 3, "star": 4, "party": 5, "fire": 6 };
-  var targetCol = colMap[rxType] || 3;
+  // Track vote state
+  if (isAdd && existingVoteRow === -1) {
+    userVotesSheet.appendRow([sanitizeInput(fromEmail), sanitizeInput(targetEmail), typeProp, voteKey]);
+  } else if (!isAdd && existingVoteRow !== -1) {
+    userVotesSheet.deleteRow(existingVoteRow);
+  }
   
-  var newCount = (currentCounts[rxType] || 0) + (isAdd ? 1 : -1);
+  // Append historical log
+  try {
+    var logsSheet = getReactionLogsSheet();
+    logsSheet.appendRow([new Date(), sanitizeInput(fromEmail), sanitizeInput(targetEmail), sanitizeInput(smurfName), typeProp, isAdd ? "ADD" : "REMOVE"]);
+  } catch (e) {}
+  
+  // Update Summary Sheet
+  var summarySheet = getReactionsSummarySheet();
+  var sLast = summarySheet.getLastRow();
+  var targetRow = -1;
+  var counts = { likes: 0, funnys: 0, stars: 0, cools: 0 };
+  var tKeyLower = targetEmail.toLowerCase();
+  
+  if (sLast > 1) {
+    var sData = summarySheet.getRange(2, 1, sLast - 1, 6).getValues();
+    for (var i = 0; i < sData.length; i++) {
+      if (String(sData[i][0]).trim().toLowerCase() === tKeyLower) {
+        targetRow = i + 2;
+        counts.likes = Number(sData[i][2]) || 0;
+        counts.funnys = Number(sData[i][3]) || 0;
+        counts.stars = Number(sData[i][4]) || 0;
+        counts.cools = Number(sData[i][5]) || 0;
+        break;
+      }
+    }
+  }
+  
+  var newCount = (counts[typeProp] || 0) + (isAdd ? 1 : -1);
   if (newCount < 0) newCount = 0;
+  counts[typeProp] = newCount;
   
   if (targetRow !== -1) {
     summarySheet.getRange(targetRow, targetCol).setValue(newCount);
     if (smurfName) summarySheet.getRange(targetRow, 2).setValue(sanitizeInput(smurfName));
   } else {
-    currentCounts[rxType] = isAdd ? 1 : 0;
+    counts[typeProp] = isAdd ? 1 : 0;
     summarySheet.appendRow([
       sanitizeInput(targetEmail),
       sanitizeInput(smurfName),
-      currentCounts.heart,
-      currentCounts.star,
-      currentCounts.party,
-      currentCounts.fire
+      counts.likes,
+      counts.funnys,
+      counts.stars,
+      counts.cools
     ]);
   }
   
-  return { status: "success", newCount: newCount };
+  return {
+    status: "success",
+    targetEmail: targetEmail,
+    type: shortType,
+    isAdd: isAdd,
+    likes: counts.likes,
+    funnys: counts.funnys,
+    stars: counts.stars,
+    cools: counts.cools,
+    counts: counts
+  };
 }

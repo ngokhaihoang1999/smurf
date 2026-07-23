@@ -367,16 +367,19 @@
 
         // ── GENERIC JSONP GET ──
         function gasRequestJsonp(params, onSuccess, onError) {
-            const callbackName = '_gasCallback_' + Date.now() + Math.round(Math.random() * 1000);
+            const callbackName = '_gasCallback_' + Date.now() + Math.round(Math.random() * 10000);
             const script = document.createElement('script');
+            let isCleaned = false;
             
             const timeout = setTimeout(() => {
                 cleanup();
-                console.warn('JSONP request timed out');
-                onError();
+                console.warn('JSONP request timed out:', params);
+                if (typeof onError === 'function') onError(new Error('Timeout'));
             }, 10000);
             
             function cleanup() {
+                if (isCleaned) return;
+                isCleaned = true;
                 clearTimeout(timeout);
                 delete window[callbackName];
                 if (script.parentNode) script.parentNode.removeChild(script);
@@ -384,12 +387,13 @@
             
             window[callbackName] = function(data) {
                 cleanup();
-                onSuccess(data);
+                if (typeof onSuccess === 'function') onSuccess(data);
             };
             
-            script.onerror = function() {
+            script.onerror = function(err) {
                 cleanup();
-                onError();
+                console.warn('JSONP script error:', err);
+                if (typeof onError === 'function') onError(err);
             };
             
             let queryParts = [];
@@ -3398,11 +3402,19 @@
             localStorage.setItem('smurf_social_db', JSON.stringify(db));
         }
 
-        let lastReactionTapTimes = {};
+        // ── HIGH-PERFORMANCE, SCALABLE EMOJI REACTION SYSTEM ──
+        let reactionQueue = {};       // key: targetId_type -> { activeFromId, telegramId, smurfName, type, isAdd }
+        let reactionSyncTimer = null;
+        let isSyncingReactions = false;
 
         function fetchFreshReactions() {
-            // Skip background polling if tab is not visible
-            if (document.hidden) return;
+            // Skip background polling if tab is hidden, or if a reaction sync is in-flight or queued
+            if (document.hidden || isSyncingReactions || Object.keys(reactionQueue).length > 0) return;
+            
+            // Only poll if user is viewing village square or modal card
+            const villageView = document.getElementById('view-village');
+            const isVillageActive = villageView && !villageView.classList.contains('hidden');
+            if (!isVillageActive && !activeModalItem) return;
             
             const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
             gasRequestJsonp({ action: 'getReactions', fromTelegramId: activeFromId }, (reactResp) => {
@@ -3415,26 +3427,35 @@
                     
                     const serverReactions = reactResp.reactions || {};
                     
-                    // Force-sync every resident with server counts to eliminate any stale device cache
                     if (Array.isArray(RESIDENTS_DATA) && RESIDENTS_DATA.length > 0) {
                         RESIDENTS_DATA.forEach(r => {
-                            const tid = String(r.telegramId || '');
+                            const tid = String(r.telegramId || r.email || '');
                             if (!tid) return;
                             if (!db[tid]) {
                                 db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
                             }
-                            const counts = serverReactions[tid] || { likes: 0, funnys: 0, stars: 0, cools: 0 };
-                            db[tid].likes = counts.likes || 0;
-                            db[tid].funnys = counts.funnys || 0;
-                            db[tid].stars = counts.stars || 0;
-                            db[tid].cools = counts.cools || 0;
+                            const counts = serverReactions[tid] || serverReactions[r.email] || {};
+                            db[tid].likes = Number(counts.likes ?? counts.heart ?? counts.like ?? db[tid].likes ?? 0);
+                            db[tid].funnys = Number(counts.funnys ?? counts.party ?? counts.funny ?? db[tid].funnys ?? 0);
+                            db[tid].stars = Number(counts.stars ?? counts.star ?? db[tid].stars ?? 0);
+                            db[tid].cools = Number(counts.cools ?? counts.fire ?? counts.cool ?? db[tid].cools ?? 0);
                         });
                     }
                     
                     localStorage.setItem('smurf_social_db', JSON.stringify(db));
                     
-                    if (reactResp.myReactions) {
-                        localStorage.setItem('smurf_my_reactions', JSON.stringify(reactResp.myReactions));
+                    if (reactResp.myReactions && typeof reactResp.myReactions === 'object') {
+                        let existingMy = {};
+                        try {
+                            existingMy = JSON.parse(localStorage.getItem('smurf_my_reactions')) || {};
+                        } catch(e) {}
+                        
+                        const mergedMy = { ...reactResp.myReactions };
+                        // Preserve any local unsynced pending states
+                        for (let qKey in reactionQueue) {
+                            mergedMy[qKey] = reactionQueue[qKey].isAdd;
+                        }
+                        localStorage.setItem('smurf_my_reactions', JSON.stringify(mergedMy));
                     }
                     
                     loadSocialData();
@@ -3473,7 +3494,10 @@
                 const btn = document.getElementById('react-btn-' + t);
                 if (btn) {
                     const reactionKey = targetId + "_" + t;
-                    if (myReactions[reactionKey]) {
+                    const reactionKeyLong = targetId + "_" + (t === 'like' ? 'likes' : (t === 'funny' ? 'funnys' : (t === 'star' ? 'stars' : 'cools')));
+                    const isReacted = !!(myReactions[reactionKey] || myReactions[reactionKeyLong]);
+                    
+                    if (isReacted) {
                         btn.style.background = '#e0f2fe';
                         btn.style.outline = '2px solid #0ea5e9';
                         btn.style.outlineOffset = '0px';
@@ -3501,18 +3525,14 @@
             const targetId = activeModalItem?.telegramId;
             if (!targetId) return;
             
-            const now = Date.now();
-            const tapKey = targetId + '_' + type;
-            if (lastReactionTapTimes[tapKey] && (now - lastReactionTapTimes[tapKey] < 250)) {
-                return; // 250ms per-button throttle to prevent double taps
-            }
-            lastReactionTapTimes[tapKey] = now;
-            
             const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
             if (!activeFromId) {
                 alert("📢 Không tìm thấy ID định danh để thực hiện tương tác!");
                 return;
             }
+            
+            const shortType = (type === 'likes' ? 'like' : (type === 'funnys' ? 'funny' : (type === 'stars' ? 'star' : (type === 'cools' ? 'cool' : type))));
+            const reactionKey = targetId + "_" + shortType;
             
             let myReactions = {};
             try {
@@ -3521,61 +3541,92 @@
                 myReactions = {};
             }
             
-            const reactionKey = targetId + "_" + type;
-            const data = getSocialData(targetId);
             const isAlreadyReacted = !!myReactions[reactionKey];
+            const nextIsAdd = !isAlreadyReacted;
             
+            // 1. INSTANT OPTIMISTIC LOCAL UPDATE
             let prop = 'likes';
-            if (type === 'funny') prop = 'funnys';
-            else if (type === 'star') prop = 'stars';
-            else if (type === 'cool') prop = 'cools';
+            if (shortType === 'funny') prop = 'funnys';
+            else if (shortType === 'star') prop = 'stars';
+            else if (shortType === 'cool') prop = 'cools';
             
+            const socialData = getSocialData(targetId);
             if (isAlreadyReacted) {
-                data[prop] = Math.max(0, (data[prop] || 0) - 1);
+                socialData[prop] = Math.max(0, (socialData[prop] || 0) - 1);
                 myReactions[reactionKey] = false;
             } else {
-                data[prop] = (data[prop] || 0) + 1;
+                socialData[prop] = (socialData[prop] || 0) + 1;
                 myReactions[reactionKey] = true;
             }
             
             localStorage.setItem('smurf_my_reactions', JSON.stringify(myReactions));
-            saveSocialData(targetId, data);
+            saveSocialData(targetId, socialData);
+            
+            // Render local UI & Leaderboard immediately for zero-lag response
             loadSocialData();
             updateLeaderboard();
             
-            // Dispatch update to online spreadsheet asynchronously
-            gasRequestJsonp({
-                action: 'updateReaction',
-                fromTelegramId: activeFromId,
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+            }
+            
+            // 2. QUEUE & DEBOUNCE ASYNC SERVER SYNC (Prevents API spamming & lag)
+            reactionQueue[reactionKey] = {
+                activeFromId: activeFromId,
                 telegramId: targetId,
                 smurfName: activeModalItem?.smurfName || '',
-                type: type,
-                isAdd: !isAlreadyReacted
+                type: shortType,
+                isAdd: nextIsAdd
+            };
+            
+            if (reactionSyncTimer) clearTimeout(reactionSyncTimer);
+            reactionSyncTimer = setTimeout(processNextReactionQueueItem, 350);
+        }
+
+        function processNextReactionQueueItem() {
+            if (isSyncingReactions) return;
+            const keys = Object.keys(reactionQueue);
+            if (keys.length === 0) return;
+            
+            const currentKey = keys[0];
+            const item = reactionQueue[currentKey];
+            delete reactionQueue[currentKey];
+            
+            isSyncingReactions = true;
+            
+            gasRequestJsonp({
+                action: 'updateReaction',
+                fromTelegramId: item.activeFromId,
+                telegramId: item.telegramId,
+                smurfName: item.smurfName,
+                type: item.type,
+                isAdd: item.isAdd
             }, (reactResp) => {
+                isSyncingReactions = false;
                 if (reactResp && reactResp.status === 'success') {
-                    const latestData = getSocialData(targetId);
-                    latestData.likes = reactResp.likes || 0;
-                    latestData.funnys = reactResp.funnys || 0;
-                    latestData.stars = reactResp.stars || 0;
-                    latestData.cools = reactResp.cools || 0;
-                    saveSocialData(targetId, latestData);
-                    
-                    let updatedMyReactions = {};
-                    try {
-                        updatedMyReactions = JSON.parse(localStorage.getItem('smurf_my_reactions')) || {};
-                    } catch (e) {}
-                    
-                    updatedMyReactions[reactionKey] = !!reactResp.isAdd;
-                    localStorage.setItem('smurf_my_reactions', JSON.stringify(updatedMyReactions));
+                    const tid = item.telegramId;
+                    const latestData = getSocialData(tid);
+                    const counts = reactResp.counts || reactResp;
+                    if (typeof counts.likes === 'number') latestData.likes = counts.likes;
+                    if (typeof counts.funnys === 'number') latestData.funnys = counts.funnys;
+                    if (typeof counts.stars === 'number') latestData.stars = counts.stars;
+                    if (typeof counts.cools === 'number') latestData.cools = counts.cools;
+                    saveSocialData(tid, latestData);
                     
                     loadSocialData();
                     updateLeaderboard();
                 }
+                
+                if (Object.keys(reactionQueue).length > 0) {
+                    setTimeout(processNextReactionQueueItem, 100);
+                }
+            }, (err) => {
+                isSyncingReactions = false;
+                console.warn('Reaction sync warning:', err);
+                if (Object.keys(reactionQueue).length > 0) {
+                    setTimeout(processNextReactionQueueItem, 300);
+                }
             });
-            
-            if (tg?.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
-            }
         }
 
         // Open your own card modal inside profile tab
