@@ -1596,41 +1596,49 @@
         }
 
         // ── GAS REQUEST POST ──
-        async function gasRequest(data) {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 35000);
-            try {
-                // Filter out raw File/Blob objects to prevent JSON serialization failure
-                const cleanData = {};
-                if (data && typeof data === 'object') {
-                    for (const k in data) {
-                        if (data[k] instanceof File || data[k] instanceof Blob) continue;
-                        cleanData[k] = data[k];
-                    }
+        async function gasRequest(data, retries = 2) {
+            const cleanData = {};
+            if (data && typeof data === 'object') {
+                for (const k in data) {
+                    if (data[k] instanceof File || data[k] instanceof Blob) continue;
+                    cleanData[k] = data[k];
                 }
+            }
 
-                const response = await fetch(GAS_WEBAPP_URL, {
-                    method: 'POST',
-                    redirect: 'follow',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(cleanData),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                const text = await response.text();
+            for (let attempt = 0; attempt <= retries; attempt++) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 35000);
                 try {
-                    return JSON.parse(text);
-                } catch(e) {
-                    console.error("GAS returned non-JSON response:", text);
-                    return { status: "error", message: text || "Hệ thống đang xử lý, vui lòng thử lại!" };
+                    const response = await fetch(GAS_WEBAPP_URL, {
+                        method: 'POST',
+                        redirect: 'follow',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(cleanData),
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    const text = await response.text();
+                    try {
+                        return JSON.parse(text);
+                    } catch(e) {
+                        console.error("GAS returned non-JSON response:", text);
+                        return { status: "error", message: text || "Hệ thống đang xử lý, vui lòng thử lại!" };
+                    }
+                } catch (err) {
+                    clearTimeout(timeoutId);
+                    console.warn(`GAS request attempt ${attempt + 1} failed:`, err);
+                    if (attempt < retries) {
+                        await new Promise(resolve => setTimeout(resolve, 1200));
+                        continue;
+                    }
+                    if (err.name === 'AbortError') {
+                        throw new Error('Hệ thống phản hồi chậm (Timeout 35s)');
+                    }
+                    if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+                        throw new Error('Không thể kết nối máy chủ Google Apps Script. Vui lòng kiểm tra lại đường truyền mạng (Wifi/4G) hoặc thử lại sau vài giây!');
+                    }
+                    throw err;
                 }
-            } catch (err) {
-                clearTimeout(timeoutId);
-                if (err.name === 'AbortError') {
-                    console.warn('GAS request timed out (35s)');
-                    throw new Error('Hệ thống phản hồi chậm (Timeout 35s)');
-                }
-                throw err;
             }
         }
 
