@@ -3483,125 +3483,124 @@
         function downloadResidentCardInternal() {
             if (!currentUser) return;
 
-            const cardEl = document.getElementById('modalCardScaleWrapper');
-            if (!cardEl) {
+            const originalCardEl = document.getElementById('modalCardScaleWrapper');
+            if (!originalCardEl) {
                 alert('⚠️ Không tìm thấy khung ảnh thẻ.');
                 return;
             }
 
-            // Populate the modal with the current user's details first
             const item = currentUser;
             const userKey = getAvatarKeyByIdentifier(item.email);
             const avatarUrl = item.avatar || `avatars/avatar_${userKey}.png`;
             
-            // Resolve fallbacks for property name formats (API vs cache)
             const hobbiesText = formatEnneagramText(item.hobbies || item.soThich || 'Cư dân');
             const personalityText = formatEnneagramText(item.personality || item.tinhCach || 'Vui vẻ');
             const strengthText = formatEnneagramText(item.strength || item.diemManh || '');
             const weaknessText = formatEnneagramText(item.weakness || item.diemYeu || '');
             const bioText = formatEnneagramText(item.bio || '');
 
-            // Set image sources and text contents
-            const avatarImgModal = document.getElementById('m-card-avatar');
-            const avatarImgPreview = document.getElementById('m-preview-smurf-avatar');
-            if (avatarImgModal) avatarImgModal.src = avatarUrl;
-            if (avatarImgPreview) avatarImgPreview.src = avatarUrl;
-            
-            const groupModal = document.getElementById('m-card-group');
-            const groupPreview = document.getElementById('m-preview-group');
-            if (groupModal) groupModal.textContent = item.group || '';
-            if (groupPreview) groupPreview.textContent = item.group || '';
-            
-            const realNameModal = document.getElementById('m-card-real-name');
-            const realNamePreview = document.getElementById('m-preview-real-name');
-            if (realNameModal) realNameModal.textContent = item.realName || '';
-            if (realNamePreview) realNamePreview.textContent = item.realName || '';
-            
-            const smurfNameModal = document.getElementById('m-card-name');
-            if (smurfNameModal) smurfNameModal.textContent = item.smurfName || '';
-            
-            const hobbyModal = document.getElementById('m-card-hobby');
-            if (hobbyModal) hobbyModal.textContent = '🏸 ' + hobbiesText;
-            
-            const personalityModal = document.getElementById('m-card-personality');
-            if (personalityModal) personalityModal.textContent = personalityText;
-            
-            const previewTinhCach = document.getElementById('m-preview-tinh-cach');
-            const previewSoThich = document.getElementById('m-preview-so-thich');
-            const previewDiemManh = document.getElementById('m-preview-diem-manh');
-            const previewDiemYeu = document.getElementById('m-preview-diem-yeu');
-            const previewBio = document.getElementById('m-preview-bio');
-            
-            if (previewTinhCach) previewTinhCach.textContent = personalityText;
-            if (previewSoThich) previewSoThich.textContent = hobbiesText;
-            if (previewDiemManh) previewDiemManh.textContent = strengthText;
-            if (previewDiemYeu) previewDiemYeu.textContent = weaknessText;
-            if (previewBio) previewBio.textContent = bioText;
-            
-            adjustAllCardFonts('m-preview-');
-            
-            // Get original parent and sibling to restore later
-            const originalParent = cardEl.parentNode;
-            const originalSibling = cardEl.nextSibling;
-            
-            const proceedToCapture = () => {
-                document.body.appendChild(cardEl);
-                const originalStyle = cardEl.getAttribute('style') || '';
-                
-                cardEl.style.position = 'fixed';
-                cardEl.style.top = '0';
-                cardEl.style.left = '0';
-                cardEl.style.transform = 'none';
-                cardEl.style.zIndex = '999999';
-                
+            // Create off-screen container for clean rendering without disturbing live DOM
+            const container = document.createElement('div');
+            container.style.position = 'fixed';
+            container.style.left = '-9999px';
+            container.style.top = '-9999px';
+            container.style.width = '1516px';
+            container.style.height = '1038px';
+            container.style.overflow = 'hidden';
+            container.style.zIndex = '-9999';
+            document.body.appendChild(container);
+
+            // Clone original card element
+            const clonedCard = originalCardEl.cloneNode(true);
+            clonedCard.id = 'clonedCardExport';
+            clonedCard.style.transform = 'none';
+            clonedCard.style.position = 'relative';
+            clonedCard.style.top = '0';
+            clonedCard.style.left = '0';
+            clonedCard.style.width = '1516px';
+            clonedCard.style.height = '1038px';
+
+            container.appendChild(clonedCard);
+
+            // Update text & image sources inside the clone
+            const cloneAvatar = clonedCard.querySelector('#m-preview-smurf-avatar');
+            if (cloneAvatar) cloneAvatar.src = avatarUrl;
+
+            const cloneRealName = clonedCard.querySelector('#m-preview-real-name');
+            if (cloneRealName) {
+                cloneRealName.textContent = item.realName || item.smurfName || '';
+                cloneRealName.style.fontSize = '50px';
+                cloneRealName.style.lineHeight = '1.2';
+            }
+
+            const cloneGroup = clonedCard.querySelector('#m-preview-group');
+            if (cloneGroup) {
+                cloneGroup.textContent = item.group || '';
+                cloneGroup.style.fontSize = '30px';
+                cloneGroup.style.lineHeight = '1';
+            }
+
+            const cloneTinhCach = clonedCard.querySelector('#m-preview-tinh-cach');
+            if (cloneTinhCach) {
+                cloneTinhCach.textContent = personalityText;
+                cloneTinhCach.style.fontSize = '36px';
+            }
+
+            const cloneSoThich = clonedCard.querySelector('#m-preview-so-thich');
+            if (cloneSoThich) {
+                cloneSoThich.textContent = hobbiesText;
+                cloneSoThich.style.fontSize = '36px';
+            }
+
+            const cloneDiemManh = clonedCard.querySelector('#m-preview-diem-manh');
+            if (cloneDiemManh) {
+                cloneDiemManh.textContent = strengthText;
+                cloneDiemManh.style.fontSize = '36px';
+            }
+
+            const cloneDiemYeu = clonedCard.querySelector('#m-preview-diem-yeu');
+            if (cloneDiemYeu) {
+                cloneDiemYeu.textContent = weaknessText;
+                cloneDiemYeu.style.fontSize = '36px';
+            }
+
+            const cloneBio = clonedCard.querySelector('#m-preview-bio');
+            if (cloneBio) {
+                cloneBio.textContent = bioText;
+                cloneBio.style.fontSize = '46px';
+                cloneBio.style.fontStyle = 'italic';
+                cloneBio.style.lineHeight = '1.3';
+            }
+
+            const captureCanvas = () => {
                 setTimeout(() => {
-                    html2canvas(cardEl, {
+                    html2canvas(clonedCard, {
                         scale: 2,
                         useCORS: true,
                         backgroundColor: null,
                         width: 1516,
-                        height: 1038,
-                        onclone: (clonedDoc) => {
-                            if (document.fonts) {
-                                document.fonts.forEach(font => {
-                                    clonedDoc.fonts.add(font);
-                                });
-                            }
-                        }
+                        height: 1038
                     }).then(canvas => {
-                        cardEl.setAttribute('style', originalStyle);
-                        if (originalSibling) {
-                            originalParent.insertBefore(cardEl, originalSibling);
-                        } else {
-                            originalParent.appendChild(cardEl);
-                        }
-                        
+                        container.remove();
                         const dataUrl = canvas.toDataURL('image/png');
                         showImageForDownload(dataUrl, `the_cu_dan_${currentUser.smurfName || 'smurf'}.png`);
                     }).catch(err => {
                         console.error('Error generating card image:', err);
+                        container.remove();
                         alert('⚠️ Lỗi khi xuất ảnh thẻ: ' + err.message);
-                        
-                        cardEl.setAttribute('style', originalStyle);
-                        if (originalSibling) {
-                            originalParent.insertBefore(cardEl, originalSibling);
-                        } else {
-                            originalParent.appendChild(cardEl);
-                        }
                     });
-                }, 100);
+                }, 150);
             };
 
-            // Wait for image loading to finish before capturing canvas
-            if (avatarImgPreview) {
-                if (avatarImgPreview.complete) {
-                    proceedToCapture();
+            if (cloneAvatar) {
+                if (cloneAvatar.complete) {
+                    captureCanvas();
                 } else {
-                    avatarImgPreview.onload = proceedToCapture;
-                    avatarImgPreview.onerror = proceedToCapture;
+                    cloneAvatar.onload = captureCanvas;
+                    cloneAvatar.onerror = captureCanvas;
                 }
             } else {
-                proceedToCapture();
+                captureCanvas();
             }
         }
 
@@ -3621,7 +3620,7 @@
                 previewModal.className = 'fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-4';
                 previewModal.innerHTML = `
                     <div class="bg-white rounded-3xl p-5 max-w-sm w-full flex flex-col items-center gap-3 shadow-2xl relative border-2 border-smurf-blueLight">
-                        <button onclick="document.getElementById('image-download-modal').classList.add('hidden')" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1">
+                        <button onclick="closeDownloadModal()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1">
                             <span class="material-symbols-outlined text-xl">close</span>
                         </button>
                         <div class="flex items-center gap-2 text-smurf-blue font-fredoka text-base">
