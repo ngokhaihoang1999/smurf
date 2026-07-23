@@ -1740,16 +1740,16 @@
             const r2 = scored[1] || null;
             const r3 = scored[2] || null;
 
-            // Load interactive Tuner Config from localStorage if customized
+            // Load interactive Tuner Config from localStorage or exact tuned balanced defaults
             const tc = JSON.parse(localStorage.getItem('smurf_tuner_config') || 'null') || {
-                t1_w: 112, t1_a: 72, t1_x: 0, t1_y: 0,
-                t2_w: 88,  t2_a: 56, t2_x: 0, t2_y: 0,
-                t3_w: 88,  t3_a: 56, t3_x: 0, t3_y: 0
+                t1_w: 121, t1_a: 81, t1_x: 0, t1_y: 3,
+                t2_w: 106, t2_a: 72, t2_x: 0, t2_y: 1,
+                t3_w: 106, t3_a: 72, t3_x: 0, t3_y: 1
             };
 
             const t1Box = Math.max(tc.t1_w, tc.t1_a);
             const t2Box = Math.max(tc.t2_w, tc.t2_a);
-            const t3Box = Math.max(tc.t3_w || tc.t2_w || 88, tc.t3_a || tc.t2_a || 56);
+            const t3Box = Math.max(tc.t3_w, tc.t3_a);
 
             if (stage) {
                 let html = '';
@@ -1757,7 +1757,7 @@
                 // Rank 2 (Silver - Left)
                 if (r2) {
                     html += `
-                        <div onclick="openModal('${r2.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[100px] relative z-10">
+                        <div onclick="openModal('${r2.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[106px] relative z-10">
                             <span class="text-[9px] bg-slate-200/90 text-slate-700 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 2</span>
                             <div class="relative flex items-center justify-center aspect-square" style="width: ${t2Box}px; height: ${t2Box}px;">
                                 <!-- Inner Circular Avatar -->
@@ -1801,20 +1801,16 @@
 
                 // Rank 3 (Bronze - Right)
                 if (r3) {
-                    const w3 = tc.t3_w || tc.t2_w || 88;
-                    const a3 = tc.t3_a || tc.t2_a || 56;
-                    const x3 = tc.t3_x || 0;
-                    const y3 = tc.t3_y || 0;
                     html += `
-                        <div onclick="openModal('${r3.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[100px] relative z-10">
+                        <div onclick="openModal('${r3.smurfName.replace(/'/g, "\\'")}', this)" class="flex flex-col items-center cursor-pointer group active:scale-95 transition-all w-[106px] relative z-10">
                             <span class="text-[9px] bg-amber-100/90 text-amber-800 px-2 py-0.5 rounded-full font-extrabold mb-1 shadow-sm uppercase tracking-wider">TOP 3</span>
                             <div class="relative flex items-center justify-center aspect-square" style="width: ${t3Box}px; height: ${t3Box}px;">
                                 <!-- Inner Circular Avatar -->
-                                <div class="rounded-full overflow-hidden shadow-sm bg-white relative z-0 aspect-square border-2 border-amber-600/40 flex items-center justify-center" style="width: ${a3}px; height: ${a3}px;">
+                                <div class="rounded-full overflow-hidden shadow-sm bg-white relative z-0 aspect-square border-2 border-amber-600/40 flex items-center justify-center" style="width: ${tc.t3_a}px; height: ${tc.t3_a}px;">
                                     <img src="${r3.avatar}" class="w-full h-full object-cover" onerror="this.src='avatars/smurf_basic_placeholder.png'">
                                 </div>
                                 <!-- Laurel Wreath Overlay -->
-                                <img src="src/assets/smurf_laurel_bronze.png" class="absolute z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" style="width: ${w3}px; height: ${w3}px; transform: translate(${x3}px, ${y3}px);" alt="Bronze Laurel Frame">
+                                <img src="src/assets/smurf_laurel_bronze.png" class="absolute z-10 pointer-events-none filter drop-shadow-md group-hover:scale-105 transition-transform" style="width: ${tc.t3_w}px; height: ${tc.t3_w}px; transform: translate(${tc.t3_x}px, ${tc.t3_y}px);" alt="Bronze Laurel Frame">
                             </div>
                             <div class="flex flex-col items-center text-center mt-1 w-full">
                                 <span class="text-[11px] font-fredoka font-bold text-slate-800 truncate w-full px-0.5">${r3.smurfName}</span>
