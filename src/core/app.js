@@ -3439,35 +3439,41 @@
             }, 300);
         }
 
-        // ── DUAL DOWNLOADS ──
+        // ── DUAL DOWNLOADS & PREVIEW MODAL ──
+        window.closeDownloadModal = function() {
+            const modal = document.getElementById('image-download-modal');
+            if (modal) modal.remove();
+        };
+
         function showImageForDownload(dataUrl, filename) {
-            const existing = document.getElementById('image-download-modal');
-            if (existing) existing.remove();
+            window.closeDownloadModal();
 
             const modal = document.createElement('div');
             modal.id = 'image-download-modal';
-            modal.className = 'fixed inset-0 z-[150] bg-slate-950/90 flex flex-col items-center justify-center p-6 transition-all duration-300';
+            modal.className = 'fixed inset-0 z-[300] bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-4 transition-all duration-300';
+            modal.onclick = function(e) {
+                if (e.target === modal) window.closeDownloadModal();
+            };
+
             modal.innerHTML = `
-                <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl flex flex-col items-center relative gap-4">
-                    <button onclick="document.getElementById('image-download-modal').remove()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1.5 bg-slate-100 rounded-full flex items-center justify-center">
-                        <span class="material-symbols-outlined text-base pointer-events-none">close</span>
+                <div class="bg-white rounded-3xl p-5 max-w-sm w-full flex flex-col items-center gap-3 shadow-2xl relative border-2 border-smurf-blueLight" onclick="event.stopPropagation()">
+                    <button onclick="window.closeDownloadModal()" type="button" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-lg pointer-events-none">close</span>
                     </button>
-                    
-                    <h3 class="font-fredoka text-base text-slate-800 mt-2">
-                        📥 Tải Ảnh Của Bạn
-                    </h3>
-                    
-                    <p class="text-[10px] text-slate-500 font-bold text-center px-2 leading-relaxed">
-                        Hãy <span class="text-smurf-blue">chạm và giữ (long-press)</span> vào ảnh bên dưới, sau đó chọn <span class="text-smurf-blue">"Lưu hình ảnh" (Save Image)</span> để tải về điện thoại nhé!
-                    </p>
-                    
-                    <div class="w-full border border-slate-100 rounded-2xl overflow-hidden shadow-inner max-h-[48vh] flex items-center justify-center bg-slate-50">
-                        <img src="${dataUrl}" class="max-w-full max-h-[46vh] object-contain select-text" style="-webkit-touch-callout: default !important; -webkit-user-select: auto !important;">
+                    <div class="flex items-center gap-2 text-smurf-blue font-fredoka text-base mt-1">
+                        <span class="material-symbols-outlined text-xl">download_done</span>
+                        <span>Ảnh Đã Sẵn Sàng!</span>
                     </div>
-                    
-                    <button onclick="document.getElementById('image-download-modal').remove()" class="w-full py-2.5 bg-smurf-blue text-white rounded-xl text-xs font-bold shadow-md shadow-smurf-blue/20">
-                        Đóng
-                    </button>
+                    <p class="text-[11px] text-slate-500 font-bold text-center leading-relaxed">
+                        Nhấn nút bên dưới để tải về máy hoặc <span class="text-smurf-blue">nhấn giữ vào hình ảnh</span> để lưu trực tiếp nhé! 📸
+                    </p>
+                    <div class="w-full border border-slate-100 rounded-2xl overflow-hidden shadow-inner max-h-[48vh] flex items-center justify-center bg-slate-50">
+                        <img id="download-preview-img" class="w-full rounded-2xl object-contain max-h-[46vh] select-text" src="${dataUrl}" alt="Download Preview" style="-webkit-touch-callout: default !important; -webkit-user-select: auto !important;">
+                    </div>
+                    <a id="download-modal-link" href="${dataUrl}" download="${filename || 'smurf_card.png'}" class="w-full py-3 bg-smurf-blue hover:bg-sky-600 text-white font-bold text-xs rounded-xl text-center shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 mt-1">
+                        <span class="material-symbols-outlined text-base">file_download</span>
+                        <span>Tải Ảnh Về Máy</span>
+                    </a>
                 </div>
             `;
             document.body.appendChild(modal);
@@ -3522,54 +3528,78 @@
 
             container.appendChild(clonedCard);
 
-            // Update text & image sources inside the clone
+            // Update Avatar
             const cloneAvatar = clonedCard.querySelector('#m-preview-smurf-avatar');
             if (cloneAvatar) cloneAvatar.src = avatarUrl;
 
+            // Real Name on Ribbon
+            const cloneRealNameWrapper = clonedCard.querySelector('#m-preview-real-name')?.parentNode;
+            if (cloneRealNameWrapper) {
+                cloneRealNameWrapper.style.top = '138px';
+                cloneRealNameWrapper.style.height = '100px';
+            }
             const cloneRealName = clonedCard.querySelector('#m-preview-real-name');
             if (cloneRealName) {
-                cloneRealName.textContent = item.realName || item.smurfName || '';
-                cloneRealName.style.fontSize = '50px';
-                cloneRealName.style.lineHeight = '1.2';
+                const nameStr = item.realName || item.smurfName || '';
+                cloneRealName.textContent = nameStr;
+                const nLen = nameStr.length;
+                cloneRealName.style.fontSize = nLen > 25 ? '32px' : nLen > 18 ? '38px' : nLen > 13 ? '44px' : '48px';
+                cloneRealName.style.lineHeight = '1.0';
+                cloneRealName.style.transform = 'none';
             }
 
+            // Group Pill
             const cloneGroup = clonedCard.querySelector('#m-preview-group');
             if (cloneGroup) {
                 cloneGroup.textContent = item.group || '';
+                cloneGroup.style.top = '274px';
+                cloneGroup.style.paddingTop = '0px';
                 cloneGroup.style.fontSize = '30px';
-                cloneGroup.style.lineHeight = '1';
+                cloneGroup.style.lineHeight = '42px';
             }
+
+            // Personality / Hobbies / Strengths / Weaknesses Boxes
+            const getChipFontSize = (str) => {
+                const len = (str || '').length;
+                return len > 24 ? '23px' : len > 16 ? '28px' : len > 10 ? '34px' : '38px';
+            };
 
             const cloneTinhCach = clonedCard.querySelector('#m-preview-tinh-cach');
             if (cloneTinhCach) {
                 cloneTinhCach.textContent = personalityText;
-                cloneTinhCach.style.fontSize = '36px';
+                cloneTinhCach.style.fontSize = getChipFontSize(personalityText);
+                cloneTinhCach.style.lineHeight = '1.2';
             }
 
             const cloneSoThich = clonedCard.querySelector('#m-preview-so-thich');
             if (cloneSoThich) {
                 cloneSoThich.textContent = hobbiesText;
-                cloneSoThich.style.fontSize = '36px';
+                cloneSoThich.style.fontSize = getChipFontSize(hobbiesText);
+                cloneSoThich.style.lineHeight = '1.2';
             }
 
             const cloneDiemManh = clonedCard.querySelector('#m-preview-diem-manh');
             if (cloneDiemManh) {
                 cloneDiemManh.textContent = strengthText;
-                cloneDiemManh.style.fontSize = '36px';
+                cloneDiemManh.style.fontSize = getChipFontSize(strengthText);
+                cloneDiemManh.style.lineHeight = '1.2';
             }
 
             const cloneDiemYeu = clonedCard.querySelector('#m-preview-diem-yeu');
             if (cloneDiemYeu) {
                 cloneDiemYeu.textContent = weaknessText;
-                cloneDiemYeu.style.fontSize = '36px';
+                cloneDiemYeu.style.fontSize = getChipFontSize(weaknessText);
+                cloneDiemYeu.style.lineHeight = '1.2';
             }
 
+            // Bio Box
             const cloneBio = clonedCard.querySelector('#m-preview-bio');
             if (cloneBio) {
                 cloneBio.textContent = bioText;
-                cloneBio.style.fontSize = '46px';
+                const bLen = bioText.length;
+                cloneBio.style.fontSize = bLen > 80 ? '30px' : bLen > 60 ? '38px' : bLen > 35 ? '48px' : '54px';
                 cloneBio.style.fontStyle = 'italic';
-                cloneBio.style.lineHeight = '1.3';
+                cloneBio.style.lineHeight = '1.35';
             }
 
             const captureCanvas = () => {
@@ -3604,51 +3634,7 @@
             }
         }
 
-        // ── IMAGE DOWNLOAD HELPERS FOR WEB & MOBILE ──
-        function showImageForDownload(dataUrl, filename) {
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = filename || 'smurf_card.png';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
 
-            let previewModal = document.getElementById('image-download-modal');
-            if (!previewModal) {
-                previewModal = document.createElement('div');
-                previewModal.id = 'image-download-modal';
-                previewModal.className = 'fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-4';
-                previewModal.innerHTML = `
-                    <div class="bg-white rounded-3xl p-5 max-w-sm w-full flex flex-col items-center gap-3 shadow-2xl relative border-2 border-smurf-blueLight">
-                        <button onclick="closeDownloadModal()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1">
-                            <span class="material-symbols-outlined text-xl">close</span>
-                        </button>
-                        <div class="flex items-center gap-2 text-smurf-blue font-fredoka text-base">
-                            <span class="material-symbols-outlined text-xl">download_done</span>
-                            <span>Ảnh Đã Sẵn Sàng!</span>
-                        </div>
-                        <p class="text-[11px] text-slate-500 font-bold text-center leading-relaxed">
-                            Nếu ảnh chưa tự động tải về, bạn hãy nhấn giữ vào hình bên dưới để lưu trực tiếp nhé! 📸
-                        </p>
-                        <img id="download-preview-img" class="w-full rounded-2xl border border-slate-200 shadow-md object-contain max-h-[55vh]" src="" alt="Download Preview">
-                        <a id="download-modal-link" href="" download="" class="w-full py-3 bg-smurf-blue hover:bg-sky-600 text-white font-bold text-xs rounded-xl text-center shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 mt-1">
-                            <span class="material-symbols-outlined text-base">file_download</span>
-                            <span>Tải Ảnh Về Máy</span>
-                        </a>
-                    </div>
-                `;
-                document.body.appendChild(previewModal);
-            }
-
-            const imgEl = document.getElementById('download-preview-img');
-            const linkEl = document.getElementById('download-modal-link');
-            if (imgEl) imgEl.src = dataUrl;
-            if (linkEl) {
-                linkEl.href = dataUrl;
-                linkEl.download = filename || 'smurf_card.png';
-            }
-            previewModal.classList.remove('hidden');
-        }
 
         window.downloadResidentCard = downloadResidentCardInternal;
 
