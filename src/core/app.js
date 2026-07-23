@@ -3808,18 +3808,18 @@
                 if (btn) {
                     const reactionKey = targetId + "_" + t;
                     const reactionKeyLong = targetId + "_" + (t === 'like' ? 'likes' : (t === 'funny' ? 'funnys' : (t === 'star' ? 'stars' : 'cools')));
-                    const isReacted = !!(myReactions[reactionKey] || myReactions[reactionKeyLong]);
+                    const isReacted = Boolean(myReactions[reactionKey] === true || myReactions[reactionKeyLong] === true);
                     
                     if (isReacted) {
                         btn.style.background = '#e0f2fe';
-                        btn.style.outline = '2px solid #0ea5e9';
-                        btn.style.outlineOffset = '0px';
+                        btn.style.border = '2px solid #0ea5e9';
+                        btn.style.boxShadow = '0 0 8px rgba(14, 165, 233, 0.4)';
                         btn.style.transform = 'scale(1.1)';
                     } else {
-                        btn.style.background = '';
-                        btn.style.outline = '';
-                        btn.style.outlineOffset = '';
-                        btn.style.transform = '';
+                        btn.style.background = 'transparent';
+                        btn.style.border = '2px solid transparent';
+                        btn.style.boxShadow = 'none';
+                        btn.style.transform = 'scale(1)';
                     }
                 }
             });
@@ -3846,6 +3846,7 @@
             
             const shortType = (type === 'likes' ? 'like' : (type === 'funnys' ? 'funny' : (type === 'stars' ? 'star' : (type === 'cools' ? 'cool' : type))));
             const reactionKey = targetId + "_" + shortType;
+            const reactionKeyLong = targetId + "_" + (shortType === 'like' ? 'likes' : (shortType === 'funny' ? 'funnys' : (shortType === 'star' ? 'stars' : 'cools')));
             
             let myReactions = {};
             try {
@@ -3854,7 +3855,7 @@
                 myReactions = {};
             }
             
-            const isAlreadyReacted = !!myReactions[reactionKey];
+            const isAlreadyReacted = Boolean(myReactions[reactionKey] === true || myReactions[reactionKeyLong] === true);
             const nextIsAdd = !isAlreadyReacted;
             
             // 1. INSTANT OPTIMISTIC LOCAL UPDATE
@@ -3866,10 +3867,18 @@
             const socialData = getSocialData(targetId);
             if (isAlreadyReacted) {
                 socialData[prop] = Math.max(0, (socialData[prop] || 0) - 1);
+                delete myReactions[reactionKey];
+                delete myReactions[reactionKeyLong];
                 myReactions[reactionKey] = false;
+                myReactions[reactionKeyLong] = false;
             } else {
                 socialData[prop] = (socialData[prop] || 0) + 1;
                 myReactions[reactionKey] = true;
+                myReactions[reactionKeyLong] = true;
+            }
+            
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
             }
             
             localStorage.setItem('smurf_my_reactions', JSON.stringify(myReactions));
