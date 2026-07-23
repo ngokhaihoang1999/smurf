@@ -64,8 +64,10 @@
         // Helper: Derive unique avatar filename key strictly from Column B Identifier (Gmail Primary Key)
         function getAvatarKeyByIdentifier(rawId) {
             if (!rawId) return 'smurf_basic_placeholder';
-            const clean = String(rawId).trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
-            // Legacy alias mappings to ensure older device/script links resolve to correct file
+            const rawStr = String(rawId).trim().toLowerCase();
+            if (rawStr.includes('hungtran.160513')) return 'hungtran.160513_gmail_com';
+            if (rawStr.includes('ngocthaotrinh4120')) return 'ngocthaotrinh4120_gmail_com';
+            const clean = rawStr.replace(/[^a-z0-9]/g, '_');
             if (clean === '5538099304') return 'yenchinguyen1012_gmail_com';
             if (clean === '1539535605') return 'ngokhaihoang1999_gmail_com';
             return clean;
