@@ -71,6 +71,34 @@
             return clean;
         }
 
+        window.handleAvatarError = function(imgEl, userEmail) {
+            if (!imgEl) return;
+            const step = parseInt(imgEl.getAttribute('data-avatar-step') || '0');
+            if (!userEmail) {
+                imgEl.src = 'avatars/smurf_basic_placeholder.png';
+                return;
+            }
+            const cleanEmail = String(userEmail).trim().toLowerCase();
+            const userKey = getAvatarKeyByIdentifier(cleanEmail);
+            const prefix = cleanEmail.split('@')[0];
+
+            const fallbacks = [
+                `avatars/avatar_${userKey}.png`,
+                `avatars/avatar_${cleanEmail}.png`,
+                `avatars/avatar_${prefix}.png`,
+                `avatars/avatar_${cleanEmail.replace(/[^a-z0-9]/g, '_')}.png`,
+                `avatars/smurf_basic_placeholder.png`
+            ];
+
+            const nextStep = step + 1;
+            if (nextStep < fallbacks.length) {
+                imgEl.setAttribute('data-avatar-step', nextStep);
+                imgEl.src = fallbacks[nextStep];
+            } else {
+                imgEl.src = 'avatars/smurf_basic_placeholder.png';
+            }
+        };
+
         // ── UI LOADING / SCANNING INDICATOR ──
         function showScanningStatus(isScanning) {
             const spinner = document.getElementById('loading-spinner-circle');
@@ -1948,7 +1976,7 @@
 
                         cardEl.innerHTML = `
                             <div class="w-full relative overflow-hidden bg-sky-50" style="aspect-ratio: 3/4;">
-                                <img src="${avatarUrl}" alt="${displayName}" class="w-full h-full object-cover" style="object-position: center top;" loading="lazy" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                <img src="${avatarUrl}" alt="${displayName}" class="w-full h-full object-cover" style="object-position: center top;" loading="lazy" onerror="handleAvatarError(this, '${item.email || ''}')">
                             </div>
                             <div class="w-full py-2.5 px-3 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 62px;">
                                 <div class="flex justify-between items-start w-full gap-1">

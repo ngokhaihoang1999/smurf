@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="styles.css?v=1784817415793" rel="stylesheet"/>
+    <link href="styles.css?v=1784818802879" rel="stylesheet"/>
     <!-- html2canvas library for card export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script id="tailwind-config">
@@ -744,13 +744,13 @@
         <div id="map-viewport" class="w-full h-[calc(100vh-100px)] min-h-[550px] relative overflow-hidden select-none flex items-center justify-center rounded-b-[24px]">
             
             <!-- Blurred Background to cover empty side margins on wide desktop views dynamically -->
-            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784817415793');"></div>
+            <div class="absolute inset-0 z-0 bg-cover bg-center filter blur-xl scale-110 opacity-50 pointer-events-none" style="background-image: url('src/assets/smurf_village_base_map_vertical.png?v=1784818802879');"></div>
             
             <!-- Map Board: Aspect Ratio Locked (512x1024) -->
             <div id="map-board" class="relative w-full aspect-[1/2] shadow-inner">
                 
                 <!-- Base Map Image (Absolute fit to prevent alignment drift) -->
-                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784817415793" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
+                <img src="src/assets/smurf_village_base_map_vertical.png?v=1784818802879" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none">
                 
                 <!-- Floating Clouds -->
                 <div class="absolute top-10 left-[5%] text-5xl opacity-20 pointer-events-none float-cloud" style="animation: floatSlow 20s linear infinite;">☁️</div>
@@ -1860,6 +1860,34 @@
             if (clean === '1539535605') return 'ngokhaihoang1999_gmail_com';
             return clean;
         }
+
+        window.handleAvatarError = function(imgEl, userEmail) {
+            if (!imgEl) return;
+            const step = parseInt(imgEl.getAttribute('data-avatar-step') || '0');
+            if (!userEmail) {
+                imgEl.src = 'avatars/smurf_basic_placeholder.png';
+                return;
+            }
+            const cleanEmail = String(userEmail).trim().toLowerCase();
+            const userKey = getAvatarKeyByIdentifier(cleanEmail);
+            const prefix = cleanEmail.split('@')[0];
+
+            const fallbacks = [
+                `avatars/avatar_${userKey}.png`,
+                `avatars/avatar_${cleanEmail}.png`,
+                `avatars/avatar_${prefix}.png`,
+                `avatars/avatar_${cleanEmail.replace(/[^a-z0-9]/g, '_')}.png`,
+                `avatars/smurf_basic_placeholder.png`
+            ];
+
+            const nextStep = step + 1;
+            if (nextStep < fallbacks.length) {
+                imgEl.setAttribute('data-avatar-step', nextStep);
+                imgEl.src = fallbacks[nextStep];
+            } else {
+                imgEl.src = 'avatars/smurf_basic_placeholder.png';
+            }
+        };
 
         // ── UI LOADING / SCANNING INDICATOR ──
         function showScanningStatus(isScanning) {
@@ -3738,7 +3766,7 @@
 
                         cardEl.innerHTML = `
                             <div class="w-full relative overflow-hidden bg-sky-50" style="aspect-ratio: 3/4;">
-                                <img src="${avatarUrl}" alt="${displayName}" class="w-full h-full object-cover" style="object-position: center top;" loading="lazy" onerror="this.src='avatars/smurf_basic_placeholder.png'">
+                                <img src="${avatarUrl}" alt="${displayName}" class="w-full h-full object-cover" style="object-position: center top;" loading="lazy" onerror="handleAvatarError(this, '${item.email || ''}')">
                             </div>
                             <div class="w-full py-2.5 px-3 flex flex-col justify-center bg-white border-t border-slate-100" style="min-height: 62px;">
                                 <div class="flex justify-between items-start w-full gap-1">

@@ -1,0 +1,51 @@
+=== RESIDENT 1: ngocthaotrinh4120@gmail.com ===
+timestamp: 2026-07-23T14:36:46.781Z
+email: ngocthaotrinh4120@gmail.com
+smurfName: Tí Taho
+realName: Trịnh Ngọc Thảo
+group: N2T5
+personalGender: Nữ
+hobbies: Đi du lịch, nấu ăn, làm bánh
+strength: Kiên nhẫn
+weakness: Hay quên, ít nói
+personality: Tuỳ lúc
+bio: Thích học hỏi và khám phá
+gender: Nam (Smurf)
+hat: Không
+hatColor: Không
+hairColor: Không
+faceAccessory: Không
+outfit: Không
+prop: Không
+expression: Không
+pose: Không
+background: Không
+additionalInfo: 
+referenceImageUrl: {'valueType': 'IMAGE'}
+referenceNotes: Baby dễ thương hehe
+
+=== RESIDENT 2: hungtran.160513@gmail.com ===
+timestamp: 2026-07-23T14:36:50.208Z
+email: hungtran.160513@gmail.com
+smurfName: Tí Văn Hóa
+realName: Trần Nguyễn Hồng Ánh
+group: N1T3
+personalGender: Nữ
+hobbies: Thích đủ thứ trên đời
+strength: Thích nghi nhanh
+weakness: Thích nghi không kịp là trốn
+personality: Hướng ngoại part time
+bio: Mâm nào cũng có mặt em 🤭
+gender: Nữ (Smurfette)
+hat: Mũ nồi Hàn Quốc, có mầm non màu xanh
+hatColor: Hồng
+hairColor: 2 màu xanh mint và hồng
+faceAccessory: Không
+outfit: Áo sơ mi trắng, vest hồng, chân váy đen, bộ đồ chuẩn MC sự kiện
+prop: Sách, có thể là Kinh Thánh
+expression: Vui vẻ
+pose: Tay ôm sách tranh nghiêm
+background: Thế giới nội tâm màu hồng và xanh mint
+additionalInfo: Muốn có chim bồ câu trắng ở cùng
+referenceImageUrl: 
+referenceNotes: 
