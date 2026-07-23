@@ -1939,6 +1939,7 @@
 
                 stage.innerHTML = html;
             }
+        }
 
         // ── 3D DETAIL CARD FLIP & ASPECT MORPH LOGIC ──
         let modalFlipped = false;
