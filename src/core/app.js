@@ -332,7 +332,14 @@
                 }
             }, 3000);
 
-            // 1. Load from Cache immediately (0ms delay)
+            // 1. Clear legacy cached data if column structure shifted
+            const cacheVer = localStorage.getItem('smurf_cache_ver');
+            if (cacheVer !== '3.4') {
+                localStorage.removeItem('smurf_residents_cache');
+                localStorage.removeItem('smurf_user_cache');
+                localStorage.setItem('smurf_cache_ver', '3.4');
+            }
+
             const cachedUser = localStorage.getItem('smurf_user_cache');
             const cachedResidents = localStorage.getItem('smurf_residents_cache');
 
