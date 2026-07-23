@@ -2684,6 +2684,7 @@
                 
                 adjustAllCardFonts('m-preview-');
                 updatePageIndicator();
+                loadSocialData();
                 
                 animator.className = `h-full w-full ${inClass}`;
                 
@@ -3434,7 +3435,7 @@
                             if (!db[tid]) {
                                 db[tid] = { likes: 0, funnys: 0, stars: 0, cools: 0, comments: [] };
                             }
-                            const counts = serverReactions[tid] || serverReactions[r.email] || {};
+                            const counts = serverReactions[tid] || serverReactions[tid.toLowerCase()] || serverReactions[r.email] || serverReactions[(r.email||'').toLowerCase()] || {};
                             db[tid].likes = Number(counts.likes ?? counts.heart ?? counts.like ?? db[tid].likes ?? 0);
                             db[tid].funnys = Number(counts.funnys ?? counts.party ?? counts.funny ?? db[tid].funnys ?? 0);
                             db[tid].stars = Number(counts.stars ?? counts.star ?? db[tid].stars ?? 0);
@@ -3465,7 +3466,7 @@
         }
 
         function loadSocialData() {
-            const targetId = activeModalItem?.telegramId;
+            const targetId = String(activeModalItem?.telegramId || activeModalItem?.email || '').trim();
             if (!targetId) return;
             
             const data = getSocialData(targetId);
@@ -3522,7 +3523,7 @@
         }
 
         function reactToResident(type) {
-            const targetId = activeModalItem?.telegramId;
+            const targetId = String(activeModalItem?.telegramId || activeModalItem?.email || '').trim();
             if (!targetId) return;
             
             const activeFromId = telegramId || (currentUser ? String(currentUser.telegramId || '') : '') || getDeviceId();
